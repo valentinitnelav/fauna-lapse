@@ -21,7 +21,12 @@ android {
     }
 }
 
-// No dependencies: only Android's own classes (see AGENTS.md).
+// No dependencies inside the app: only Android's own classes (see AGENTS.md).
+// JUnit is used only for the tests that run on the PC; it never goes into the APK.
+dependencies {
+    testImplementation "junit:junit:4.13.2"
+}
+
 // The Android build plugin 9 adds the Kotlin standard library (about 2.4 MB) on its own; this app
 // has no Kotlin code, so leave it out.
 configurations.configureEach {

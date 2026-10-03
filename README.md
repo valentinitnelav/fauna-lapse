@@ -11,9 +11,10 @@ FaunaLapse has no artificial intelligence (AI). Its sister app,
 
 ## Status
 
-Early development, not ready for field use. Phase 0 is running: a small test app checks on several
-phones that photos and videos work with the screen off, how fast they are, and how much power they use.
-See [docs/PHONES.md](docs/PHONES.md) for the phones tested so far.
+Early development, not ready for field use. Scheduled photo and video sessions with the screen off
+work on the first test phone; the square is still fixed in the middle of the photo. Phase 0 tests on
+more phones (speed, power, heat) are running. See [docs/PHONES.md](docs/PHONES.md) for the phones
+tested so far.
 
 ## Planned features
 

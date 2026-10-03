@@ -38,6 +38,15 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 
+### Sessions (app version 0.0.1-phase0, Camera2, screen off, 2026-10-03)
+
+| Session | Result |
+|---|---|
+| Photos: step 1 s, 10 s bursts, 1 min breaks, 3.6 min run | first burst had no warm-up and missed 3 photo times (fixed: the schedule now starts 5 s after the tap); the other bursts on time with 10 photos, 0 skipped; photo 0.61 to 0.68 s; square cut from 3000 px and saved at 1024 px in 0.23 s (on the saver thread), 172 KB; camera opened in 0.28 s 5 s before each burst, autofocus sharp in 1.7 s, camera off in each break |
+| Video: 30 s clips at 1080p, 1 min breaks, 3.6 min run | 3 clips, each started 0 ms late; 15.00 fps and 8.5 Mbit/s measured, about 30 MB per 30 s; the first 0.4 s of each clip has no frames (encoder start) |
+| Photos in a daily window (21:07 to 21:09): step 0.5 s, 20 s bursts, 30 s breaks | bursts at 21:07:00, 21:07:50 and 21:08:40 as planned; camera stayed on in the short breaks; each burst 20 photos and 20 skipped photo times (a photo takes 0.62 s); the app warned once: step too short, use video or a step of at least 1.0 s |
+| Stop during a video clip | session ended within 1 s; the clip file was finished and playable (15 s), recorded with `stopped_early` |
+
 ### What this means for 1 photo per second
 
 The number of real pixels inside the square depends on how much of the view the square covers

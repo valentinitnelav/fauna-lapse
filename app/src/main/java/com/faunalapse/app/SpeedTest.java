@@ -363,7 +363,7 @@ final class SpeedTest implements Runnable {
         try {
             camera.stopPreview();
             Camera.Parameters p = camera.getParameters();
-            int[] range = fpsRangeFor(p.getSupportedPreviewFpsRange(), fps);
+            int[] range = Camera1Backend.fpsRangeFor(p.getSupportedPreviewFpsRange(), fps);
             p.setPreviewFpsRange(range[0], range[1]);
             put(r, "preview_fps_range", range[0] / 1000.0 + "-" + range[1] / 1000.0);
             Camera.Size preview = p.getPreferredPreviewSizeForVideo();
@@ -422,21 +422,6 @@ final class SpeedTest implements Runnable {
             }
         }
         finish(r);
-    }
-
-    /** The range that contains {@code fps} with the lowest maximum; else the lowest range. */
-    private static int[] fpsRangeFor(List<int[]> ranges, int fps) {
-        int target = fps * 1000;
-        int[] best = null;
-        for (int[] r : ranges) {
-            int min = r[Camera.Parameters.PREVIEW_FPS_MIN_INDEX];
-            int max = r[Camera.Parameters.PREVIEW_FPS_MAX_INDEX];
-            if (min <= target && target <= max
-                    && (best == null || max < best[1] || (max == best[1] && min > best[0]))) {
-                best = new int[] {min, max};
-            }
-        }
-        return best != null ? best : Camera1Backend.lowestFpsRange(ranges);
     }
 
     private static int[] highestFpsRange(List<int[]> ranges) {

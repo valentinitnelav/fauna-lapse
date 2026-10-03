@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- fitsSystemWindows keeps the content clear of the status bar and the navigation bar. -->
+<!-- importantForAutofill="no": these are settings, not personal data (Android 8+). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
@@ -11,10 +13,137 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <TextView style="@style/Heading" android:layout_marginTop="0dp" android:text="@string/session_heading" />
+
+        <TextView android:id="@+id/phone_time" style="@style/Hint" android:layout_marginTop="4dp" />
+
+        <RadioGroup
+            android:id="@+id/mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <RadioButton android:id="@+id/mode_photo" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/mode_photo" />
+
+            <RadioButton android:id="@+id/mode_video" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="@string/mode_video" />
+        </RadioGroup>
+
+        <LinearLayout android:id="@+id/photo_settings" style="@style/Group">
+            <TextView style="@style/Label" android:labelFor="@id/step_s" android:text="@string/step_label" />
+            <EditText android:id="@+id/step_s" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/step_hint" />
+
+            <TextView style="@style/Label" android:labelFor="@id/burst_s" android:text="@string/burst_label" />
+            <EditText android:id="@+id/burst_s" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/burst_hint" />
+
+            <TextView style="@style/Label" android:labelFor="@id/square_percent" android:text="@string/square_label" />
+            <EditText android:id="@+id/square_percent" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="number" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/square_hint" />
+
+            <TextView style="@style/Label" android:labelFor="@id/saved_side_px" android:text="@string/saved_side_label" />
+            <EditText android:id="@+id/saved_side_px" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="number" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/saved_side_hint" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/video_settings" style="@style/Group">
+            <TextView style="@style/Label" android:labelFor="@id/clip_min" android:text="@string/clip_label" />
+            <EditText android:id="@+id/clip_min" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/clip_hint" />
+
+            <TextView style="@style/Label" android:text="@string/video_size_label" />
+            <RadioGroup
+                android:id="@+id/video_quality"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton android:id="@+id/video_1080p" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/video_1080p" />
+
+                <RadioButton android:id="@+id/video_720p" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="16dp"
+                    android:text="@string/video_720p" />
+
+                <RadioButton android:id="@+id/video_480p" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="16dp"
+                    android:text="@string/video_480p" />
+            </RadioGroup>
+            <TextView style="@style/Hint" android:text="@string/video_size_hint" />
+        </LinearLayout>
+
+        <TextView style="@style/Label" android:labelFor="@id/break_min" android:text="@string/break_label" />
+        <EditText android:id="@+id/break_min" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+        <TextView style="@style/Hint" android:text="@string/break_hint" />
+
+        <RadioGroup
+            android:id="@+id/schedule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <RadioButton android:id="@+id/schedule_run" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/schedule_run" />
+
+            <RadioButton android:id="@+id/schedule_daily" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/schedule_daily" />
+        </RadioGroup>
+
+        <LinearLayout android:id="@+id/run_settings" style="@style/Group">
+            <TextView style="@style/Label" android:labelFor="@id/run_h" android:text="@string/run_label" />
+            <EditText android:id="@+id/run_h" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/run_hint" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/daily_settings" style="@style/Group">
+            <TextView style="@style/Label" android:labelFor="@id/windows" android:text="@string/windows_label" />
+            <EditText android:id="@+id/windows" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="text" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/windows_hint" />
+
+            <TextView style="@style/Label" android:labelFor="@id/days" android:text="@string/days_label" />
+            <EditText android:id="@+id/days" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="number" tools:targetApi="o" />
+            <TextView style="@style/Hint" android:text="@string/days_hint" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/start_session"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/start_session" />
+
+        <Button
+            android:id="@+id/stop_session"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/stop_session" />
+
+        <TextView
+            android:id="@+id/session_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="16sp" />
+
+        <TextView style="@style/Heading" android:layout_marginTop="32dp" android:text="@string/tests_heading" />
+
         <TextView
             android:id="@+id/intro"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:textSize="16sp" />
 
         <Button

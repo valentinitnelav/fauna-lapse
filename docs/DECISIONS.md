@@ -72,3 +72,19 @@ and start at the same clock times every day. Multi-day runs assume the phone is 
 
 If the phone cannot reach the asked photo step at the chosen size (measured on the phone), the app
 says so and suggests video instead (15 fps, or time-lapse video at 1 frame per s) or a smaller picture.
+
+## 2026-10-03: first session version: simple choices to replace later
+
+- The square is centred, with its size as a share of the photo height, until the screen for dragging
+  the square exists. Saved squares keep the sensor's orientation (turned 90° on most phones) until
+  then.
+- Session files go to the app's own folder (`files/sessions/<start time>/`) until DCIM output exists.
+- The wake lock is held for the whole session (the phone stays awake between bursts). Fine on a power
+  supply; alarms for long breaks come later.
+- The schedule starts one wake lead (5 s) after the tap, so the first burst also has its warm-up.
+- Video: full frame at 15 fps, the phone maker's bit rate scaled to 15 fps; one MP4 per clip.
+
+## 2026-10-03: unit tests with JUnit, on the PC only
+
+Schedule and square maths are plain Java classes tested with JUnit 4 (`./gradlew test`). JUnit is a
+test-only dependency: it never goes into the app, so the "no libraries" rule for the app still holds.

@@ -285,4 +285,19 @@ final class Camera1Backend {
         }
         return best;
     }
+
+    /** The range that contains {@code fps} with the lowest maximum; else the lowest range. */
+    static int[] fpsRangeFor(List<int[]> ranges, int fps) {
+        int target = fps * 1000;
+        int[] best = null;
+        for (int[] r : ranges) {
+            int min = r[Camera.Parameters.PREVIEW_FPS_MIN_INDEX];
+            int max = r[Camera.Parameters.PREVIEW_FPS_MAX_INDEX];
+            if (min <= target && target <= max
+                    && (best == null || max < best[1] || (max == best[1] && min > best[0]))) {
+                best = new int[] {min, max};
+            }
+        }
+        return best != null ? best : lowestFpsRange(ranges);
+    }
 }

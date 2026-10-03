@@ -20,9 +20,9 @@ The project owner is a pollination ecologist with statistics skills (R, Python),
 mobile developer. In code comments and explanations, define mobile development terms in plain language
 at first use. Write plain English: short sentences, no idioms.
 
-Status (2026-10-02): phase 0 (feasibility test on several phones) is running. The test app takes one
-photo or runs a speed test with the screen off; the Samsung M12 is tested (`docs/PHONES.md`). Current
-state and next steps: `docs/AGENT_OVERVIEW.md`.
+Status (2026-10-03): scheduled photo and video sessions work with the screen off on the Samsung M12;
+phase 0 tests on more phones are still to come (`docs/PHONES.md`). Current state and next steps:
+`docs/AGENT_OVERVIEW.md`.
 
 ## Hard constraints (change only with the owner's approval)
 
@@ -75,16 +75,22 @@ Gradle itself on first use.
 
 ```bash
 ./gradlew assembleDebug    # APK: app/build/outputs/apk/debug/app-debug.apk
+./gradlew test             # unit tests on the PC (JUnit): app/src/test/
 ./gradlew lintDebug        # Android code checks: app/build/reports/lint-results-debug.txt
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 # Debug builds only: start a test without tapping (it starts 10 s later)
 adb shell am start -n com.faunalapse.app/.MainActivity --ez take_photo true
 adb shell am start -n com.faunalapse.app/.MainActivity --ez speed_test true
+# Start a session; any setting can be given (names as in SessionSettings), the rest stays as saved
+adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
+    --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_h 0.06
+adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
 ```
 
-There are no unit tests yet (`./gradlew test` comes with the first pure-Java classes, such as
-`BurstPlan`). On the phone, phase 0 photos and `log.jsonl` are in
-`/sdcard/Android/data/com.faunalapse.app/files/phase0/` (speed tests in `speed_<time>/` below it).
+Unit tests cover the classes without Android code (`CapturePlan`, `RoiMath`); keep new schedule
+and maths code in such classes and test it. On the phone, sessions are in
+`/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/` (photos or videos and
+`session.jsonl`); phase 0 tests and `log.jsonl` are in `.../files/phase0/`.
 
 ## Where knowledge lives
 

@@ -1,15 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">FaunaLapse</string>
-    <string name="intro">Phase 0 tests with the back camera, without a preview.\n\nOne test photo: the camera opens, waits 5 s for the exposure, focuses once, takes one photo and closes.\n\nSpeed test (about 3 minutes): photos one after the other at 4 sizes, photos from preview frames, and 10 s videos at 15 and 5 frames per second.\n\nTap a button, then switch the screen off with the power button. The camera starts %1$d s after the tap, so you can check that it works with the screen off.\n\nPhotos, videos and the log are saved in:\n%2$s</string>
+
+    <!-- Session -->
+    <string name="session_heading">Session</string>
+    <string name="phone_time">Phone time: %1$s. Check it before a field session: the session record uses it.</string>
+    <string name="mode_photo">Photos</string>
+    <string name="mode_video">Video</string>
+    <string name="step_label">Photo step (s)</string>
+    <string name="step_hint">Time between photos in a burst. Default 2 s: a 3 s step caught about 90 % of insect visits (Edwards et al. 2015).</string>
+    <string name="burst_label">Burst length (s)</string>
+    <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
+    <string name="square_label">Square side (% of the photo height)</string>
+    <string name="square_hint">Only this square, in the middle of the photo, is saved. Default 100 %: the whole height. Choosing the square on the screen comes later.</string>
+    <string name="saved_side_label">Saved square side (px)</string>
+    <string name="saved_side_hint">Default 1024 px: enough pixels on a small insect. Never more than the real pixels inside the square.</string>
+    <string name="clip_label">Clip length (min)</string>
+    <string name="clip_hint">One video file per clip, 15 frames per s. Default 5 min.</string>
+    <string name="video_size_label">Video size</string>
+    <string name="video_1080p">1080p</string>
+    <string name="video_720p">720p</string>
+    <string name="video_480p">480p</string>
+    <string name="video_size_hint">On the Samsung M12, 10 s of video took about 9 MB at 1080p, 7 MB at 720p and 2 MB at 480p.</string>
+    <string name="break_label">Break between bursts or clips (min)</string>
+    <string name="break_hint">Default 4 min: the camera rests about 80 % of the time. It is switched off when the break is longer than 30 s. 0 = no break.</string>
+    <string name="schedule_run">Run for some hours from the start</string>
+    <string name="schedule_daily">Record in daily windows</string>
+    <string name="run_label">Run length (h)</string>
+    <string name="run_hint">Default 2 h.</string>
+    <string name="windows_label">Daily windows</string>
+    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. A window cannot cross midnight: write 20:00-24:00, 00:00-06:00. Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
+    <string name="days_label">Days</string>
+    <string name="days_hint">Default 1 (today). For more days, keep the phone on a power supply.</string>
+    <string name="start_session">Start session</string>
+    <string name="stop_session">Stop session</string>
+    <string name="session_idle">Set the values, tap Start session, then switch the screen off with the power button. Files are saved in:\n%1$s</string>
+    <string name="number_needed">%1$s: write a number.</string>
+
+    <!-- Phase 0 tests -->
+    <string name="tests_heading">Phase 0 tests</string>
+    <string name="intro">Tests with the back camera, without a preview.\n\nOne test photo: the camera opens, waits 5 s for the exposure, focuses once, takes one photo and closes.\n\nSpeed test (about 3 minutes): photos one after the other, photos from preview frames, short videos, and Camera2 photos.\n\nThe camera starts %1$d s after the tap, so you can switch the screen off first. Results are saved in:\n%2$s</string>
     <string name="take_photo">Take one test photo</string>
     <string name="speed_test">Run the speed test</string>
     <string name="status_running">Working: the camera starts %1$d s after the tap and closes again when the test ends.</string>
     <string name="status_none">No test run yet.</string>
-    <string name="status_ok">Last test finished: %1$s</string>
-    <string name="status_error">Last test failed: %1$s</string>
+    <string name="status_ok">Last test or session finished: %1$s</string>
+    <string name="status_error">Last test or session failed: %1$s</string>
     <string name="camera_permission_needed">FaunaLapse needs the camera permission to take photos. Tap the button again to allow it.</string>
+
+    <!-- Notification -->
     <string name="channel_name">Photo capture</string>
     <string name="notification_title">FaunaLapse is running a camera test</string>
     <string name="notification_text">The camera closes again when the test ends.</string>
+    <string name="notification_session_title">FaunaLapse session running</string>
+    <string name="notification_session_text">Photos or video on the schedule. Open the app to stop it.</string>
 </resources>
