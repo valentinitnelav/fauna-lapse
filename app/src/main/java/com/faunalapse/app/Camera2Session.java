@@ -3,6 +3,7 @@ package com.faunalapse.app;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -12,6 +13,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
 import android.media.Image;
@@ -36,8 +38,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Session camera through Camera2, used on phones whose Camera2 level is "limited" or
- * better. Photos: invisible preview plus a full-size JPEG output, made by the camera hardware.
- * Video: MediaRecorder (Android's hardware video recorder) fed straight by the camera.
+ * better. Photos: preview (invisible, or on the aim screen) plus a full-size JPEG output, made by
+ * the camera hardware. Video: MediaRecorder (Android's hardware video recorder) fed straight by the
+ * camera.
  *
  * Camera2 calls back on its own thread ("camera2"); the session thread waits for the answers.
  */
@@ -51,9 +54,13 @@ final class Camera2Session implements SessionCamera {
     private final boolean video;
     private final int videoQuality;
     private final int fps;
+    private final SurfaceTexture shown;
     private final JSONObject facts = new JSONObject();
     private final LinkedBlockingQueue<byte[]> jpegs = new LinkedBlockingQueue<>();
+    /** Tag of the request that starts autofocus: focus states count from its result on. */
+    private static final Object FOCUS_START = new Object();
     private volatile Integer afState;
+    private volatile boolean focusStarted;
     private HandlerThread thread;
     private Handler handler;
     private CameraDevice device;
@@ -67,21 +74,30 @@ final class Camera2Session implements SessionCamera {
     private Surface recorderSurface;
     private CamcorderProfile profile;
     private Range<Integer> fpsRange;
+    private Size photoSize;
+    private Rect pixelArray;
+    private boolean focusOnSquare;
+    private boolean exposureOnSquare;
+    private MeteringRectangle[] square;
     private boolean canFocus;
     private boolean recording;
 
     private final CameraCaptureSession.CaptureCallback afWatcher = new CameraCaptureSession.CaptureCallback() {
         @Override
         public void onCaptureCompleted(CameraCaptureSession s, CaptureRequest r, TotalCaptureResult result) {
-            afState = result.get(CaptureResult.CONTROL_AF_STATE);
+            // Earlier frames still report the last focus ("sharp" in a short break).
+            if (r.getTag() == FOCUS_START) focusStarted = true;
+            if (focusStarted) afState = result.get(CaptureResult.CONTROL_AF_STATE);
         }
     };
 
-    Camera2Session(Context context, boolean video, int videoQuality, int fps) {
+    /** {@code shown}: the aim screen's view to show the preview on, or null for none. */
+    Camera2Session(Context context, boolean video, int videoQuality, int fps, SurfaceTexture shown) {
         this.context = context;
         this.video = video;
         this.videoQuality = videoQuality;
         this.fps = fps;
+        this.shown = shown;
     }
 
     /** True when the back camera's Camera2 level is better than "legacy" (a Camera1 wrapper). */
@@ -108,6 +124,11 @@ final class Camera2Session implements SessionCamera {
         int[] afModes = c.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
         if (afModes != null) for (int m : afModes) canFocus |= m == CameraMetadata.CONTROL_AF_MODE_AUTO;
         Range<Integer>[] ranges = c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+        pixelArray = c.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+        Integer afRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
+        Integer aeRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE);
+        focusOnSquare = !video && canFocus && pixelArray != null && afRegions != null && afRegions > 0;
+        exposureOnSquare = !video && pixelArray != null && aeRegions != null && aeRegions > 0;
         put("camera_api", "camera2");
         put("camera_id", id);
         Integer orientation = c.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -134,23 +155,45 @@ final class Camera2Session implements SessionCamera {
                 jpegs.offer(bytes);
             }, handler);
             fpsRange = lowest(ranges); // least work while the camera waits between photos
+            photoSize = shape;
             put("photo_size", shape.getWidth() + "x" + shape.getHeight());
+            put("focus_on_square", focusOnSquare);
+            put("exposure_on_square", exposureOnSquare);
         }
         if (fpsRange != null) put("preview_fps_range", fpsRange.getLower() + "-" + fpsRange.getUpper());
-        Size previewSize = smallestWithShape(map.getOutputSizes(SurfaceTexture.class), shape);
-        texture = new SurfaceTexture(0); // invisible preview: frames are never drawn
+        Size[] previewSizes = map.getOutputSizes(SurfaceTexture.class);
+        // On the aim screen, frames sharp enough to judge focus; otherwise the smallest (least work).
+        Size previewSize = shown != null ? largestWithShape(previewSizes, shape, 1920)
+                : smallestWithShape(previewSizes, shape);
+        put("preview_size", previewSize.getWidth() + "x" + previewSize.getHeight());
+        texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
         texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
         preview = new Surface(texture);
 
         openDevice(manager, id);
         startPreview(video ? Arrays.asList(preview) : Arrays.asList(preview, reader.getSurface()));
-        if (!video) {
-            CaptureRequest.Builder still = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            still.addTarget(reader.getSurface());
-            setCommon(still);
-            still.set(CaptureRequest.JPEG_QUALITY, JPEG_QUALITY);
-            stillRequest = still.build();
-        }
+        if (!video) buildStill();
+    }
+
+    private void buildStill() throws Exception {
+        CaptureRequest.Builder still = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+        still.addTarget(reader.getSurface());
+        setCommon(still);
+        still.set(CaptureRequest.JPEG_QUALITY, JPEG_QUALITY);
+        stillRequest = still.build();
+    }
+
+    @Override
+    public void setSquare(double sideShare, double centreX, double centreY) throws Exception {
+        if (!focusOnSquare && !exposureOnSquare) return;
+        int[] r = RoiMath.square(photoSize.getWidth(), photoSize.getHeight(), sideShare, centreX, centreY);
+        int[] a = RoiMath.inArray(pixelArray.width(), pixelArray.height(),
+                photoSize.getWidth(), photoSize.getHeight(), r);
+        square = new MeteringRectangle[] {new MeteringRectangle(pixelArray.left + a[0], pixelArray.top + a[1],
+                a[2], a[3], MeteringRectangle.METERING_WEIGHT_MAX)};
+        setCommon(previewRequest);
+        session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
+        buildStill();
     }
 
     /** New capture session with these outputs and a repeating preview-only request. */
@@ -169,15 +212,20 @@ final class Camera2Session implements SessionCamera {
         // Autofocus mode "auto": the lens moves only when focus() asks, then stays.
         if (canFocus) b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
         if (fpsRange != null) b.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
+        if (square != null && focusOnSquare) b.set(CaptureRequest.CONTROL_AF_REGIONS, square);
+        if (square != null && exposureOnSquare) b.set(CaptureRequest.CONTROL_AE_REGIONS, square);
     }
 
     @Override
     public String focus() throws Exception {
         if (!canFocus) return "fixed focus";
         long t = SpeedTest.now();
+        focusStarted = false;
         afState = null;
         previewRequest.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+        previewRequest.setTag(FOCUS_START);
         session.capture(previewRequest.build(), afWatcher, handler);
+        previewRequest.setTag(null);
         previewRequest.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
         while (SpeedTest.now() - t < FOCUS_TIMEOUT_MS) {
             Integer s = afState;
@@ -266,7 +314,7 @@ final class Camera2Session implements SessionCamera {
         reader = null;
         if (preview != null) preview.release();
         preview = null;
-        if (texture != null) texture.release();
+        if (texture != null && texture != shown) texture.release(); // the aim screen owns its view
         texture = null;
         if (thread != null) thread.quitSafely();
         thread = null;
@@ -385,16 +433,31 @@ final class Camera2Session implements SessionCamera {
         return best;
     }
 
+    /** Same width-to-height ratio, within 1 %. */
+    private static boolean sameShape(Size a, Size b) {
+        return Math.abs((double) a.getWidth() * b.getHeight() - (double) a.getHeight() * b.getWidth())
+                <= 0.01 * a.getHeight() * b.getWidth();
+    }
+
     private static Size smallestWithShape(Size[] sizes, Size shape) {
         Size best = null;
         for (Size s : sizes) {
-            boolean same = Math.abs((double) s.getWidth() * shape.getHeight()
-                    - (double) s.getHeight() * shape.getWidth()) <= 0.01 * s.getHeight() * shape.getWidth();
-            if (same && s.getWidth() >= 320
+            if (sameShape(s, shape) && s.getWidth() >= 320
                     && (best == null || s.getWidth() * s.getHeight() < best.getWidth() * best.getHeight())) {
                 best = s;
             }
         }
         return best != null ? best : sizes[0];
+    }
+
+    private static Size largestWithShape(Size[] sizes, Size shape, int maxWidth) {
+        Size best = null;
+        for (Size s : sizes) {
+            if (sameShape(s, shape) && s.getWidth() <= maxWidth
+                    && (best == null || s.getWidth() * s.getHeight() > best.getWidth() * best.getHeight())) {
+                best = s;
+            }
+        }
+        return best != null ? best : smallestWithShape(sizes, shape);
     }
 }

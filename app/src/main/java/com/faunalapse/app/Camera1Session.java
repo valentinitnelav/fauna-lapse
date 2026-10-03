@@ -1,5 +1,6 @@
 package com.faunalapse.app;
 
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
@@ -10,6 +11,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +32,12 @@ final class Camera1Session implements SessionCamera {
     private final boolean video;
     private final int videoQuality;
     private final int fps;
+    private final SurfaceTexture shown;
     private final JSONObject facts = new JSONObject();
     private Camera camera;
+    private Camera.Size photoSize;
+    private boolean focusOnSquare;
+    private boolean exposureOnSquare;
     private SurfaceTexture texture;
     private Surface recorderPreview;
     private MediaRecorder recorder;
@@ -39,10 +46,12 @@ final class Camera1Session implements SessionCamera {
     private boolean unlocked;
     private boolean recording;
 
-    Camera1Session(boolean video, int videoQuality, int fps) {
+    /** {@code shown}: the aim screen's view to show the preview on, or null for none. */
+    Camera1Session(boolean video, int videoQuality, int fps, SurfaceTexture shown) {
         this.video = video;
         this.videoQuality = videoQuality;
         this.fps = fps;
+        this.shown = shown;
     }
 
     /** The phone maker's video preset for {@code quality}, or the next lower one that exists. */
@@ -66,19 +75,29 @@ final class Camera1Session implements SessionCamera {
     public void open() throws Exception {
         int id = Camera1Backend.backCameraId();
         camera = Camera.open(id);
-        texture = new SurfaceTexture(0); // invisible preview: frames are never drawn
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(id, info);
+        texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
         camera.setPreviewTexture(texture);
+        // The aim screen is always upright (portrait), so the view turns by the sensor orientation.
+        if (shown != null) camera.setDisplayOrientation(info.orientation);
         Camera.Parameters p = camera.getParameters();
         canFocus = p.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO);
         if (canFocus) p.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         put("camera_api", "camera1");
         put("camera_id", id);
+        put("sensor_orientation", info.orientation);
         if (video) {
             profile = videoProfile(id, videoQuality);
             int[] range = Camera1Backend.fpsRangeFor(p.getSupportedPreviewFpsRange(), fps);
             p.setPreviewFpsRange(range[0], range[1]);
             Camera.Size preview = p.getPreferredPreviewSizeForVideo();
-            if (p.getSupportedVideoSizes() == null || preview == null) {
+            if (shown != null) {
+                // The aim screen shows the video's own shape (the preview for recording may be 4:3).
+                preview = Camera1Backend.largestWithSameShape(p.getSupportedPreviewSizes(),
+                        camera.new Size(profile.videoFrameWidth, profile.videoFrameHeight), 1920);
+                p.setPreviewSize(preview.width, preview.height);
+            } else if (p.getSupportedVideoSizes() == null || preview == null) {
                 // The recorder gets the preview frames, so they must have the video size.
                 p.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
             } else {
@@ -91,19 +110,38 @@ final class Camera1Session implements SessionCamera {
         } else {
             Camera.Size picture = Camera1Backend.largest(p.getSupportedPictureSizes());
             p.setPictureSize(picture.width, picture.height);
-            Camera.Size preview = Camera1Backend.smallestWithSameShape(p.getSupportedPreviewSizes(), picture);
+            // On the aim screen, frames sharp enough to judge focus; otherwise the smallest.
+            List<Camera.Size> previews = p.getSupportedPreviewSizes();
+            Camera.Size preview = shown != null ? Camera1Backend.largestWithSameShape(previews, picture, 1920)
+                    : Camera1Backend.smallestWithSameShape(previews, picture);
             p.setPreviewSize(preview.width, preview.height);
             int[] range = Camera1Backend.lowestFpsRange(p.getSupportedPreviewFpsRange());
             if (range != null) p.setPreviewFpsRange(range[0], range[1]);
+            photoSize = picture;
+            focusOnSquare = canFocus && p.getMaxNumFocusAreas() > 0;
+            exposureOnSquare = p.getMaxNumMeteringAreas() > 0;
             put("photo_size", picture.width + "x" + picture.height);
+            put("focus_on_square", focusOnSquare);
+            put("exposure_on_square", exposureOnSquare);
         }
         camera.setParameters(p);
-        Camera.CameraInfo info = new Camera.CameraInfo();
-        Camera.getCameraInfo(id, info);
-        put("sensor_orientation", info.orientation);
+        Camera.Size preview = camera.getParameters().getPreviewSize();
+        put("preview_size", preview.width + "x" + preview.height);
         put("focus", canFocus ? "auto, once per burst" : "fixed");
         if (info.canDisableShutterSound) put("shutter_sound_off", camera.enableShutterSound(false));
         camera.startPreview();
+    }
+
+    @Override
+    public void setSquare(double sideShare, double centreX, double centreY) {
+        if (!focusOnSquare && !exposureOnSquare) return;
+        int[] r = RoiMath.square(photoSize.width, photoSize.height, sideShare, centreX, centreY);
+        int[] a = RoiMath.camera1Area(photoSize.width, photoSize.height, r);
+        List<Camera.Area> areas = Collections.singletonList(new Camera.Area(new Rect(a[0], a[1], a[2], a[3]), 1000));
+        Camera.Parameters p = camera.getParameters();
+        if (focusOnSquare) p.setFocusAreas(areas);
+        if (exposureOnSquare) p.setMeteringAreas(areas);
+        camera.setParameters(p);
     }
 
     @Override
@@ -220,7 +258,7 @@ final class Camera1Session implements SessionCamera {
             }
             camera = null;
         }
-        if (texture != null) texture.release();
+        if (texture != null && texture != shown) texture.release(); // the aim screen owns its view
         texture = null;
     }
 

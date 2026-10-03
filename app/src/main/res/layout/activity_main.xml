@@ -31,6 +31,15 @@
                 android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="@string/mode_video" />
         </RadioGroup>
 
+        <Button
+            android:id="@+id/aim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/aim_button" />
+
+        <TextView android:id="@+id/aim_summary" style="@style/Hint" />
+
         <LinearLayout android:id="@+id/photo_settings" style="@style/Group">
             <TextView style="@style/Label" android:labelFor="@id/step_s" android:text="@string/step_label" />
             <EditText android:id="@+id/step_s" style="@style/Field" android:importantForAutofill="no"
@@ -41,11 +50,6 @@
             <EditText android:id="@+id/burst_s" style="@style/Field" android:importantForAutofill="no"
                 android:inputType="numberDecimal" tools:targetApi="o" />
             <TextView style="@style/Hint" android:text="@string/burst_hint" />
-
-            <TextView style="@style/Label" android:labelFor="@id/square_percent" android:text="@string/square_label" />
-            <EditText android:id="@+id/square_percent" style="@style/Field" android:importantForAutofill="no"
-                android:inputType="number" tools:targetApi="o" />
-            <TextView style="@style/Hint" android:text="@string/square_hint" />
 
             <TextView style="@style/Label" android:labelFor="@id/saved_side_px" android:text="@string/saved_side_label" />
             <EditText android:id="@+id/saved_side_px" style="@style/Field" android:importantForAutofill="no"

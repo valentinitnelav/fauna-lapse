@@ -49,6 +49,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Video: 30 s clips at 1080p, 1 min breaks, 3.6 min run | 3 clips, each started 0 ms late; 15.00 fps and 8.5 Mbit/s measured, about 30 MB per 30 s; the first 0.4 s of each clip has no frames (encoder start) |
 | Photos in a daily window (21:07 to 21:09): step 0.5 s, 20 s bursts, 30 s breaks | bursts at 21:07:00, 21:07:50 and 21:08:40 as planned; camera stayed on in the short breaks; each burst 20 photos and 20 skipped photo times (a photo takes 0.62 s); the app warned once: step too short, use video or a step of at least 1.0 s |
 | Stop during a video clip | session ended within 1 s; the clip file was finished and playable (15 s), recorded with `stopped_early` |
+| Aim screen and a moved square (50 %, top right), Camera2 and Camera1 | view 1440x1080 for photos (both interfaces), 1920x1080 for video; focus and exposure areas on the square work in both; focus sharp in 1.4 to 1.9 s; saved squares show the same area as the screen, upright with the phone upright or turned left side up. Camera1 session at step 1 s: photo 0.95 to 1.6 s, 3 of 10 photo times skipped and the step warning shown |
 
 ### What this means for 1 photo per second
 

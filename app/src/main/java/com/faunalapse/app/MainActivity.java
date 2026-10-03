@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,10 +39,13 @@ public final class MainActivity extends Activity {
     private static final String EXTRA_TAKE_PHOTO = "take_photo";
     private static final String EXTRA_START_SESSION = "start_session";
     private static final String EXTRA_STOP_SESSION = "stop_session";
+    private static final String EXTRA_AIM = "aim";
+    private static final String EXTRA_CAMERA1 = "camera1";
     private static final int PERMISSION_REQUEST = 1;
     private static final int TEST_PHOTO = 0;
     private static final int SPEED_TEST = 1;
     private static final int SESSION = 2;
+    private static final int AIM = 3;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refresher = new Runnable() {
@@ -55,6 +59,10 @@ public final class MainActivity extends Activity {
     private Button speedButton;
     private Button startButton;
     private Button stopButton;
+    private Button aimButton;
+    private TextView aimSummary;
+    private OrientationEventListener orientationListener;
+    private volatile int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
     private TextView status;
     private TextView sessionStatus;
     private TextView phoneTime;
@@ -63,7 +71,6 @@ public final class MainActivity extends Activity {
     private RadioGroup videoQuality;
     private EditText stepS;
     private EditText burstS;
-    private EditText squarePercent;
     private EditText savedSidePx;
     private EditText clipMin;
     private EditText breakMin;
@@ -89,6 +96,15 @@ public final class MainActivity extends Activity {
         startButton.setOnClickListener(v -> startSession());
         stopButton = findViewById(R.id.stop_session);
         stopButton.setOnClickListener(v -> stopSession());
+        aimButton = findViewById(R.id.aim);
+        aimButton.setOnClickListener(v -> start(AIM));
+        aimSummary = findViewById(R.id.aim_summary);
+        orientationListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int degrees) {
+                phoneTurn = RoiMath.quarterTurn(degrees);
+            }
+        };
         status = findViewById(R.id.status);
         sessionStatus = findViewById(R.id.session_status);
         phoneTime = findViewById(R.id.phone_time);
@@ -97,7 +113,6 @@ public final class MainActivity extends Activity {
         videoQuality = findViewById(R.id.video_quality);
         stepS = findViewById(R.id.step_s);
         burstS = findViewById(R.id.burst_s);
-        squarePercent = findViewById(R.id.square_percent);
         savedSidePx = findViewById(R.id.saved_side_px);
         clipMin = findViewById(R.id.clip_min);
         breakMin = findViewById(R.id.break_min);
@@ -120,11 +135,14 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (orientationListener.canDetectOrientation()) orientationListener.enable();
+        showAimSummary(); // the aim screen may have moved the square
         handler.post(refresher);
     }
 
     @Override
     protected void onPause() {
+        orientationListener.disable();
         handler.removeCallbacks(refresher);
         super.onPause();
     }
@@ -138,7 +156,6 @@ public final class MainActivity extends Activity {
                 : "720p".equals(s.videoQuality) ? R.id.video_720p : R.id.video_1080p);
         stepS.setText(number(s.stepS));
         burstS.setText(number(s.burstS));
-        squarePercent.setText(String.valueOf(s.squarePercent));
         savedSidePx.setText(String.valueOf(s.savedSidePx));
         clipMin.setText(number(s.clipMin));
         breakMin.setText(number(s.breakMin));
@@ -155,19 +172,31 @@ public final class MainActivity extends Activity {
         findViewById(R.id.video_settings).setVisibility(video ? View.VISIBLE : View.GONE);
         findViewById(R.id.run_settings).setVisibility(daily ? View.GONE : View.VISIBLE);
         findViewById(R.id.daily_settings).setVisibility(daily ? View.VISIBLE : View.GONE);
+        showAimSummary();
     }
 
-    /** The settings on the screen, or null when a value is not usable (the reason is shown). */
+    /** The square as saved by the aim screen (photo mode), or what the aim screen is for (video). */
+    private void showAimSummary() {
+        if (mode.getCheckedRadioButtonId() == R.id.mode_video) {
+            aimSummary.setText(R.string.aim_summary_video);
+            return;
+        }
+        SessionSettings s = SessionSettings.load(this);
+        boolean middle = Math.abs(s.squareX - 0.5) < 0.005 && Math.abs(s.squareY - 0.5) < 0.005;
+        aimSummary.setText(getString(R.string.aim_summary_photo, s.squarePercent,
+                getString(middle ? R.string.aim_square_middle : R.string.aim_square_placed)));
+    }
+
+    /** The settings on the screen (the square from the aim screen), or null when a value is not
+     *  usable (the reason is shown). */
     private SessionSettings readSettings() {
-        SessionSettings s = new SessionSettings();
+        SessionSettings s = SessionSettings.load(this);
         try {
             s.video = mode.getCheckedRadioButtonId() == R.id.mode_video;
             s.daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
-            int quality = videoQuality.getCheckedRadioButtonId();
-            s.videoQuality = quality == R.id.video_480p ? "480p" : quality == R.id.video_720p ? "720p" : "1080p";
+            s.videoQuality = chosenVideoQuality();
             s.stepS = decimal(stepS, R.string.step_label);
             s.burstS = decimal(burstS, R.string.burst_label);
-            s.squarePercent = (int) Math.round(decimal(squarePercent, R.string.square_label));
             s.savedSidePx = (int) Math.round(decimal(savedSidePx, R.string.saved_side_label));
             s.clipMin = decimal(clipMin, R.string.clip_label);
             s.breakMin = decimal(breakMin, R.string.break_label);
@@ -180,6 +209,11 @@ public final class MainActivity extends Activity {
         }
         sessionMessage = s.problem();
         return sessionMessage == null ? s : null;
+    }
+
+    private String chosenVideoQuality() {
+        int id = videoQuality.getCheckedRadioButtonId();
+        return id == R.id.video_480p ? "480p" : id == R.id.video_720p ? "720p" : "1080p";
     }
 
     private double decimal(EditText field, int labelId) {
@@ -213,6 +247,8 @@ public final class MainActivity extends Activity {
     private void handleTestIntent(Intent intent) {
         boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         if (!debuggable) return;
+        if (intent.hasExtra(EXTRA_CAMERA1)) SessionRunner.forceCamera1 = intent.getBooleanExtra(EXTRA_CAMERA1, false);
+        if (intent.getBooleanExtra(EXTRA_AIM, false)) start(AIM);
         if (intent.getBooleanExtra(EXTRA_TAKE_PHOTO, false)) start(TEST_PHOTO);
         if (intent.getBooleanExtra(CaptureService.EXTRA_SPEED_TEST, false)) start(SPEED_TEST);
         if (intent.getBooleanExtra(EXTRA_STOP_SESSION, false)) stopSession();
@@ -229,13 +265,18 @@ public final class MainActivity extends Activity {
             }
             setFromExtra(intent, "step_s", stepS);
             setFromExtra(intent, "burst_s", burstS);
-            setFromExtra(intent, "square_percent", squarePercent);
             setFromExtra(intent, "saved_side_px", savedSidePx);
             setFromExtra(intent, "clip_min", clipMin);
             setFromExtra(intent, "break_min", breakMin);
             setFromExtra(intent, "run_h", runH);
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
+            // The square has no field on this screen: save it, readSettings then loads it.
+            SessionSettings saved = SessionSettings.load(this);
+            saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
+            saved.squareX = fromExtra(intent, "square_x", saved.squareX);
+            saved.squareY = fromExtra(intent, "square_y", saved.squareY);
+            saved.save(this);
             startSession();
         }
     }
@@ -243,6 +284,11 @@ public final class MainActivity extends Activity {
     private static void setFromExtra(Intent intent, String key, EditText field) {
         String value = intent.getStringExtra(key);
         if (value != null) field.setText(value);
+    }
+
+    private static double fromExtra(Intent intent, String key, double fallback) {
+        String value = intent.getStringExtra(key);
+        return value == null ? fallback : Double.parseDouble(value);
     }
 
     private void start(int what) {
@@ -254,9 +300,16 @@ public final class MainActivity extends Activity {
             return;
         }
         if (CaptureService.running) return;
+        if (what == AIM) {
+            startActivity(new Intent(this, AimActivity.class)
+                    .putExtra(AimActivity.EXTRA_VIDEO, mode.getCheckedRadioButtonId() == R.id.mode_video)
+                    .putExtra(AimActivity.EXTRA_VIDEO_QUALITY, chosenVideoQuality()));
+            return;
+        }
         Intent intent = new Intent(this, CaptureService.class)
                 .putExtra(CaptureService.EXTRA_SPEED_TEST, what == SPEED_TEST)
-                .putExtra(CaptureService.EXTRA_SESSION, what == SESSION);
+                .putExtra(CaptureService.EXTRA_SESSION, what == SESSION)
+                .putExtra(CaptureService.EXTRA_PHONE_TURN, phoneTurn);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
         else startService(intent);
         refresh();
@@ -297,6 +350,7 @@ public final class MainActivity extends Activity {
         photoButton.setEnabled(!running);
         speedButton.setEnabled(!running);
         startButton.setEnabled(!running);
+        aimButton.setEnabled(!running); // the camera is busy
         stopButton.setEnabled(session);
 
         String warning = SessionRunner.warning;

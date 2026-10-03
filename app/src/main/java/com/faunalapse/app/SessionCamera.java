@@ -11,8 +11,13 @@ import java.io.File;
  */
 interface SessionCamera {
 
-    /** Opens the camera and starts an invisible preview, so exposure can settle. */
+    /** Opens the camera and starts the preview (invisible, or on the aim screen), so exposure can
+     *  settle. */
     void open() throws Exception;
+
+    /** Photo mode: focus and exposure on the ROI square (as in SessionSettings) where the phone
+     *  allows it; exposure follows at once, focus at the next focus(). */
+    void setSquare(double sideShare, double centreX, double centreY) throws Exception;
 
     /** Photo mode: one autofocus; the lens then stays where it is. Returns the result for the log. */
     String focus() throws Exception;
@@ -30,7 +35,7 @@ interface SessionCamera {
     /** Video mode: stops recording and closes the clip file. */
     void stopClip() throws Exception;
 
-    /** Facts for the session log: camera interface, sizes, frame rate. */
+    /** Facts for the session log: camera interface, sensor orientation, sizes, frame rate. */
     JSONObject describe();
 
     /** Stops a running clip (so its file stays readable) and closes the camera. Never throws. */

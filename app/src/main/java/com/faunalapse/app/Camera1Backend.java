@@ -272,6 +272,17 @@ final class Camera1Backend {
         return best;
     }
 
+    static Camera.Size largestWithSameShape(List<Camera.Size> sizes, Camera.Size target, int maxWidth) {
+        Camera.Size best = null;
+        for (Camera.Size s : sizes) {
+            if (sameShape(s, target) && s.width <= maxWidth
+                    && (best == null || s.width * s.height > best.width * best.height)) {
+                best = s;
+            }
+        }
+        return best != null ? best : smallestWithSameShape(sizes, target);
+    }
+
     /** The range with the lowest maximum frame rate (then the lowest minimum): least work. */
     static int[] lowestFpsRange(List<int[]> ranges) {
         if (ranges == null) return null;

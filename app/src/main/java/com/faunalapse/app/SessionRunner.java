@@ -1,6 +1,7 @@
 package com.faunalapse.app;
 
 import android.content.Context;
+import android.graphics.SurfaceTexture;
 import android.os.Build;
 
 import org.json.JSONArray;
@@ -36,6 +37,10 @@ final class SessionRunner implements Runnable {
     /** Longest single wait, so a changed phone clock is noticed within a minute. */
     private static final long MAX_SLEEP_MS = 60000;
 
+    /** Debug builds: use Camera1 even where Camera2 is suitable, to test the Camera1 path (adb
+     *  hook; lasts until the app is closed). */
+    static volatile boolean forceCamera1;
+
     /** What the session does now, and a warning if any; read by the screen. */
     static volatile String status = "";
     static volatile String warning = "";
@@ -47,7 +52,9 @@ final class SessionRunner implements Runnable {
     private final SessionLog log;
     private final Camera1Backend.Listener onDone;
     private final boolean useCamera2;
+    private final int phoneTurn;
     private SessionCamera camera;
+    private int photoTurn;
     private ThreadPoolExecutor saver;
     private int bursts;
     private int photos;
@@ -55,15 +62,31 @@ final class SessionRunner implements Runnable {
     private int clips;
     private int errors;
 
-    SessionRunner(Context context, SessionSettings settings, CapturePlan plan, File dir,
+    /** {@code phoneTurn}: how the phone was held at Start (RoiMath.quarterTurn), to save the
+     *  squares upright. */
+    SessionRunner(Context context, SessionSettings settings, CapturePlan plan, File dir, int phoneTurn,
                   Camera1Backend.Listener onDone) {
         this.context = context;
         this.settings = settings;
         this.plan = plan;
         this.dir = dir;
+        this.phoneTurn = phoneTurn;
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
-        this.useCamera2 = Camera2Session.suitable(context);
+        this.useCamera2 = useCamera2(context);
+    }
+
+    /** Camera2 where the phone's level is "limited" or better, else Camera1 (AGENTS.md). */
+    static boolean useCamera2(Context context) {
+        return !forceCamera1 && Camera2Session.suitable(context);
+    }
+
+    /** A session camera; {@code shown} is the aim screen's view, or null for an invisible preview. */
+    static SessionCamera newCamera(Context context, boolean camera2, boolean video, int videoQuality,
+                                   SurfaceTexture shown) {
+        return camera2
+                ? new Camera2Session(context, video, videoQuality, SessionSettings.VIDEO_FPS, shown)
+                : new Camera1Session(video, videoQuality, SessionSettings.VIDEO_FPS, shown);
     }
 
     @Override
@@ -152,6 +175,7 @@ final class SessionRunner implements Runnable {
         JSONObject r = SessionLog.record("session_start");
         SessionLog.put(r, "settings", settings.toJson());
         SessionLog.put(r, "camera_api", useCamera2 ? "camera2" : "camera1");
+        SessionLog.put(r, "phone_turn_deg", phoneTurn); // 0 upright or flat, 90 left side up
         SessionLog.put(r, "phone", Build.MANUFACTURER + " " + Build.MODEL);
         SessionLog.put(r, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         SessionLog.put(r, "app_version", appVersion());
@@ -169,19 +193,20 @@ final class SessionRunner implements Runnable {
 
     private void openCamera() throws Exception {
         long t = SpeedTest.now();
-        SessionCamera c = useCamera2
-                ? new Camera2Session(context, settings.video, settings.videoQualityConstant(), SessionSettings.VIDEO_FPS)
-                : new Camera1Session(settings.video, settings.videoQualityConstant(), SessionSettings.VIDEO_FPS);
+        SessionCamera c = newCamera(context, useCamera2, settings.video, settings.videoQualityConstant(), null);
         try {
             c.open();
+            if (!settings.video) c.setSquare(settings.squarePercent / 100.0, settings.squareX, settings.squareY);
         } catch (Exception e) {
             c.close();
             throw e;
         }
         camera = c;
+        photoTurn = RoiMath.photoTurn(c.describe().optInt("sensor_orientation"), phoneTurn);
         JSONObject r = SessionLog.record("camera_open");
         SessionLog.put(r, "open_ms", SpeedTest.now() - t);
         SessionLog.put(r, "camera", c.describe());
+        if (!settings.video) SessionLog.put(r, "saved_photo_turn_deg", photoTurn);
         log.write(r);
     }
 
@@ -248,6 +273,7 @@ final class SessionRunner implements Runnable {
     /** Cuts and saves the ROI square on the saver thread; one "photo" record per photo. */
     private void save(final byte[] jpeg, final long planned, final long takenAt, final long captureMs) {
         final File file = new File(dir, SessionLog.fileStem(takenAt) + ".jpg");
+        final int turn = photoTurn;
         saver.execute(() -> {
             JSONObject r = SessionLog.record("photo");
             SessionLog.put(r, "time", SessionLog.isoTime(takenAt)); // when the photo was asked for
@@ -256,7 +282,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(r, "photo_ms", captureMs);
             try {
                 long s0 = SpeedTest.now();
-                int[] sides = PhotoSaver.saveSquare(jpeg, settings.squarePercent / 100.0, settings.savedSidePx, file);
+                int[] sides = PhotoSaver.saveSquare(jpeg, settings, turn, file);
                 SessionLog.put(r, "square_real_px", sides[0]);
                 SessionLog.put(r, "saved_side_px", sides[1]);
                 SessionLog.put(r, "save_ms", SpeedTest.now() - s0);

@@ -1,8 +1,8 @@
 # FaunaLapse
 
 FaunaLapse turns old or cheap Android phones into time-lapse cameras that watch one spot, for example
-insects visiting a flower. It takes short bursts of photos (later also short videos) with the screen
-off, keeps only a square area that you choose, and closes the camera between bursts. This keeps the
+insects visiting a flower. It takes short bursts of photos or short video clips with the screen off,
+keeps only a square area of each photo that you choose, and closes the camera between bursts. This keeps the
 phone cool, so it can run for days on a power bank. Every photo is logged, so visit rates can be
 computed later.
 
@@ -12,7 +12,7 @@ FaunaLapse has no artificial intelligence (AI). Its sister app,
 ## Status
 
 Early development, not ready for field use. Scheduled photo and video sessions with the screen off
-work on the first test phone; the square is still fixed in the middle of the photo. Phase 0 tests on
+work on the first test phone; you aim the phone and place the square on a live camera view. Phase 0 tests on
 more phones (speed, power, heat) are running. See [docs/PHONES.md](docs/PHONES.md) for the phones
 tested so far.
 

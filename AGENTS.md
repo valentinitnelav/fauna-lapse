@@ -68,6 +68,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 # Debug builds only: start a test without tapping (it starts 10 s later)
 adb shell am start -n com.faunalapse.app/.MainActivity --ez take_photo true
 adb shell am start -n com.faunalapse.app/.MainActivity --ez speed_test true
+adb shell am start -n com.faunalapse.app/.MainActivity --ez aim true    # the aim screen
+# Add --ez camera1 true to any hook to use Camera1 on a Camera2 phone (until the app is closed)
 # Start a session; any setting can be given (names as in SessionSettings), the rest stays as saved
 adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
     --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_h 0.06

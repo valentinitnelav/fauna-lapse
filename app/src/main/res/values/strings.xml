@@ -11,8 +11,11 @@
     <string name="step_hint">Time between photos in a burst. Default 2 s: a 3 s step caught about 90 % of insect visits (Edwards et al. 2015).</string>
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
-    <string name="square_label">Square side (% of the photo height)</string>
-    <string name="square_hint">Only this square, in the middle of the photo, is saved. Default 100 %: the whole height. Choosing the square on the screen comes later.</string>
+    <string name="aim_button">Aim the camera</string>
+    <string name="aim_summary_photo">Only a square of each photo is saved: side %1$d %% of the short side of the photo, %2$s. Focus and exposure follow the square. Default: the whole short side, in the middle.</string>
+    <string name="aim_square_middle">in the middle</string>
+    <string name="aim_square_placed">where you placed it</string>
+    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view.</string>
     <string name="saved_side_label">Saved square side (px)</string>
     <string name="saved_side_hint">Default 1024 px: enough pixels on a small insect. Never more than the real pixels inside the square.</string>
     <string name="clip_label">Clip length (min)</string>
@@ -36,6 +39,19 @@
     <string name="stop_session">Stop session</string>
     <string name="session_idle">Set the values, tap Start session, then switch the screen off with the power button. Files are saved in:\n%1$s</string>
     <string name="number_needed">%1$s: write a number.</string>
+
+    <!-- Aim screen -->
+    <string name="square_label">Square side (% of the short side of the photo)</string>
+    <string name="aim_opening">Opening the camera…</string>
+    <string name="aim_photo_info">Square: %1$d %% of the short side, %2$d px across in the full photo, saved at %3$d px. %4$s, photo %5$s.</string>
+    <string name="aim_not_enlarged">This is fewer than the saved side of %1$d px: the square is saved smaller, never enlarged. Make the square larger for more pixels on the insect.</string>
+    <string name="aim_video_info">Video %1$s (frames per s: %2$d); the whole view is saved. %3$s.</string>
+    <string name="aim_camera_failed">The camera did not open: %1$s</string>
+    <string name="aim_focus">Focus again</string>
+    <string name="aim_done">Done</string>
+    <string name="aim_focusing">Focusing…</string>
+    <string name="aim_focus_result">Focus: %1$s</string>
+    <string name="aim_hint">Drag the square onto the flower with a finger. The triangle marks the top of the saved photos; it follows how the phone is held, and the position at Start counts. The square is saved at once; the session focuses on it at the start of each burst.</string>
 
     <!-- Phase 0 tests -->
     <string name="tests_heading">Phase 0 tests</string>

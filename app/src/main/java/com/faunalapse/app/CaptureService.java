@@ -49,6 +49,8 @@ public final class CaptureService extends Service {
     static final String EXTRA_SPEED_TEST = "speed_test";
     /** Intent extra: run a session with the saved settings (SessionSettings). */
     static final String EXTRA_SESSION = "session";
+    /** Intent extra: how the phone is held at Start (RoiMath.quarterTurn), for upright squares. */
+    static final String EXTRA_PHONE_TURN = "phone_turn";
     /** Intent extra: stop the running session. */
     static final String EXTRA_STOP = "stop";
     /** True from the start until the camera is closed again; read by the screen. */
@@ -116,7 +118,7 @@ public final class CaptureService extends Service {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FaunaLapse:capture");
         if (session) {
-            startSession();
+            startSession(intent.getIntExtra(EXTRA_PHONE_TURN, 0));
             return START_NOT_STICKY;
         }
         final boolean speedTest = intent != null && intent.getBooleanExtra(EXTRA_SPEED_TEST, false);
@@ -147,7 +149,7 @@ public final class CaptureService extends Service {
     }
 
     /** Starts the session thread with the settings the screen saved just before. */
-    private void startSession() {
+    private void startSession(int phoneTurn) {
         SessionSettings settings = SessionSettings.load(this);
         long now = System.currentTimeMillis();
         CapturePlan plan;
@@ -168,7 +170,7 @@ public final class CaptureService extends Service {
         wakeLock.acquire(plan.end() - now + 10 * 60000L);
         File dir = new File(sessionsDir(this), new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now)));
         dir.mkdirs();
-        sessionThread = new Thread(new SessionRunner(this, settings, plan, dir, summary -> {
+        sessionThread = new Thread(new SessionRunner(this, settings, plan, dir, phoneTurn, summary -> {
             report(summary);
             new Handler(Looper.getMainLooper()).post(this::stopSelf);
         }), "session");

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aim screen. keepScreenOn: the screen does not switch off while aiming. The camera view's size
+     is set in AimActivity.fitView, to the shape of the camera frames. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:keepScreenOn="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/camera_frame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextureView
+            android:id="@+id/camera_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.faunalapse.app.SquareView
+            android:id="@+id/square"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp">
+
+            <!-- Normal buttons with a frame: easier to see outdoors than borderless ones. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                tools:ignore="ButtonStyle">
+
+                <Button
+                    android:id="@+id/focus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/aim_focus" />
+
+                <Button
+                    android:id="@+id/done"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/aim_done" />
+            </LinearLayout>
+
+            <TextView android:id="@+id/focus_result" style="@style/Hint" android:layout_marginTop="4dp" />
+
+            <LinearLayout android:id="@+id/size_group" style="@style/Group">
+                <TextView style="@style/Label" android:labelFor="@id/square_size" android:text="@string/square_label" />
+                <SeekBar
+                    android:id="@+id/square_size"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:max="90" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/aim_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="16sp" />
+
+            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp"
+                android:text="@string/aim_hint" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

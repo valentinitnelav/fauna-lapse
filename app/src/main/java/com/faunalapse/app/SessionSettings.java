@@ -25,7 +25,9 @@ final class SessionSettings {
     double runH = 2;
     String windows = "05:00-21:00"; // early morning and evening visits count (Toivonen and Humberg 2026)
     int days = 1;
-    int squarePercent = 100;     // square side as a share of the photo height; centred for now
+    int squarePercent = 100;     // square side as a share of the short side of the photo
+    double squareX = 0.5;        // square centre as shares of the photo width and height (RoiMath
+    double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
     int savedSidePx = 1024;      // pixels on the insect (FaunaPulse default)
     String videoQuality = "1080p";
 
@@ -44,6 +46,8 @@ final class SessionSettings {
         s.windows = p.getString("windows", s.windows);
         s.days = p.getInt("days", s.days);
         s.squarePercent = p.getInt("square_percent", s.squarePercent);
+        s.squareX = p.getFloat("square_x", (float) s.squareX);
+        s.squareY = p.getFloat("square_y", (float) s.squareY);
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoQuality = p.getString("video_quality", s.videoQuality);
         return s;
@@ -61,6 +65,8 @@ final class SessionSettings {
                 .putString("windows", windows)
                 .putInt("days", days)
                 .putInt("square_percent", squarePercent)
+                .putFloat("square_x", (float) squareX)
+                .putFloat("square_y", (float) squareY)
                 .putInt("saved_side_px", savedSidePx)
                 .putString("video_quality", videoQuality)
                 .apply();
@@ -75,6 +81,7 @@ final class SessionSettings {
         if (!daily && (runH <= 0 || runH > 720)) return "Run length: use more than 0 and up to 720 h.";
         if (daily && (days < 1 || days > 365)) return "Days: use 1 to 365.";
         if (squarePercent < 10 || squarePercent > 100) return "Square side: use 10 to 100 %.";
+        if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
         if (savedSidePx < 480 || savedSidePx > 1280) return "Saved square side: use 480 to 1280 px.";
         if (daily) {
             try {
@@ -127,7 +134,9 @@ final class SessionSettings {
         } else {
             SessionLog.put(j, "photo_step_s", round(stepS));
             SessionLog.put(j, "burst_s", round(burstS));
-            SessionLog.put(j, "square_percent_of_height", squarePercent);
+            SessionLog.put(j, "square_percent_of_short_side", squarePercent);
+            SessionLog.put(j, "square_centre_x", round(squareX)); // shares of the full photo, before turning
+            SessionLog.put(j, "square_centre_y", round(squareY));
             SessionLog.put(j, "saved_side_px", savedSidePx);
             SessionLog.put(j, "saved_jpeg_quality", PhotoSaver.JPEG_QUALITY);
         }
