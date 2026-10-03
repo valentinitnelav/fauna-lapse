@@ -1,0 +1,32 @@
+# What stays out of git. Everything else in this folder is tracked.
+
+# Build output and caches (re-created by every build)
+.gradle/
+build/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+captures/
+*.hprof
+
+# Personal settings of one computer or one person
+local.properties
+.idea/
+*.iml
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
+
+# App packages go to GitHub releases, not git
+*.apk
+*.aab
+
+# Signing keys and passwords: never in git
+*.jks
+*.keystore
+key.properties
+
+# Field data: photos, videos and session logs stay on the phone or the PC
+*.jpg
+*.jpeg
+*.mp4

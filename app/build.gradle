@@ -1,0 +1,34 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace = "com.faunalapse.app"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.faunalapse.app"
+        minSdk = 19       // Android 4.4, the oldest phone we want to reuse
+        targetSdk = 36
+        versionCode = 1
+        versionName = "0.0.1-phase0"
+    }
+
+    compileOptions {
+        // Java 8 language level (lambdas). D8 turns lambdas into plain classes for old phones.
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+// No dependencies: only Android's own classes (see AGENTS.md).
+// The Android build plugin 9 adds the Kotlin standard library (about 2.4 MB) on its own; this app
+// has no Kotlin code, so leave it out.
+configurations.configureEach {
+    exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // Hide the "source value 8 is obsolete" note from new JDKs; Java 8 is a deliberate choice.
+    options.compilerArgs += ["-Xlint:-options"]
+}

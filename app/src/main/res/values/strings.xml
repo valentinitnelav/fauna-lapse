@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FaunaLapse</string>
+    <string name="intro">Phase 0 tests with the back camera, without a preview.\n\nOne test photo: the camera opens, waits 5 s for the exposure, focuses once, takes one photo and closes.\n\nSpeed test (about 3 minutes): photos one after the other at 4 sizes, photos from preview frames, and 10 s videos at 15 and 5 frames per second.\n\nTap a button, then switch the screen off with the power button. The camera starts %1$d s after the tap, so you can check that it works with the screen off.\n\nPhotos, videos and the log are saved in:\n%2$s</string>
+    <string name="take_photo">Take one test photo</string>
+    <string name="speed_test">Run the speed test</string>
+    <string name="status_running">Working: the camera starts %1$d s after the tap and closes again when the test ends.</string>
+    <string name="status_none">No test run yet.</string>
+    <string name="status_ok">Last test finished: %1$s</string>
+    <string name="status_error">Last test failed: %1$s</string>
+    <string name="camera_permission_needed">FaunaLapse needs the camera permission to take photos. Tap the button again to allow it.</string>
+    <string name="channel_name">Photo capture</string>
+    <string name="notification_title">FaunaLapse is running a camera test</string>
+    <string name="notification_text">The camera closes again when the test ends.</string>
+</resources>
