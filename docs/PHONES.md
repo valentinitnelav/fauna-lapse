@@ -16,7 +16,9 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
   fixed rate 15; focus modes auto, continuous, infinity; one focus area and one metering area;
   exposure and white balance lock; shutter sound can be switched off.
 - Camera2: hardware level "limited" (more than a Camera1 wrapper); freeform crop (the camera chip can
-  cut out the square); manual focus possible, closest 10 cm; YUV frames up to 2576x1932.
+  cut out the square); manual focus possible, closest 10 cm; YUV frames up to 2576x1932. Sensor
+  4000x3000, the same as the largest photo (not enlarged in software). A second back camera (id 2,
+  2576x1932) exists; the app uses id 0.
 - Video presets: 1080p, 720p and 480p at 30 fps (17, 12 and 3.4 Mbit/s).
 - EXIF exposure values in Camera1 photos are fixed (always 1/33 s, ISO 308): do not trust them.
 
