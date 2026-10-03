@@ -30,6 +30,7 @@ final class SessionSettings {
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
     int savedSidePx = 1024;      // pixels on the insect (FaunaPulse default)
     String videoQuality = "1080p";
+    double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
 
     private static final String PREFS = "session_settings";
 
@@ -50,6 +51,7 @@ final class SessionSettings {
         s.squareY = p.getFloat("square_y", (float) s.squareY);
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoQuality = p.getString("video_quality", s.videoQuality);
+        s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
         return s;
     }
 
@@ -69,6 +71,7 @@ final class SessionSettings {
                 .putFloat("square_y", (float) squareY)
                 .putInt("saved_side_px", savedSidePx)
                 .putString("video_quality", videoQuality)
+                .putFloat("heat_limit_c", (float) heatLimitC)
                 .apply();
     }
 
@@ -83,6 +86,7 @@ final class SessionSettings {
         if (squarePercent < 10 || squarePercent > 100) return "Square side: use 10 to 100 %.";
         if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
         if (savedSidePx < 480 || savedSidePx > 1280) return "Saved square side: use 480 to 1280 px.";
+        if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
         if (daily) {
             try {
                 CapturePlan.parseWindows(windows);
@@ -141,6 +145,8 @@ final class SessionSettings {
             SessionLog.put(j, "saved_jpeg_quality", PhotoSaver.JPEG_QUALITY);
         }
         SessionLog.put(j, "break_min", round(breakMin));
+        SessionLog.put(j, "heat_pause_c", round(heatLimitC));
+        SessionLog.put(j, "heat_resume_c", round(heatLimitC - Guards.RESUME_GAP_C));
         if (daily) {
             SessionLog.put(j, "daily_windows", windows);
             SessionLog.put(j, "days", days);

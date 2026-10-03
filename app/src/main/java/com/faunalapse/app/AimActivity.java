@@ -75,6 +75,14 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         focusButton = findViewById(R.id.focus);
         focusButton.setOnClickListener(v -> focus());
         findViewById(R.id.done).setOnClickListener(v -> finish());
+        View middle = findViewById(R.id.middle);
+        middle.setVisibility(video ? View.GONE : View.VISIBLE);
+        middle.setOnClickListener(v -> {
+            square.centreX = 0.5;
+            square.centreY = 0.5;
+            square.keepInside();
+            squareChanged();
+        });
 
         SeekBar size = findViewById(R.id.square_size);
         size.setProgress(s.squarePercent - 10); // the slider runs from 0 to 90: 10 to 100 %

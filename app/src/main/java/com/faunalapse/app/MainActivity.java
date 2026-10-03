@@ -77,6 +77,7 @@ public final class MainActivity extends Activity {
     private EditText runH;
     private EditText windows;
     private EditText days;
+    private EditText heatLimitC;
     private int requested;
     private boolean cameraDenied;
     private String sessionMessage; // a problem with the values, shown until the next tap
@@ -119,6 +120,7 @@ public final class MainActivity extends Activity {
         runH = findViewById(R.id.run_h);
         windows = findViewById(R.id.windows);
         days = findViewById(R.id.days);
+        heatLimitC = findViewById(R.id.heat_limit_c);
         showSettings(SessionSettings.load(this));
         mode.setOnCheckedChangeListener((group, id) -> showGroups());
         schedule.setOnCheckedChangeListener((group, id) -> showGroups());
@@ -162,6 +164,7 @@ public final class MainActivity extends Activity {
         runH.setText(number(s.runH));
         windows.setText(s.windows);
         days.setText(String.valueOf(s.days));
+        heatLimitC.setText(number(s.heatLimitC));
     }
 
     /** Shows only the settings that apply to the chosen mode and schedule. */
@@ -203,6 +206,7 @@ public final class MainActivity extends Activity {
             s.runH = decimal(runH, R.string.run_label);
             s.windows = windows.getText().toString().trim();
             s.days = (int) Math.round(decimal(days, R.string.days_label));
+            s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
         } catch (NumberFormatException e) {
             sessionMessage = e.getMessage();
             return null;
@@ -271,6 +275,7 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "run_h", runH);
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
+            setFromExtra(intent, "heat_limit_c", heatLimitC);
             // The square has no field on this screen: save it, readSettings then loads it.
             SessionSettings saved = SessionSettings.load(this);
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));

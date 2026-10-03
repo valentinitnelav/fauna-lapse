@@ -216,11 +216,9 @@ public final class CaptureService extends Service {
     private void report(JSONObject record) {
         put(record, "phone", Build.MANUFACTURER + " " + Build.MODEL);
         put(record, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
-        put(record, "battery_temp_c", batteryTempC(this));
-        Intent battery = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (battery != null) {
-            put(record, "charging", battery.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0);
-        }
+        Battery battery = Battery.read(this);
+        put(record, "battery_temp_c", battery.tempC);
+        put(record, "charging", battery.charging);
         Log.i(TAG, record.toString());
         try (Writer w = new OutputStreamWriter(
                 new FileOutputStream(logFile(this), true), StandardCharsets.UTF_8)) {
@@ -233,9 +231,31 @@ public final class CaptureService extends Service {
 
     /** Battery temperature in °C (the only temperature an app can read), or null if unknown. */
     static Double batteryTempC(Context context) {
-        Intent battery = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        // Android reports tenths of a degree Celsius.
-        return battery == null ? null : battery.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10.0;
+        return Battery.read(context).tempC;
+    }
+
+    /** The phone's last battery report. Android keeps it as a "sticky" broadcast, so reading it
+     *  costs almost nothing. */
+    static final class Battery {
+        final Double tempC;    // null if unknown
+        final int percent;     // -1 if unknown
+        final boolean charging;
+
+        private Battery(Double tempC, int percent, boolean charging) {
+            this.tempC = tempC;
+            this.percent = percent;
+            this.charging = charging;
+        }
+
+        static Battery read(Context context) {
+            Intent b = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            if (b == null) return new Battery(null, -1, false);
+            int level = b.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = b.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            return new Battery(b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10.0, // tenths of a °C
+                    level >= 0 && scale > 0 ? level * 100 / scale : -1,
+                    b.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0);
+        }
     }
 
     static boolean isScreenOn(Context context) {

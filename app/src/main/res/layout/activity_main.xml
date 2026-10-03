@@ -121,6 +121,11 @@
             <TextView style="@style/Hint" android:text="@string/days_hint" />
         </LinearLayout>
 
+        <TextView style="@style/Label" android:labelFor="@id/heat_limit_c" android:text="@string/heat_label" />
+        <EditText android:id="@+id/heat_limit_c" style="@style/Field" android:importantForAutofill="no"
+                android:inputType="numberDecimal" tools:targetApi="o" />
+        <TextView style="@style/Hint" android:text="@string/heat_hint" />
+
         <Button
             android:id="@+id/start_session"
             android:layout_width="match_parent"

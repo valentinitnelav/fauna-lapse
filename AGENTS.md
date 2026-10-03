@@ -74,11 +74,11 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez aim true    # the ai
 adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
     --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_h 0.06
 adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
+# Guards, with the owner's OK: dumpsys battery set temp 460 | unplug | set level 10; then reset
 ```
 
-Keep schedule and maths code in classes without Android code, and test it. On the phone, sessions
-are in `/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/`; phase 0 tests in
-`.../files/phase0/`.
+Keep schedule and maths code in classes without Android code, and test it. On the phone: sessions in
+`/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/`, tests in `.../files/phase0/`.
 
 ## Where knowledge lives (keep these files short)
 

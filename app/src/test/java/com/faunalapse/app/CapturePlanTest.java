@@ -31,6 +31,18 @@ public class CapturePlanTest {
     }
 
     @Test
+    public void burstsStartingInAPause() {
+        long t0 = at("2026-10-02 10:00:00");
+        CapturePlan plan = CapturePlan.run(t0, 30 * MIN, 60 * S, 4 * MIN); // bursts every 5 min
+        // A pause from 10:00:30 (inside the first burst) to 10:12:00 misses the bursts at 5 and 10 min.
+        assertEquals(2, plan.burstsStartingIn(t0 + 30 * S, t0 + 12 * MIN));
+        assertEquals(0, plan.burstsStartingIn(t0 + MIN, t0 + 5 * MIN));
+        assertEquals(6, plan.burstsStartingIn(t0, t0 + 2 * H)); // the session ends at 30 min
+        CapturePlan noBreak = CapturePlan.run(t0, 10 * MIN, 60 * S, 0);
+        assertEquals(10, noBreak.burstsStartingIn(t0, t0 + 10 * MIN));
+    }
+
+    @Test
     public void runGridStartsAtSessionStartAndCutsTheLastBurst() {
         long t0 = at("2026-10-02 10:00:00");
         // 60 s bursts, 4 min break, for 11 minutes: bursts at 0, 5 and 10 min; the last one is cut at 11 min.

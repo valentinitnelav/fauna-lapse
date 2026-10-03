@@ -111,6 +111,15 @@ final class CapturePlan {
         return t < burst.end ? t : -1;
     }
 
+    /** Number of bursts that start in [from, to): for example those missed in a heat pause. */
+    int burstsStartingIn(long from, long to) {
+        int n = 0;
+        for (Burst b = burstAtOrAfter(from); b != null && b.start < to; b = burstAtOrAfter(b.end)) {
+            if (b.start >= from) n++;
+        }
+        return n;
+    }
+
     /** End of the last period: the session cannot last longer. */
     long end() {
         return periods.get(periods.size() - 1)[1];

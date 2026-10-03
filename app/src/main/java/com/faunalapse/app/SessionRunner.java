@@ -1,5 +1,6 @@
 package com.faunalapse.app;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
@@ -18,7 +19,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Runs one session: follows the CapturePlan, opens the camera shortly before each photo burst or
  * video clip, closes it again when the break is long, saves the ROI square of each photo or one MP4
- * per clip, and writes every event into session.jsonl.
+ * per clip, and writes every event into session.jsonl. Guards: a heat pause, and clean stops when
+ * the battery runs low or the storage is nearly full.
  *
  * Runs on its own thread without a message loop (Camera1Session needs that) and simply waits between
  * events. All times come from the phone clock, so a late wake-up or a changed clock heals itself on
@@ -34,6 +36,10 @@ final class SessionRunner implements Runnable {
     static final long KEEP_ON_MS = 30000;
     /** Stop the session after this many camera errors in a row. */
     static final int MAX_ERRORS_IN_A_ROW = 3;
+    /** Battery temperature checks during a burst or clip, this often. */
+    static final long HEAT_CHECK_MS = 10000;
+    /** Temperature checks during a heat pause, this often. */
+    private static final long PAUSE_CHECK_MS = 30000;
     /** Longest single wait, so a changed phone clock is noticed within a minute. */
     private static final long MAX_SLEEP_MS = 60000;
 
@@ -53,6 +59,7 @@ final class SessionRunner implements Runnable {
     private final Camera1Backend.Listener onDone;
     private final boolean useCamera2;
     private final int phoneTurn;
+    private final long videoBitRate; // for the storage check
     private SessionCamera camera;
     private int photoTurn;
     private ThreadPoolExecutor saver;
@@ -61,6 +68,8 @@ final class SessionRunner implements Runnable {
     private int skipped;
     private int clips;
     private int errors;
+    private int heatPauses;
+    private long heatPauseMs;
 
     /** {@code phoneTurn}: how the phone was held at Start (RoiMath.quarterTurn), to save the
      *  squares upright. */
@@ -74,6 +83,8 @@ final class SessionRunner implements Runnable {
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
         this.useCamera2 = useCamera2(context);
+        this.videoBitRate = settings.video ? Camera1Session.bitRate(Camera1Session.videoProfile(
+                Camera1Backend.backCameraId(), settings.videoQualityConstant()), SessionSettings.VIDEO_FPS) : 0;
     }
 
     /** Camera2 where the phone's level is "limited" or better, else Camera1 (AGENTS.md). */
@@ -111,13 +122,22 @@ final class SessionRunner implements Runnable {
                     status = "Camera off. Next " + (settings.video ? "clip" : "burst") + " at " + clock(b.start) + ".";
                     sleepUntil(b.start - WAKE_LEAD_MS);
                 }
+                String stop = stopReason();
+                if (stop != null) {
+                    reason = stop;
+                    break;
+                }
+                if (tooHot(false)) {
+                    coolDown();
+                    continue; // plan again from the new time
+                }
                 try {
                     if (camera == null) openCamera();
                     sleepUntil(b.start - FOCUS_LEAD_MS);
-                    if (settings.video) clip(b);
-                    else burst(b);
+                    boolean hot = settings.video ? clip(b) : burst(b);
                     doneUntil = b.end;
                     errorsInRow = 0;
+                    if (hot) coolDown();
                 } catch (InterruptedException e) {
                     throw e;
                 } catch (Exception e) {
@@ -153,10 +173,13 @@ final class SessionRunner implements Runnable {
             SessionLog.put(end, "skipped_photo_times", skipped);
             SessionLog.put(end, "clips", clips);
             SessionLog.put(end, "errors", errors);
+            SessionLog.put(end, "heat_pauses", heatPauses);
+            SessionLog.put(end, "heat_pause_min", Math.round(heatPauseMs / 6000.0) / 10.0);
             log.write(end);
             String counts = settings.video ? count(clips, "clip")
                     : count(photos, "photo") + " in " + count(bursts, "burst");
-            status = "Session ended (" + reason + "): " + counts + ", " + count(errors, "error") + ".";
+            status = "Session ended (" + reason + "): " + counts + ", " + count(errors, "error")
+                    + (heatPauses > 0 ? ", " + count(heatPauses, "heat pause") : "") + ".";
 
             JSONObject summary = new JSONObject();
             SessionLog.put(summary, "test", "session");
@@ -183,6 +206,8 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "wake_lead_s", WAKE_LEAD_MS / 1000.0);
         SessionLog.put(r, "focus_lead_s", FOCUS_LEAD_MS / 1000.0);
         SessionLog.put(r, "keep_camera_on_if_break_below_s", KEEP_ON_MS / 1000.0);
+        SessionLog.put(r, "low_battery_stop_percent", Guards.LOW_BATTERY_PERCENT);
+        SessionLog.put(r, "storage_reserve_mb", Guards.RESERVE_BYTES / (1024 * 1024));
         JSONArray periods = new JSONArray();
         for (long[] p : plan.periods()) {
             periods.put(SessionLog.isoTime(p[0]) + " to " + SessionLog.isoTime(p[1]));
@@ -217,24 +242,88 @@ final class SessionRunner implements Runnable {
         log.write(SessionLog.record("camera_close"));
     }
 
-    /** One photo burst: focus once, then one photo per step on the grid from the burst start. */
-    private void burst(CapturePlan.Burst b) throws Exception {
+    /** A reason to end the session now (battery low and not charging, or too little storage for
+     *  the next burst or clip), or null. Usable space leaves out caches that Android could clear: a
+     *  cautious number, and the newer allocatable-bytes call needs Android 8. */
+    @SuppressLint("UsableSpace")
+    private String stopReason() {
+        CaptureService.Battery battery = CaptureService.Battery.read(context);
+        if (Guards.batteryLow(battery.percent, battery.charging)) {
+            return "battery low: " + battery.percent + " %, not charging";
+        }
+        long free = dir.getUsableSpace();
+        long next = settings.video ? Guards.clipBytes(settings.burstMs(), videoBitRate)
+                : Guards.burstBytes(settings.burstMs(), settings.stepMs(), settings.savedSidePx);
+        if (Guards.storageLow(free, next)) {
+            return "not enough storage: " + free / (1024 * 1024) + " MB free, the next "
+                    + (settings.video ? "clip" : "burst") + " needs up to " + next / (1024 * 1024) + " MB";
+        }
+        return null;
+    }
+
+    /** True when the battery is at the heat limit (while paused: not yet cool enough to go on). */
+    private boolean tooHot(boolean paused) {
+        Double t = CaptureService.batteryTempC(context);
+        return t != null && Guards.tooHot(t, settings.heatLimitC, paused);
+    }
+
+    /** Heat pause: the camera stays off until the battery is Guards.RESUME_GAP_C below the limit,
+     *  or until the schedule ends. */
+    private void coolDown() throws InterruptedException {
+        closeCamera();
+        heatPauses++;
+        long start = System.currentTimeMillis();
+        double resumeC = settings.heatLimitC - Guards.RESUME_GAP_C;
+        JSONObject r = SessionLog.record("heat_pause");
+        SessionLog.put(r, "battery_temp_c", CaptureService.batteryTempC(context));
+        SessionLog.put(r, "resume_below_c", resumeC);
+        log.write(r);
+        do {
+            status = String.format(Locale.US, "Paused since %s: the phone is too warm (%.1f °C). The camera"
+                    + " stays off until the battery is below %.0f °C.", clock(start),
+                    CaptureService.batteryTempC(context), resumeC);
+            long left = plan.end() - System.currentTimeMillis();
+            if (left <= 0) break;
+            sleepUntil(System.currentTimeMillis() + Math.min(PAUSE_CHECK_MS, left));
+        } while (tooHot(true));
+        long end = System.currentTimeMillis();
+        heatPauseMs += end - start;
+        JSONObject e = SessionLog.record("heat_pause_end");
+        SessionLog.put(e, "battery_temp_c", CaptureService.batteryTempC(context));
+        SessionLog.put(e, "paused_min", Math.round((end - start) / 6000.0) / 10.0);
+        SessionLog.put(e, settings.video ? "clips_missed" : "bursts_missed", plan.burstsStartingIn(start, end));
+        log.write(e);
+    }
+
+    /** One photo burst: focus once, then one photo per step on the grid from the burst start.
+     *  Returns true when it stopped early because the phone got too warm. */
+    private boolean burst(CapturePlan.Burst b) throws Exception {
         bursts++;
         JSONObject r = SessionLog.record("burst_start");
         putBurstFacts(r, b);
         SessionLog.put(r, "focus", camera.focus());
         log.write(r);
-        sleepUntil(b.start);
 
         long step = settings.stepMs();
         int taken = 0;
         int missed = 0;
         long captureMsSum = 0;
+        // The first photo time is found before waiting for it: after the wait the clock is often a
+        // few ms past the burst start, which would push the first photo one step later.
         long t = CapturePlan.nextPhotoTime(b, step, System.currentTimeMillis());
         // Grid times already over when the burst could start (camera or focus too slow).
         long firstPossible = t >= 0 ? t : b.end;
         int lateStart = (int) Math.max(0, (firstPossible - b.start + step - 1) / step);
+        boolean hot = false;
+        long nextHeatCheck = System.currentTimeMillis() + HEAT_CHECK_MS;
         while (t >= 0) {
+            if (System.currentTimeMillis() >= nextHeatCheck) {
+                if (tooHot(false)) {
+                    hot = true;
+                    break;
+                }
+                nextHeatCheck = System.currentTimeMillis() + HEAT_CHECK_MS;
+            }
             sleepUntil(t);
             status = "Burst " + bursts + ": photo " + (taken + 1) + ". Burst ends at " + clock(b.end) + ".";
             long takenAt = System.currentTimeMillis();
@@ -257,6 +346,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(e, "skipped_photo_times", missed);
         SessionLog.put(e, "photo_times_missed_at_start", lateStart);
         if (taken > 0) SessionLog.put(e, "mean_photo_ms", captureMsSum / taken);
+        if (hot) SessionLog.put(e, "stopped_for_heat", true);
         log.write(e);
         if (missed > 0 && warning.isEmpty() && taken > 0) {
             double photoS = captureMsSum / (double) taken / 1000;
@@ -268,6 +358,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(w, "warning", warning);
             log.write(w);
         }
+        return hot;
     }
 
     /** Cuts and saves the ROI square on the saver thread; one "photo" record per photo. */
@@ -294,8 +385,9 @@ final class SessionRunner implements Runnable {
         });
     }
 
-    /** One video clip: prepare and focus before the start, record from start to end. */
-    private void clip(CapturePlan.Burst b) throws Exception {
+    /** One video clip: prepare and focus before the start, record from start to end. Returns true
+     *  when it stopped early because the phone got too warm. */
+    private boolean clip(CapturePlan.Burst b) throws Exception {
         clips++;
         File file = new File(dir, SessionLog.fileStem(Math.max(b.start, System.currentTimeMillis())) + ".mp4");
         String focus = camera.prepareClip(file);
@@ -304,8 +396,12 @@ final class SessionRunner implements Runnable {
         camera.startClip();
         status = "Recording clip " + clips + " until " + clock(b.end) + ".";
         boolean stoppedEarly = false;
+        boolean hot = false;
         try {
-            sleepUntil(b.end);
+            while (!hot && System.currentTimeMillis() < b.end) {
+                sleepUntil(Math.min(b.end, System.currentTimeMillis() + HEAT_CHECK_MS));
+                hot = tooHot(false);
+            }
         } catch (InterruptedException e) {
             stoppedEarly = true; // Stop on the screen: finish the file and record it, then end
         }
@@ -320,14 +416,19 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "recorded_s", (stopped - started) / 1000.0);
         SessionLog.put(r, "kb", file.length() / 1024);
         if (stoppedEarly) SessionLog.put(r, "stopped_early", true);
+        if (hot) SessionLog.put(r, "stopped_for_heat", true);
         log.write(r);
         if (stoppedEarly) throw new InterruptedException();
+        return hot;
     }
 
     private void putBurstFacts(JSONObject r, CapturePlan.Burst b) {
         SessionLog.put(r, "planned_start", SessionLog.isoTime(b.start));
         SessionLog.put(r, "planned_end", SessionLog.isoTime(b.end));
-        SessionLog.put(r, "battery_temp_c", CaptureService.batteryTempC(context));
+        CaptureService.Battery battery = CaptureService.Battery.read(context);
+        SessionLog.put(r, "battery_temp_c", battery.tempC);
+        SessionLog.put(r, "battery_percent", battery.percent);
+        SessionLog.put(r, "charging", battery.charging);
         SessionLog.put(r, "screen_on", CaptureService.isScreenOn(context));
     }
 

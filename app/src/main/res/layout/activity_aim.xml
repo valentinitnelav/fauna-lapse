@@ -55,6 +55,13 @@
                     android:text="@string/aim_focus" />
 
                 <Button
+                    android:id="@+id/middle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/aim_middle" />
+
+                <Button
                     android:id="@+id/done"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"

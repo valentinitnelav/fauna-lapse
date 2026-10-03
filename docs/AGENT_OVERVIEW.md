@@ -15,9 +15,10 @@ Last update: 2026-10-03.
   every event in `session.jsonl`. Settings screen with Start and Stop. Tested on the Samsung M12.
 - **Aim screen**: live camera view in the session's own camera setup; drag the square, slider for
   its size; focus and exposure follow the square; a triangle marks the top of the saved photos.
+- **Guards**: heat pause (camera off); clean stop on low battery without charging or too little storage.
 - **Phase 0 tests** (screen off): one test photo, and the speed test (`PHONES.md`).
-- Not yet: DCIM output, alarms instead of a wake lock in long breaks, thermal and battery guards,
-  exposure lock, time-lapse video below 15 fps.
+- Not yet: DCIM output, alarms instead of a wake lock in long breaks, exposure lock, time-lapse video
+  below 15 fps.
 
 ## Key invariants
 
@@ -38,10 +39,8 @@ Last update: 2026-10-03.
 - `CaptureService.running` = a test or session runs (one at a time); `sessionRunning` = a session.
   Stop = `Thread.interrupt()` of the session thread; the camera closes, and an open clip is finished
   and recorded with `"stopped_early": true`.
-- Photos are cut and saved on one saver thread with a queue of 2; when it is full the session thread
-  saves itself (slows photos rather than filling memory).
-- Records: `time` fields are phone clock time with time zone; durations are milliseconds
-  (`SystemClock.elapsedRealtime`).
+- Photos are cut and saved on a saver thread (queue of 2; when full, the session thread saves itself).
+- Records: `time` = phone clock time with time zone; durations in ms (`SystemClock.elapsedRealtime`).
 - `app/build.gradle` excludes the Kotlin standard library that the Android Gradle plugin adds; keep
   the exclusion when plugins change (APK near 70 KB).
 
@@ -53,6 +52,7 @@ Last update: 2026-10-03.
 | Video frame rate | 15 fps, bit rate = phone preset scaled to 15 fps | `SessionSettings.VIDEO_FPS`, `Camera1Session.bitRate` |
 | Wake lead / autofocus lead / keep camera on if off for less than | 5 s / 3 s / 30 s | `SessionRunner` constants |
 | Stop after camera errors in a row | 3 | `SessionRunner.MAX_ERRORS_IN_A_ROW` |
+| Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
 | Output | `Android/data/com.faunalapse.app/files/sessions/<start time>/`; tests in `.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
@@ -68,6 +68,7 @@ Last update: 2026-10-03.
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Session values: defaults, saving, checks, `CapturePlan` and the record line |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
+| `Guards.java` | Heat pause, low battery and storage rules (unit tested) |
 | `SessionRunner.java` | Follows the plan: camera on and off, bursts and clips, saver thread, `session.jsonl`, screen status |
 | `SessionCamera.java` | Interface of a session camera; `Camera2Session.java` and `Camera1Session.java` implement it |
 | `RoiMath.java`, `PhotoSaver.java` | Square position, saved size, screen and focus-area maps, upright turn (unit tested); cutting, turning and saving the square |
@@ -80,8 +81,7 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 ## Open problems and next steps
 
 1. Save sessions to `DCIM/FaunaLapse/` (MediaStore on Android 10+) so they survive an uninstall.
-2. Long breaks: alarms instead of holding the wake lock. Guards: thermal pause at 45 °C battery
-   temperature, resume at 42 °C (a setting, at most 50 °C); low battery and storage.
+2. Long breaks: alarms instead of holding the wake lock (measure first with the USB power meter).
 3. Lock exposure and white balance for each burst (no jumps; exposure already meters on the square);
    Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
 4. Time-lapse video below 15 fps (5 asked gave 3.7 on the Samsung M12: ask a little more).

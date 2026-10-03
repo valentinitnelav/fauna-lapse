@@ -27,6 +27,8 @@ tested so far.
 - Photos keep only a square region of interest that you drag over the subject, at up to
   1024 x 1024 pixels, never enlarged.
 - Screen off and camera closed between bursts, to save power and avoid heat.
+- A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
+  is nearly full.
 - A session log of every photo and event, ready for analysis in R or Python.
 
 ## Build from source
