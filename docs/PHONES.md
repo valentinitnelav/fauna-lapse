@@ -1,8 +1,9 @@
 # Test phones and measured results
 
-One section per phone. Numbers come from the phase 0 test app (screen off, phone on USB power, room
-temperature, indoor light) unless stated otherwise. Raw data stays outside git. After a speed test on
-a phone, `tools/phase0_speed_report.py` copies it to the PC and prints the summary used below.
+Read this file only for camera or energy work. One section per phone; new measurements replace the
+old ones (no history of runs). Numbers come from the phase 0 test app (screen off, phone on USB power,
+indoor light) unless stated otherwise. Raw data stays outside git; after a speed test,
+`tools/phase0_speed_report.py` copies it to the PC and prints the summary used below.
 
 ## Samsung Galaxy M12 (SM-M127F), Android 13, 2021
 

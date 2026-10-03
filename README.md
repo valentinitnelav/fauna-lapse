@@ -43,7 +43,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 - [docs/AGENT_OVERVIEW.md](docs/AGENT_OVERVIEW.md): current state, file map and next steps (written
   for coding agents, readable for humans).
-- [docs/DECISIONS.md](docs/DECISIONS.md): design decisions and their reasons.
 - [docs/PHONES.md](docs/PHONES.md): test phones and measured results.
 - [AGENTS.md](AGENTS.md): rules and commands for contributors, human or AI coding agents.
 

@@ -1,81 +1,66 @@
 # AGENTS.md
 
-Guidance for AI coding agents (Claude Code, Codex and others) and for human contributors working in
-this repository. `CLAUDE.md` only imports this file.
+Guidance for AI coding agents (Claude Code, Codex and others) and human contributors. `CLAUDE.md`
+only imports this file. At the start of a session, read this file and `docs/AGENT_OVERVIEW.md`.
 
 ## What FaunaLapse is
 
-FaunaLapse turns old or cheap Android phones into time-lapse trail cameras for monitoring insects and
-other animals at a fixed spot (for example, pollinators on a flower). It has no AI. It takes photos
-(later also short videos) in timed bursts with the screen off, saves only a square region of interest
-(ROI) that the user drags over the subject, and closes the camera between bursts, so the phone stays
-cool and can run longer on a power bank. Every photo and event is logged in a session file, so visit
-rates can be computed later.
+An Android app that turns old or cheap phones into time-lapse cameras for insects and other animals
+at a fixed spot (for example pollinators on a flower), without AI. It records photo bursts or video
+clips on a schedule with the screen off, saves only a square region of interest (ROI) of each photo,
+closes the camera between bursts and logs every event, so visit rates can be computed later. Sister
+app: FaunaPulse (https://github.com/valentinitnelav/fauna-pulse, Flutter, with AI); its ideas are
+re-written in Java, never copied.
 
-Sister project: FaunaPulse (https://github.com/valentinitnelav/fauna-pulse), a Flutter app that runs AI
-detection on newer phones. FaunaLapse re-uses its ideas (ROI square, burst schedule, thermal pause,
-session log), re-written in Java, not copied.
-
-The project owner is a pollination ecologist with statistics skills (R, Python), not a professional
-mobile developer. In code comments and explanations, define mobile development terms in plain language
-at first use. Write plain English: short sentences, no idioms.
-
-Status (2026-10-03): scheduled photo and video sessions work with the screen off on the Samsung M12;
-phase 0 tests on more phones are still to come (`docs/PHONES.md`). Current state and next steps:
-`docs/AGENT_OVERVIEW.md`.
+The owner is a pollination ecologist (R, Python), not a mobile developer: explain mobile terms in
+plain language at first use, and write plain English with short sentences and no idioms.
 
 ## Hard constraints (change only with the owner's approval)
 
-- Android first. An iOS version, if any, comes later as a separate app.
-- Java, language level 8. No Kotlin, no C/C++ (the heavy image work runs in the phone's camera hardware,
-  so native code would not make the app faster or cooler).
-- Oldest Android: 4.4 (minSdk 19). Compile and target the newest SDK (36).
-- No AndroidX and no third-party libraries, only Android's own classes (new AndroidX releases need
-  Android 6 or newer).
-- Camera: back camera only. The camera interface is chosen per phone: Camera2 where its hardware
-  level is "limited", "full" or "level 3" (much faster photos); the old Camera1 interface
-  (`android.hardware.Camera`) on Android 4.4 and on "legacy" phones, because it works everywhere.
-- No AI. No network access for now.
-- Keep it small: aim for an APK under about 300 KB.
-- Energy and heat come first: screen off during capture, no preview while capturing, camera closed
-  between bursts, lowest frame rate while open, hardware JPEG and video encoders. Only the ROI crop
-  runs on the processor.
-- Photos: save only the ROI square. The saved side is at least 480 px (default 1024) and is never
-  enlarged beyond the real pixels inside the ROI. Videos: full frame for now (cropped on the PC); a
-  crop inside the camera (Camera2 "freeform" phones) may come later.
-- Sessions follow a schedule (daily windows for some days, or a run of some hours; inside them photo
-  bursts or video clips with breaks). Bursts and clips follow a fixed time grid counted from the start
-  of each window, so the schedule never drifts.
-- Photo file names use the time (`yyyyMMdd_HHmmss_SSS.jpg`), so they sort correctly across midnight.
+- Android only for now (iOS, if ever, as a separate app). No AI. No network access.
+- Java 8 language level; no Kotlin, no C/C++ (the image work runs in the camera hardware, so native
+  code would not be faster or cooler). minSdk 19 (Android 4.4); compile and target SDK 36.
+- In the app only Android's own classes: no AndroidX (its new releases need Android 6+), no other
+  libraries. JUnit for the PC tests is fine (it never goes into the APK). APK under about 300 KB.
+- Back camera only. Camera interface per phone: Camera2 where its hardware level is "limited",
+  "full" or "level 3" (Samsung M12: a 12 MP photo in 0.43 s, against 0.9 to 1.7 s with Camera1);
+  Camera1 on Android 4.4 and on "legacy" phones, because it works everywhere.
+- Focus: autofocus once at the start of each burst or clip, then the lens stays. Phones with manual
+  focus (later) keep one fixed distance and never autofocus.
+- Energy and heat first: screen off, no visible preview, camera closed in long breaks, lowest frame
+  rate while waiting, hardware JPEG and video encoders; only the ROI crop runs on the processor.
+- Photos: save only the ROI square, side at least 480 px (default 1024), never enlarged beyond the
+  real pixels in the ROI. Videos: full frame (cropped on the PC).
+- Schedule: daily windows for some days, or a run of some hours; inside them photo bursts or video
+  clips with breaks, on a fixed grid from each window start (no drift, same clock times every day).
+- If the phone cannot reach the asked photo step, the app says so and suggests video or a longer step.
+- File names use the time (`yyyyMMdd_HHmmss_SSS`), so they sort correctly across midnight.
+- Every setting gets a control on screen, a saved value, a reason for its default and a line in the
+  session record.
 
 ## Code origin and licence
 
-- All code is written from scratch for this repository. The owner chooses the licence before the first
-  release.
-- GPL projects (Open Camera, TimeLapseCam, Background-Timelapse, FreeDcam, Haven and others) may be read
-  for ideas and behaviour. Never copy, translate or closely paraphrase their code.
-- Code from permissive projects (MIT, Apache-2.0, Apple sample code) may be re-used only with credit, in
-  `NOTICE.md` and in a comment next to the re-used code.
-- When an idea comes from a paper, an app or a person, say so in the comment or doc. Credit the source
-  of the idea and the implementer separately.
+- All code is written from scratch here; the owner chooses the licence before the first release.
+- GPL projects (Open Camera, TimeLapseCam, Background-Timelapse, FreeDcam, Haven and others) may be
+  read for ideas and behaviour. Never copy, translate or closely paraphrase their code.
+- Code from permissive projects (MIT, Apache-2.0) may be re-used only with credit, in `NOTICE.md` and
+  in a comment next to the code. When an idea comes from a paper, an app or a person, say so in the
+  comment; credit the source of the idea and the implementer separately.
 
-## Repository layout (update when it changes)
+## Repository layout
 
-- `app/`: the Android app (Gradle project, package `com.faunalapse.app`).
-- `tools/`: PC scripts in Python. Now: `phase0_speed_report.py` (copy the newest speed test from a
-  phone and summarise it). Planned: copy sessions with `adb pull`, contact sheets, crop video bursts
-  with ffmpeg.
-- `docs/`: documentation for humans and agents (see "Where knowledge lives" below).
+- `app/`: the Android app (Gradle project, package `com.faunalapse.app`); unit tests in `app/src/test/`.
+- `tools/`: PC scripts in Python (`phase0_speed_report.py`).
+- `docs/`: `AGENT_OVERVIEW.md` and `PHONES.md` (see "Where knowledge lives").
 
 ## Build and test
 
-Needs JDK 17 or newer and the Android SDK (platform 36). Put the SDK path in `local.properties`
-(`sdk.dir=/path/to/Android/Sdk`); that file stays out of git. The Gradle wrapper (`gradlew`) downloads
-Gradle itself on first use.
+Needs JDK 17+ and the Android SDK (platform 36), with its path in `local.properties`
+(`sdk.dir=/path/to/Android/Sdk`, not in git). `gradlew` downloads Gradle itself.
 
 ```bash
 ./gradlew assembleDebug    # APK: app/build/outputs/apk/debug/app-debug.apk
-./gradlew test             # unit tests on the PC (JUnit): app/src/test/
+./gradlew test             # unit tests on the PC (JUnit)
 ./gradlew lintDebug        # Android code checks: app/build/reports/lint-results-debug.txt
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 # Debug builds only: start a test without tapping (it starts 10 s later)
@@ -87,58 +72,45 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
 adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
 ```
 
-Unit tests cover the classes without Android code (`CapturePlan`, `RoiMath`); keep new schedule
-and maths code in such classes and test it. On the phone, sessions are in
-`/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/` (photos or videos and
-`session.jsonl`); phase 0 tests and `log.jsonl` are in `.../files/phase0/`.
+Keep schedule and maths code in classes without Android code, and test it. On the phone, sessions
+are in `/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/`; phase 0 tests in
+`.../files/phase0/`.
 
-## Where knowledge lives
+## Where knowledge lives (keep these files short)
 
-Each fact has one home, so nothing needs to be read twice or kept in sync:
-
-| Place | What | Update |
-|---|---|---|
-| `README.md` | For humans: what the app is, status, how to install and build | When the status or the use changes |
-| `docs/AGENT_OVERVIEW.md` | For coding agents: current defaults, file map, key invariants, open problems, pointers | Edit in place whenever a change alters them; replace or remove old text, never add history |
-| `docs/DECISIONS.md` | Each design decision with its reason and date | Add an entry when a decision is made or changed |
-| `docs/PHONES.md` | Test phones and measured results (speed, heat, quirks) | Add results after each phone test |
-| Git history | What changed in each commit and why | Through the commit message |
-| Code comments | Why a line is written this way (non-obvious reasons, credits) | With the code |
-
-Start of a session: read this file and `docs/AGENT_OVERVIEW.md`. Read `docs/DECISIONS.md` before changing the
-design and `docs/PHONES.md` before camera or energy work. Use `git log` (for example
-`git log --oneline -- <file>`) when you need the history of a file.
+- `AGENTS.md`: rules for every task (at most 120 lines).
+- `docs/AGENT_OVERVIEW.md`: current state, defaults, file map, next steps (at most 100 lines).
+- `docs/PHONES.md`: phone facts and measurements; read it only for camera or energy work.
+- `README.md`: for humans. Git commit messages: the history (`git log --oneline -- <file>`).
+- Upkeep: one home per fact. When something changes, replace or remove its text; never add history,
+  dates of changes or "replaces X" notes. If an edit would pass a line limit, merge or remove lines
+  first. A reason goes in one clause next to its rule or in a code comment; longer reasoning goes in
+  the commit message.
 
 ## Git
 
-- Do not commit or push unless the owner asks for it in the conversation.
-- Never push to `main`, never force push, no destructive Git operations without explicit approval.
-- When you change code while on `main`, first switch to the branch `develop` (create it if missing) and
-  leave the changes uncommitted.
-- After code changes, suggest a commit message: a first line of at most about 70 characters that
-  says what changed, an empty line, then a short body that says what and why (the body is the
-  project history, so make it useful to a later reader).
-- No `Co-Authored-By` or other agent lines in commit messages or pull requests. The README states that
-  coding agents help write this project.
-- Never put private or sensitive data in tracked files: email addresses, passwords, keys, signing
-  keystores, phone serial numbers, personal whereabouts.
-- No binaries in git (APKs, photos, videos, session data). APKs go to GitHub releases.
+- Do not commit or push unless the owner asks. Never push to `main`, never force push, no
+  destructive Git operations without explicit approval. Code changes go on the branch `develop`.
+- Suggest a commit message after code changes: a first line of at most about 70 characters, an empty
+  line, then what changed and why (this is the project history). No `Co-Authored-By` or other agent
+  lines in commits or pull requests; the README says that coding agents help write this project.
+- No private data in tracked files: email addresses, passwords, keys, keystores, phone serial
+  numbers, personal whereabouts.
+- No binaries in git (APKs go to GitHub releases; photos, videos and session data stay out). The one
+  exception is the Gradle wrapper (`gradle/wrapper/gradle-wrapper.jar`), so anyone can build.
 
 ## Writing style
 
-- Keep answers concise, clear and easy to understand.
-- Less is more: the simplest code that keeps the core function and stays readable for humans.
+- Answers concise, clear and easy to understand. Less is more: the simplest code that keeps the core
+  function and stays readable for humans.
 - Avoid the em dash as punctuation; use parentheses (round brackets) instead.
-- Text in the app: plain language, no jargon; give the reason for each default; show a number in the
-  same unit and scale everywhere.
-- Every new setting gets a control on screen, a saved value, and a line in the session record.
+- Text in the app: plain language, no jargon; the same unit and scale for a number everywhere.
 
 ## Working with test phones
 
-- Ask the owner before running anything on a connected phone. The phone must be unlocked and on a
-  charger, and nobody should use it during the check.
-- Do not uninstall the app from a test phone without the owner's agreement (it deletes the saved
-  settings). Update with `adb install -r`.
-- Read only the app's own log lines and the app's own folders on the phone. Do not browse other files.
-- A new default in the code does not change a value already saved on a phone. Tell the owner which
+- Ask the owner before running anything on a connected phone. It must be unlocked and on a charger,
+  and nobody should use it during the check.
+- Update with `adb install -r`; do not uninstall without the owner's agreement (it deletes the saved
+  settings). Read only the app's own log lines and folders on the phone.
+- A new default in the code does not change a value already saved on a phone: tell the owner which
   setting to change by hand.

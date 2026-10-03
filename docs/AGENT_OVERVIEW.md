@@ -1,9 +1,9 @@
 # Agent overview: current state
 
-A short snapshot for coding agents (humans may read it too): current defaults, file map, key
-invariants and pointers. Read it at the start of every session. Each entry says only what is true now
-and where it lives. When a change alters a default, an invariant or a file, replace or remove the old
-text here instead of adding to it. History is in git; reasons are in `DECISIONS.md`.
+A short snapshot for coding agents (humans may read it too): current state, defaults, file map, key
+invariants and next steps. Read at the start of every session; at most 100 lines. Each entry says only
+what is true now and where it lives: replace or remove text when it changes, never add history. Rules
+and their reasons are in `AGENTS.md`; history is in git.
 
 Last update: 2026-10-03.
 
@@ -92,7 +92,6 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 ## Pointers
 
 - Rules, commands, git and writing style: `AGENTS.md`.
-- Design decisions with reasons: `docs/DECISIONS.md`.
 - Phone facts and measured speeds: `docs/PHONES.md`.
 - Human introduction: `README.md`.
 - History of a file: `git log --oneline -- <file>`.

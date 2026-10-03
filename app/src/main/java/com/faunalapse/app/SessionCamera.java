@@ -6,8 +6,8 @@ import java.io.File;
 
 /**
  * The back camera as a session uses it. Camera2Session or Camera1Session, chosen per phone
- * (DECISIONS.md, 2026-10-03). All calls come from the session thread and wait until the camera has
- * answered. A camera is opened either for photos or for video, never both.
+ * (AGENTS.md, hard constraints). All calls come from the session thread and wait until the camera
+ * has answered. A camera is opened either for photos or for video, never both.
  */
 interface SessionCamera {
 
