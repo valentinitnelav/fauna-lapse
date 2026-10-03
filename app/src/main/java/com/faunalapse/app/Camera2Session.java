@@ -1,7 +1,6 @@
 package com.faunalapse.app;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -36,14 +35,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Session camera through Camera2 (Android 5+), used on phones whose Camera2 level is "limited" or
+ * Session camera through Camera2, used on phones whose Camera2 level is "limited" or
  * better. Photos: invisible preview plus a full-size JPEG output, made by the camera hardware.
  * Video: MediaRecorder (Android's hardware video recorder) fed straight by the camera.
  *
  * Camera2 calls back on its own thread ("camera2"); the session thread waits for the answers.
- * Only reached behind a {@code Build.VERSION.SDK_INT >= 21} check.
  */
-@TargetApi(21)
 final class Camera2Session implements SessionCamera {
 
     private static final long TIMEOUT_MS = 5000;

@@ -63,7 +63,7 @@ final class SessionRunner implements Runnable {
         this.dir = dir;
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
-        this.useCamera2 = Build.VERSION.SDK_INT >= 21 && Camera2Session.suitable(context);
+        this.useCamera2 = Camera2Session.suitable(context);
     }
 
     @Override

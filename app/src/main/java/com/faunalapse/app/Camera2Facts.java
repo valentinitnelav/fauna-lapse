@@ -1,13 +1,11 @@
 package com.faunalapse.app;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.Build;
 import android.util.Range;
 import android.util.Size;
 
@@ -17,10 +15,9 @@ import org.json.JSONObject;
 import java.util.Locale;
 
 /**
- * What the newer Camera2 interface (Android 5+) says about each camera. Phase 4 (manual focus) and
- * the hardware ROI crop depend on these facts. Kept in its own class so Android 4.4 never loads it.
+ * What the newer Camera2 interface says about each camera. Phase 4 (manual focus) and the hardware
+ * ROI crop depend on these facts.
  */
-@TargetApi(21)
 final class Camera2Facts {
 
     private Camera2Facts() {
@@ -49,12 +46,10 @@ final class Camera2Facts {
         Integer level = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
         String[] levels = {"limited", "full", "legacy", "level 3", "external"};
         f.put("hardware_level", level == null || level >= levels.length ? "?" : levels[level]);
-        if (Build.VERSION.SDK_INT >= 23) {
-            // Freeform: the camera chip can cut out any rectangle (a hardware ROI crop).
-            Integer crop = c.get(CameraCharacteristics.SCALER_CROPPING_TYPE);
-            f.put("cropping", crop != null && crop == CameraMetadata.SCALER_CROPPING_TYPE_FREEFORM
-                    ? "freeform" : "center only");
-        }
+        // Freeform: the camera chip can cut out any rectangle (a hardware ROI crop).
+        Integer crop = c.get(CameraCharacteristics.SCALER_CROPPING_TYPE);
+        f.put("cropping", crop != null && crop == CameraMetadata.SCALER_CROPPING_TYPE_FREEFORM
+                ? "freeform" : "center only");
         // Manual focus: the app can switch autofocus off and set the lens distance itself. Minimum
         // focus distance is in diopters (1 / metres); 0 or missing means fixed focus.
         Float minFocus = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
@@ -79,6 +74,10 @@ final class Camera2Facts {
         Range<Integer>[] ranges = c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
         if (ranges != null) for (Range<Integer> r : ranges) fps.put(r.getLower() + "-" + r.getUpper());
         f.put("fps_ranges", fps);
+        // Pixels of the sensor itself: a larger JPEG size means the phone enlarges photos in
+        // software (some legacy phones report the enlarged size here as well).
+        Size sensor = c.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE);
+        if (sensor != null) f.put("sensor_pixels", sensor.getWidth() + "x" + sensor.getHeight());
         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map != null) {
             f.put("jpeg_largest", largestWithRate(map, ImageFormat.JPEG));

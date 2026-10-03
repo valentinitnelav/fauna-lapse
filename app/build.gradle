@@ -8,14 +8,14 @@ android {
 
     defaultConfig {
         applicationId = "com.faunalapse.app"
-        minSdk = 19       // Android 4.4, the oldest phone we want to reuse
+        minSdk = 24       // Android 7.0, the oldest phone we can test
         targetSdk = 36
         versionCode = 1
         versionName = "0.0.1-phase0"
     }
 
     compileOptions {
-        // Java 8 language level (lambdas). D8 turns lambdas into plain classes for old phones.
+        // Java 8 language level (lambdas). D8 turns lambdas into plain classes.
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }

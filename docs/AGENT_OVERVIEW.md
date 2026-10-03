@@ -20,7 +20,7 @@ Last update: 2026-10-03.
 
 ## Key invariants
 
-- Product rules (Java 8, minSdk 19, no AndroidX or other libraries in the app, screen off, ROI
+- Product rules (Java 8, minSdk 24, no AndroidX or other libraries in the app, screen off, ROI
   square for photos, time-named files, back camera only, camera interface per phone, schedule grid
   from each window start): `AGENTS.md`, "Hard constraints".
 - Schedule maths lives in `CapturePlan` and square maths in `RoiMath`: no Android classes there, unit
@@ -32,8 +32,6 @@ Last update: 2026-10-03.
 - Camera1 calls back on the thread that opened the camera. `SessionRunner`, `SpeedTest` and
   `Camera1Session` open it on a plain thread without a message loop, so callbacks go to the main
   thread; `Camera1Backend` uses its own HandlerThread. Never block the main thread during a session.
-- Classes that use Camera2 (`Camera2Session`, `Camera2Facts`, `Camera2StillTest`) are only reached
-  behind `Build.VERSION.SDK_INT >= 21` checks; Android 4.4 must never load them.
 - `CaptureService.running` = a test or session runs (one at a time); `sessionRunning` = a session.
   Stop = `Thread.interrupt()` of the session thread; the camera closes, and an open clip is finished
   and recorded with `"stopped_early": true`.
@@ -85,9 +83,11 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
    are about one stop brighter than Camera1 (bright parts clip).
 5. Time-lapse video below 15 fps (5 asked gave 3.7 on the Samsung M12: ask a little more).
 6. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
-7. More test phones (Android 4.4 to 6, 7 to 9, the Xiaomi) and a USB power meter (phase 0 gate).
-8. Lint warnings left on purpose: `allowBackup`, `TargetApi` (the suggested `RequiresApi` needs
-   AndroidX), `QUALITY_2160P` (harmless on Android 4.4), one text concatenation on the screen.
+7. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
+   (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against
+   `jpeg_largest` shows photos enlarged in software).
+8. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), one text
+   concatenation on the screen, newer Gradle available (update with the Android build plugin).
 
 ## Pointers
 

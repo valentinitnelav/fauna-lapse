@@ -8,7 +8,6 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
@@ -36,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Full photos (takePicture): how fast can photos follow each other, at 4 picture sizes?
  * - Preview frames: how fast can frames be saved as JPEG, whole and as the ROI square?
  * - Video: do 1080p, 720p and 480p work at 15 fps? Does time-lapse video at 5 and 1 frames per s?
- * - On Android 5+, full photos through Camera2 (Camera2StillTest), to compare with Camera1.
+ * - Full photos through Camera2 (Camera2StillTest), to compare with Camera1.
  * Each test writes one JSON line to results.jsonl in {@code dir}, next to the files it made.
  * facts.json lists what the camera offers.
  *
@@ -89,9 +88,7 @@ final class SpeedTest implements Runnable {
             previewTests();
             videoTests(cameraId);
             closeCamera1();
-            if (Build.VERSION.SDK_INT >= 21) {
-                for (JSONObject r : new Camera2StillTest(context, dir).run()) finish(r);
-            }
+            for (JSONObject r : new Camera2StillTest(context, dir).run()) finish(r);
             put(summary, "result", failed == 0 ? "ok" : "error");
             if (failed > 0) put(summary, "error", failed + " tests failed, see results.jsonl");
         } catch (Exception e) {

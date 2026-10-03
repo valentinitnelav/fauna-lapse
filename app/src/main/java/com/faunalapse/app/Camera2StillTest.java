@@ -1,7 +1,6 @@
 package com.faunalapse.app;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -34,14 +33,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Phase 0: full-size photos of the back camera through Camera2 (Android 5+), to compare with
- * Camera1's takePicture. Same steps as there: invisible preview, 3 s warm-up, one autofocus, then
+ * Phase 0: full-size photos of the back camera through Camera2, to compare with Camera1's
+ * takePicture. Same steps as there: invisible preview, 3 s warm-up, one autofocus, then
  * photos once per second and as fast as possible (one at a time). The photo is made and compressed
  * to JPEG by the camera hardware; the app only saves the bytes.
  *
  * Runs on the SpeedTest thread and waits for each answer; Camera2 calls back on its own thread.
  */
-@TargetApi(21)
 final class Camera2StillTest {
 
     private static final long TIMEOUT_MS = 5000;

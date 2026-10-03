@@ -54,7 +54,7 @@ final class CameraFacts {
         f.put("focal_length_mm", p.getFocalLength());
         f.put("view_angle_deg", p.getHorizontalViewAngle() + " x " + p.getVerticalViewAngle());
         f.put("video_profiles", videoProfiles(cameraId));
-        if (Build.VERSION.SDK_INT >= 21) f.put("camera2", Camera2Facts.collect(context));
+        f.put("camera2", Camera2Facts.collect(context));
         return f;
     }
 

@@ -18,7 +18,7 @@ tested so far.
 
 ## Planned features
 
-- Android 4.4 or newer; old phones are welcome.
+- Android 7.0 or newer; old phones are welcome.
 - Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00) for several
   days, or a run of some hours.
 - Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 4 minute break) or

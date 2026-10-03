@@ -19,12 +19,14 @@ plain language at first use, and write plain English with short sentences and no
 
 - Android only for now (iOS, if ever, as a separate app). No AI. No network access.
 - Java 8 language level; no Kotlin, no C/C++ (the image work runs in the camera hardware, so native
-  code would not be faster or cooler). minSdk 19 (Android 4.4); compile and target SDK 36.
-- In the app only Android's own classes: no AndroidX (its new releases need Android 6+), no other
-  libraries. JUnit for the PC tests is fine (it never goes into the APK). APK under about 300 KB.
+  code would not be faster or cooler). minSdk 24 (Android 7.0, the oldest phone we can test);
+  compile and target SDK 36.
+- In the app only Android's own classes: no AndroidX or other libraries (they add size and updates,
+  not speed; CameraX would hide the Camera1 path that legacy phones need). JUnit for the PC tests is
+  fine (it never goes into the APK). APK under about 300 KB.
 - Back camera only. Camera interface per phone: Camera2 where its hardware level is "limited",
   "full" or "level 3" (Samsung M12: a 12 MP photo in 0.43 s, against 0.9 to 1.7 s with Camera1);
-  Camera1 on Android 4.4 and on "legacy" phones, because it works everywhere.
+  Camera1 on "legacy" phones, where Camera2 only wraps Camera1.
 - Focus: autofocus once at the start of each burst or clip, then the lens stays. Phones with manual
   focus (later) keep one fixed distance and never autofocus.
 - Energy and heat first: screen off, no visible preview, camera closed in long breaks, lowest frame

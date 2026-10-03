@@ -236,10 +236,8 @@ public final class CaptureService extends Service {
         return battery == null ? null : battery.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10.0;
     }
 
-    @SuppressWarnings("deprecation") // isScreenOn() is the only choice on Android 4.4
     static boolean isScreenOn(Context context) {
-        PowerManager pm = (PowerManager) context.getSystemService(POWER_SERVICE);
-        return Build.VERSION.SDK_INT >= 20 ? pm.isInteractive() : pm.isScreenOn();
+        return ((PowerManager) context.getSystemService(POWER_SERVICE)).isInteractive();
     }
 
     private static void put(JSONObject record, String key, Object value) {

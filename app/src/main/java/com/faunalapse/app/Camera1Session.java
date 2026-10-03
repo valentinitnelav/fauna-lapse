@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Session camera through the old Camera1 interface, for Android 4.4 and "legacy" phones.
+ * Session camera through the old Camera1 interface, for "legacy" phones.
  *
  * Must be used from a thread without a message loop (Looper): Camera1 then delivers its callbacks on
  * the main thread, while this thread waits for them.

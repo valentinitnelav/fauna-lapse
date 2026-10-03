@@ -249,7 +249,7 @@ public final class MainActivity extends Activity {
         requested = what;
         cameraDenied = false;
         List<String> missing = missingPermissions();
-        if (!missing.isEmpty() && Build.VERSION.SDK_INT >= 23) {
+        if (!missing.isEmpty()) {
             requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
             return;
         }
@@ -265,8 +265,7 @@ public final class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         // The notification permission is optional: without it the camera still works.
-        if (Build.VERSION.SDK_INT >= 23
-                && checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             start(requested);
         } else {
             cameraDenied = true;
@@ -274,10 +273,9 @@ public final class MainActivity extends Activity {
         }
     }
 
-    /** Runtime permissions exist only from Android 6; older phones grant them at install. */
+    /** Permissions still to ask for: the camera and, on Android 13+, notifications. */
     private List<String> missingPermissions() {
         List<String> missing = new ArrayList<>();
-        if (Build.VERSION.SDK_INT < 23) return missing;
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             missing.add(Manifest.permission.CAMERA);
         }
