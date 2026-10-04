@@ -25,6 +25,10 @@ interface SessionCamera {
     /** Photo mode: one full-size JPEG photo. */
     byte[] takePhoto() throws Exception;
 
+    /** Photo mode: exposure time (ms) and ISO (light sensitivity) of the last photo into {@code r},
+     *  where the camera reports them. */
+    void putExposure(JSONObject r);
+
     /** Video mode: gets a clip ready to record into {@code file} and focuses once; returns the focus
      *  result. */
     String prepareClip(File file) throws Exception;

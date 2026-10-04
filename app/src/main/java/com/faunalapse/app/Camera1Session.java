@@ -206,6 +206,11 @@ final class Camera1Session implements SessionCamera {
     }
 
     @Override
+    public void putExposure(JSONObject r) {
+        // Camera1 has no per-photo exposure values; its EXIF values are not reliable (docs/PHONES.md).
+    }
+
+    @Override
     public String prepareClip(File file) throws Exception {
         String focusResult = focus(); // before unlock: the app cannot use the camera after it
         camera.unlock();

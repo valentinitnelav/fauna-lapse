@@ -84,8 +84,7 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 ## Open problems and next steps
 
 1. Long breaks: alarms instead of holding the wake lock (measure first with the USB power meter).
-2. Lock exposure and white balance for each burst (no jumps; exposure already meters on the square);
-   Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
+2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
 3. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
 4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
    (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against

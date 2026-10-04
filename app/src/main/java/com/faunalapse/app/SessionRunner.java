@@ -389,7 +389,7 @@ final class SessionRunner implements Runnable {
             double photoS = captureMsSum / (double) taken / 1000;
             double suggested = Math.ceil(photoS * 2 + 0.4) / 2; // a little more, rounded up to 0.5 s
             warning = String.format(Locale.US, "The photo step of %.1f s is too short for this phone: a photo"
-                    + " takes about %.1f s. Use video (15 frames per s) or a photo step of at least %.1f s.",
+                    + " takes about %.1f s. Use video or a photo step of at least %.1f s.",
                     settings.stepS, photoS, suggested);
             JSONObject w = SessionLog.record("warning");
             SessionLog.put(w, "warning", warning);
@@ -402,12 +402,13 @@ final class SessionRunner implements Runnable {
     private void save(final byte[] jpeg, final long planned, final long takenAt, final long captureMs) {
         final File file = new File(dir, SessionLog.fileStem(takenAt) + ".jpg");
         final int turn = photoTurn;
+        final JSONObject r = SessionLog.record("photo");
+        SessionLog.put(r, "time", SessionLog.isoTime(takenAt)); // when the photo was asked for
+        SessionLog.put(r, "file", file.getName());
+        SessionLog.put(r, "late_ms", takenAt - planned);
+        SessionLog.put(r, "photo_ms", captureMs);
+        camera.putExposure(r); // now: the next photo replaces it
         saver.execute(() -> {
-            JSONObject r = SessionLog.record("photo");
-            SessionLog.put(r, "time", SessionLog.isoTime(takenAt)); // when the photo was asked for
-            SessionLog.put(r, "file", file.getName());
-            SessionLog.put(r, "late_ms", takenAt - planned);
-            SessionLog.put(r, "photo_ms", captureMs);
             try {
                 long s0 = SpeedTest.now();
                 int[] sides = PhotoSaver.saveSquare(jpeg, settings, turn, file);

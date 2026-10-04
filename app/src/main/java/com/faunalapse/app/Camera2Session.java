@@ -50,6 +50,7 @@ final class Camera2Session implements SessionCamera {
     private static final long TIMEOUT_MS = 5000;
     private static final long FOCUS_TIMEOUT_MS = 3000;
     private static final long CLOSE_TIMEOUT_MS = 2000;
+    private static final long RESULT_WAIT_MS = 500; // the report on a photo, after its JPEG
     private static final byte JPEG_QUALITY = 90;
 
     private final Context context;
@@ -59,6 +60,8 @@ final class Camera2Session implements SessionCamera {
     private final SurfaceTexture shown;
     private final JSONObject facts = new JSONObject();
     private final LinkedBlockingQueue<byte[]> jpegs = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<TotalCaptureResult> stillResults = new LinkedBlockingQueue<>();
+    private TotalCaptureResult lastStill; // the camera's report on the last photo, or null
     /** Tag of the request that starts autofocus: focus states count from its result on. */
     private static final Object FOCUS_START = new Object();
     private volatile Integer afState;
@@ -92,6 +95,13 @@ final class Camera2Session implements SessionCamera {
             // Earlier frames still report the last focus ("sharp" in a short break).
             if (r.getTag() == FOCUS_START) focusStarted = true;
             if (focusStarted) afState = result.get(CaptureResult.CONTROL_AF_STATE);
+        }
+    };
+
+    private final CameraCaptureSession.CaptureCallback stillWatcher = new CameraCaptureSession.CaptureCallback() {
+        @Override
+        public void onCaptureCompleted(CameraCaptureSession s, CaptureRequest r, TotalCaptureResult result) {
+            stillResults.offer(result);
         }
     };
 
@@ -254,10 +264,21 @@ final class Camera2Session implements SessionCamera {
     @Override
     public byte[] takePhoto() throws Exception {
         jpegs.clear(); // a photo that arrived after an earlier timeout is not this one
-        session.capture(stillRequest, null, handler);
+        stillResults.clear();
+        session.capture(stillRequest, stillWatcher, handler);
         byte[] jpeg = jpegs.poll(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (jpeg == null) throw new IllegalStateException("no photo after " + TIMEOUT_MS + " ms");
+        lastStill = stillResults.poll(RESULT_WAIT_MS, TimeUnit.MILLISECONDS); // usually there already
         return jpeg;
+    }
+
+    @Override
+    public void putExposure(JSONObject r) {
+        if (lastStill == null) return;
+        Long ns = lastStill.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+        Integer iso = lastStill.get(CaptureResult.SENSOR_SENSITIVITY);
+        if (ns != null) SessionLog.put(r, "exposure_ms", Math.round(ns / 1e4) / 100.0);
+        if (iso != null) SessionLog.put(r, "iso", iso);
     }
 
     @Override

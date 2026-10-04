@@ -27,8 +27,8 @@ plain language at first use, and write plain English with short sentences and no
 - Back camera only. Camera interface per phone: Camera2 where its hardware level is "limited",
   "full" or "level 3" (Samsung M12: a 12 MP photo in 0.43 s, against 0.9 to 1.7 s with Camera1);
   Camera1 on "legacy" phones, where Camera2 only wraps Camera1.
-- Focus: autofocus once at the start of each burst or clip, then the lens stays. Phones with manual
-  focus (later) keep one fixed distance and never autofocus.
+- Focus: autofocus once per burst or clip, then the lens stays (manual-focus phones, later: one
+  fixed distance). Exposure and white balance stay automatic, metered on the ROI square (clouds).
 - Energy and heat first: screen off, no visible preview, camera closed in long breaks, lowest frame
   rate while waiting, hardware JPEG and video encoders; only the ROI crop runs on the processor.
 - Photos: save only the ROI square, side at least 480 px (default 1024), never enlarged beyond the
