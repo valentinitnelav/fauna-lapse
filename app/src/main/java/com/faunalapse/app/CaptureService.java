@@ -243,7 +243,7 @@ public final class CaptureService extends Service {
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class),
                 PendingIntent.FLAG_IMMUTABLE);
         Notification notification = builder
-                .setSmallIcon(android.R.drawable.ic_menu_camera)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(open)
                 .setContentTitle(getString(session ? R.string.notification_session_title : R.string.notification_title))
                 .setContentText(getString(session ? R.string.notification_session_text : R.string.notification_text))
