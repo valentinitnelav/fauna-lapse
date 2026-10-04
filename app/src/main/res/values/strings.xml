@@ -45,7 +45,10 @@
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
     <string name="saved_side_label">Saved square side (px)</string>
-    <string name="saved_side_hint">Default 1024 px: enough pixels on a small insect. Never more than the real pixels inside the square.</string>
+    <string name="saved_side_640">640</string>
+    <string name="saved_side_1024">1024</string>
+    <string name="saved_side_1280">1280</string>
+    <string name="saved_side_hint">The square is shrunk to this size when saved. Default 1280 px: the input size of many insect detectors, so they need no resizing (all three are multiples of 32). A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32.</string>
     <string name="clip_label">Clip length (min)</string>
     <string name="clip_hint">One video file per clip. Default 5 min.</string>
     <string name="video_size_label">Video size</string>
@@ -95,7 +98,7 @@
     <string name="aim_top">top</string>
     <string name="aim_focusing">Focusing…</string>
     <string name="aim_focus_result">Focus: %1$s</string>
-    <string name="aim_hint">Drag the square onto the flower with a finger. The small triangle marks the top of the saved photos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
+    <string name="aim_hint">Drag the square onto the flower with a finger; pinch it with two fingers (or use the slider) to make it larger or smaller. The small triangle marks the top of the saved photos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
     <string name="aim_hint_video">Fix the phone in its place, then tap Start session here.</string>
 
     <!-- Phone tests (phase 0) -->

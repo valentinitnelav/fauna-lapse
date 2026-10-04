@@ -26,7 +26,7 @@ final class SessionSettings {
     int squarePercent = 100;     // square side as a share of the short side of the photo
     double squareX = 0.5;        // square centre as shares of the photo width and height (RoiMath
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
-    int savedSidePx = 1024;      // pixels on the insect (FaunaPulse default)
+    int savedSidePx = 1280;      // input size of many insect detectors (owner, 2026-10-04)
     String videoQuality = "1080p";
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
@@ -90,7 +90,9 @@ final class SessionSettings {
         if (daily && (days < 1 || days > 365)) return "Days: use 1 to 365.";
         if (squarePercent < 10 || squarePercent > 100) return "Square side: use 10 to 100 %.";
         if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
-        if (savedSidePx < 480 || savedSidePx > 1280) return "Saved square side: use 480 to 1280 px.";
+        if (savedSidePx != 640 && savedSidePx != 1024 && savedSidePx != 1280) {
+            return "Saved square side: use 640, 1024 or 1280 px.";
+        }
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
         if (!validPhoneName(phoneName)) return "Phone name: use up to 20 letters (a to z), digits, - or _.";
         if (daily) {

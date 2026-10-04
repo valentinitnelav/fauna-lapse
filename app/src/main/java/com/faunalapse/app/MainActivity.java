@@ -100,7 +100,7 @@ public final class MainActivity extends Activity {
     private RadioGroup videoFps;
     private EditText stepS;
     private EditText burstS;
-    private EditText savedSidePx;
+    private RadioGroup savedSide;
     private EditText clipMin;
     private EditText breakMin;
     private EditText runH;
@@ -172,7 +172,7 @@ public final class MainActivity extends Activity {
         videoFps = findViewById(R.id.video_fps);
         stepS = findViewById(R.id.step_s);
         burstS = findViewById(R.id.burst_s);
-        savedSidePx = findViewById(R.id.saved_side_px);
+        savedSide = findViewById(R.id.saved_side);
         clipMin = findViewById(R.id.clip_min);
         breakMin = findViewById(R.id.break_min);
         runH = findViewById(R.id.run_h);
@@ -226,7 +226,7 @@ public final class MainActivity extends Activity {
         videoFps.check(s.videoFps == 15 ? R.id.video_fps_15 : s.videoFps == 10 ? R.id.video_fps_10 : R.id.video_fps_5);
         stepS.setText(number(s.stepS));
         burstS.setText(number(s.burstS));
-        savedSidePx.setText(String.valueOf(s.savedSidePx));
+        checkSavedSide(s.savedSidePx);
         clipMin.setText(number(s.clipMin));
         breakMin.setText(number(s.breakMin));
         runH.setText(number(s.runH));
@@ -306,7 +306,8 @@ public final class MainActivity extends Activity {
         s.videoFps = fps == R.id.video_fps_15 ? 15 : fps == R.id.video_fps_10 ? 10 : 5;
         s.stepS = decimal(stepS, R.string.step_label);
         s.burstS = decimal(burstS, R.string.burst_label);
-        s.savedSidePx = (int) Math.round(decimal(savedSidePx, R.string.saved_side_label));
+        int side = savedSide.getCheckedRadioButtonId();
+        s.savedSidePx = side == R.id.saved_side_640 ? 640 : side == R.id.saved_side_1024 ? 1024 : 1280;
         s.clipMin = decimal(clipMin, R.string.clip_label);
         s.breakMin = decimal(breakMin, R.string.break_label);
         s.runH = decimal(runH, R.string.run_label);
@@ -333,6 +334,11 @@ public final class MainActivity extends Activity {
         } finally {
             refresh();
         }
+    }
+
+    /** The choice nearest to {@code px} (older versions saved any size). */
+    private void checkSavedSide(int px) {
+        savedSide.check(px <= 832 ? R.id.saved_side_640 : px <= 1152 ? R.id.saved_side_1024 : R.id.saved_side_1280);
     }
 
     private String chosenVideoQuality() {
@@ -407,7 +413,8 @@ public final class MainActivity extends Activity {
             }
             setFromExtra(intent, "step_s", stepS);
             setFromExtra(intent, "burst_s", burstS);
-            setFromExtra(intent, "saved_side_px", savedSidePx);
+            String sidePx = intent.getStringExtra("saved_side_px");
+            if (sidePx != null) checkSavedSide(Integer.parseInt(sidePx));
             setFromExtra(intent, "clip_min", clipMin);
             setFromExtra(intent, "break_min", breakMin);
             setFromExtra(intent, "run_h", runH);

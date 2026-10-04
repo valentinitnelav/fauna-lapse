@@ -38,6 +38,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private SquareView square;
     private TextView info;
     private TextView focusResult;
+    private SeekBar size;
     private Button focusButton;
     private Button startButton;
     private OrientationEventListener orientationListener;
@@ -86,13 +87,13 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             squareChanged();
         });
 
-        SeekBar size = findViewById(R.id.square_size);
-        size.setProgress(s.squarePercent - 10); // the slider runs from 0 to 90: 10 to 100 %
+        size = findViewById(R.id.square_size);
+        size.setProgress(s.squarePercent - 10);
         size.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (!fromUser) return;
-                square.sideShare = (progress + 10) / 100.0;
+                square.sideShare = (progress + 10) / 100.0; // the slider runs from 0 to 90: 10 to 100 %
                 square.keepInside();
                 showInfo();
             }
@@ -203,7 +204,18 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         int[] preview = size(d.optString("preview_size"));
         boolean sideways = turn % 180 != 0;
         fitView(sideways ? preview[1] : preview[0], sideways ? preview[0] : preview[1]);
-        square.setUp(photo[0], photo[1], turn, this::squareChanged);
+        square.setUp(photo[0], photo[1], turn, new SquareView.Listener() {
+            @Override
+            public void onResized() {
+                size.setProgress((int) Math.round(square.sideShare * 100) - 10);
+                showInfo();
+            }
+
+            @Override
+            public void onChanged() {
+                squareChanged();
+            }
+        });
         showInfo();
         focus(); // a sharp view from the start
     }
@@ -242,6 +254,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
 
     /** Saves the square, moves focus and exposure to it and focuses again. */
     private void squareChanged() {
+        square.sideShare = Math.round(square.sideShare * 100) / 100.0; // whole percent, as saved
+        square.keepInside();
         SessionSettings s = SessionSettings.load(this);
         s.squarePercent = (int) Math.round(square.sideShare * 100);
         s.squareX = square.centreX;

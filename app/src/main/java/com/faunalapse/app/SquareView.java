@@ -7,19 +7,27 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 
 /**
- * The ROI square over the camera view on the aim screen; a finger moves it. The square is kept as
+ * The ROI square over the camera view on the aim screen; a finger moves it, two fingers pinch it
+ * larger or smaller (around its centre). The square is kept as
  * in SessionSettings (shares of the photo, see RoiMath), and the view shows the photo turned
  * clockwise by {@code viewTurn}. A triangle marks the edge that becomes the top of the saved photos.
  */
 public final class SquareView extends View {
 
-    /** Called when the finger leaves the screen after moving the square. */
     interface Listener {
-        void onMoved();
+        /** While two fingers pinch: the size changes (the slider follows). */
+        void onResized();
+
+        /** When the fingers leave the screen after moving or pinching the square. */
+        void onChanged();
     }
+
+    /** Smallest square side, as a share of the short side of the photo (the slider's minimum). */
+    static final double MIN_SHARE = 0.1;
 
     double sideShare = 1;
     double centreX = 0.5;
@@ -39,6 +47,8 @@ public final class SquareView extends View {
     private float downX;
     private float downY;
     private double[] downCentre; // square centre on the screen (shares) when the finger came down
+    private boolean pinched;     // two fingers touched: no moving until all fingers are up
+    private final ScaleGestureDetector scaler;
 
     public SquareView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -53,6 +63,15 @@ public final class SquareView extends View {
         label.setTextAlign(Paint.Align.CENTER);
         label.setShadowLayer(2 * dp, 0, 0, Color.BLACK); // readable on a bright flower
         topWord = context.getString(R.string.aim_top);
+        scaler = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector d) {
+                sideShare = Math.max(MIN_SHARE, Math.min(1, sideShare * d.getScaleFactor()));
+                keepInside();
+                if (listener != null) listener.onResized();
+                return true;
+            }
+        });
     }
 
     /** Called once the camera is open and the photo size is known. */
@@ -119,22 +138,27 @@ public final class SquareView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         if (photoW == 0) return false;
+        scaler.onTouchEvent(e);
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+                pinched = false;
                 downX = e.getX();
                 downY = e.getY();
                 downCentre = RoiMath.photoToScreen(centreX, centreY, viewTurn);
                 return true;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                pinched = true;
+                return true;
             case MotionEvent.ACTION_MOVE:
-                moveTo(e);
+                if (!pinched) moveTo(e);
                 return true;
             case MotionEvent.ACTION_UP:
-                moveTo(e);
+                if (!pinched) moveTo(e);
                 performClick();
-                if (listener != null) listener.onMoved();
+                if (listener != null) listener.onChanged();
                 return true;
             case MotionEvent.ACTION_CANCEL:
-                if (listener != null) listener.onMoved();
+                if (listener != null) listener.onChanged();
                 return true;
             default:
                 return super.onTouchEvent(e);
