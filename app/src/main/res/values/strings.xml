@@ -45,10 +45,7 @@
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
     <string name="saved_side_label">Saved square side (px)</string>
-    <string name="saved_side_640">640</string>
-    <string name="saved_side_1024">1024</string>
-    <string name="saved_side_1280">1280</string>
-    <string name="saved_side_hint">The square is shrunk to this size when saved. Default 1280 px: the input size of many insect detectors, so they need no resizing (all three are multiples of 32). A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32.</string>
+    <string name="saved_side_hint">The square is shrunk to this size when saved: any multiple of 32 from 224 to 4096, for example 320, 640, 1024 or 1280. Detectors and video encoders work in blocks of 16 or 32 pixels, so these sizes need no padding. Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both).</string>
     <string name="clip_label">Clip length (min)</string>
     <string name="clip_hint">One video file per clip. Default 5 min.</string>
     <string name="video_size_label">Video size</string>

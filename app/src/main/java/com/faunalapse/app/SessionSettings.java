@@ -35,6 +35,11 @@ final class SessionSettings {
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
     String phoneName = "";       // optional, added to the folder name: files from several phones do not mix
 
+    /** Saved square side limits: the smallest common classifier input; a sanity bound (squares are
+     *  never enlarged beyond their real pixels anyway). */
+    static final int MIN_SIDE_PX = 224;
+    static final int MAX_SIDE_PX = 4096;
+
     private static final String PREFS = "session_settings";
 
     static SessionSettings load(Context context) {
@@ -97,8 +102,8 @@ final class SessionSettings {
         if (daily && (days < 1 || days > 365)) return "Days: use 1 to 365.";
         if (squarePercent < 10 || squarePercent > 100) return "Square side: use 10 to 100 %.";
         if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
-        if (savedSidePx != 640 && savedSidePx != 1024 && savedSidePx != 1280) {
-            return "Saved square side: use 640, 1024 or 1280 px.";
+        if (savedSidePx < MIN_SIDE_PX || savedSidePx > MAX_SIDE_PX || savedSidePx % RoiMath.SIDE_STEP != 0) {
+            return sideProblem(savedSidePx);
         }
         if (focusFixed && (focusDiopters < 0 || focusDiopters > 50)) return "Fixed focus: set it again on the aim screen.";
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
@@ -111,6 +116,15 @@ final class SessionSettings {
             }
         }
         return null;
+    }
+
+    /** What to write instead of a saved side that is not a multiple of 32 in the limits: the two
+     *  nearest that are. */
+    static String sideProblem(int px) {
+        int step = RoiMath.SIDE_STEP;
+        int below = Math.max(MIN_SIDE_PX, Math.min(MAX_SIDE_PX - step, Math.floorDiv(px, step) * step));
+        return String.format(Locale.US, "Saved square side: use a multiple of %d from %d to %d px, for example"
+                + " %d or %d.", step, MIN_SIDE_PX, MAX_SIDE_PX, below, below + step);
     }
 
     /** A lens distance in words ({@code diopters} = 1 / distance in m), for the screen and the record. */

@@ -27,8 +27,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   second; fewer frames give smaller files, enough to follow insects from frame to frame on a computer.
 - If a phone cannot take photos as fast as asked, the app suggests video instead.
 - Photos keep only a square region of interest that you drag over the subject and pinch to size,
-  saved at 640, 1024 or 1280 pixels (1280 by default, the input size of many insect detectors),
-  never enlarged.
+  saved at any multiple of 32 pixels from 224 to 4096 (1280 by default, the input size of many
+  insect detectors), never enlarged.
 - Focus: fixed at one distance (20 cm to start, set while you watch the camera view), so wind, a
   passing insect or another flower cannot pull the focus away. Phones that cannot fix the focus
   (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
