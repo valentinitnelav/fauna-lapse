@@ -66,6 +66,8 @@
     <string name="days_hint">Default 1. Counted from the first window that is not over yet: a phone started in the evening records from the next morning. For more days, keep the phone on a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
+    <string name="phone_name_label">Phone name (optional)</string>
+    <string name="phone_name_hint">A short name such as P1 or Meadow-3 (letters a to z, digits, - or _). It is added to the session folder name and the record, so files from several phones do not mix. Default values keep it.</string>
     <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
 

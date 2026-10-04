@@ -31,6 +31,7 @@ final class SessionSettings {
     int savedSidePx = 1024;      // pixels on the insect (FaunaPulse default)
     String videoQuality = "1080p";
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
+    String phoneName = "";       // optional, added to the folder name: files from several phones do not mix
 
     private static final String PREFS = "session_settings";
 
@@ -52,6 +53,7 @@ final class SessionSettings {
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoQuality = p.getString("video_quality", s.videoQuality);
         s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
+        s.phoneName = p.getString("phone_name", s.phoneName);
         return s;
     }
 
@@ -72,6 +74,7 @@ final class SessionSettings {
                 .putInt("saved_side_px", savedSidePx)
                 .putString("video_quality", videoQuality)
                 .putFloat("heat_limit_c", (float) heatLimitC)
+                .putString("phone_name", phoneName)
                 .apply();
     }
 
@@ -87,6 +90,7 @@ final class SessionSettings {
         if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
         if (savedSidePx < 480 || savedSidePx > 1280) return "Saved square side: use 480 to 1280 px.";
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
+        if (!validPhoneName(phoneName)) return "Phone name: use up to 20 letters (a to z), digits, - or _.";
         if (daily) {
             try {
                 CapturePlan.parseWindows(windows);
@@ -95,6 +99,11 @@ final class SessionSettings {
             }
         }
         return null;
+    }
+
+    /** Letters a to z, digits, - and _ only: safe in folder names on every computer. */
+    static boolean validPhoneName(String name) {
+        return name.matches("[A-Za-z0-9_-]{0,20}");
     }
 
     long stepMs() {
@@ -130,6 +139,7 @@ final class SessionSettings {
     /** All settings, for the session record (only those that apply to the chosen mode). */
     JSONObject toJson() {
         JSONObject j = new JSONObject();
+        if (!phoneName.isEmpty()) SessionLog.put(j, "phone_name", phoneName);
         SessionLog.put(j, "mode", video ? "video" : "photo");
         if (video) {
             SessionLog.put(j, "clip_min", round(clipMin));

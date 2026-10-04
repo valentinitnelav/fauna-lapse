@@ -101,6 +101,7 @@ public final class MainActivity extends Activity {
     private EditText windows;
     private EditText days;
     private EditText heatLimitC;
+    private EditText phoneName;
     private int requested;
     private boolean cameraDenied;
     private String problem; // why Start or Aim did not go on, shown above Start until the next tap
@@ -169,6 +170,7 @@ public final class MainActivity extends Activity {
         windows = findViewById(R.id.windows);
         days = findViewById(R.id.days);
         heatLimitC = findViewById(R.id.heat_limit_c);
+        phoneName = findViewById(R.id.device_name);
         showSettings(SessionSettings.load(this), true);
         mode.setOnCheckedChangeListener((group, id) -> showGroups());
         schedule.setOnCheckedChangeListener((group, id) -> showGroups());
@@ -202,9 +204,13 @@ public final class MainActivity extends Activity {
 
     // ---- Session settings -------------------------------------------------------------------
 
-    /** Puts the values on the screen; {@code withMode}: also photos or video (card 1). */
-    private void showSettings(SessionSettings s, boolean withMode) {
-        if (withMode) mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
+    /** Puts the values on the screen; {@code all}: also photos or video (card 1) and the phone name,
+     *  which "Default values" keeps. */
+    private void showSettings(SessionSettings s, boolean all) {
+        if (all) {
+            mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
+            phoneName.setText(s.phoneName);
+        }
         schedule.check(s.daily ? R.id.schedule_daily : R.id.schedule_run);
         videoQuality.check("480p".equals(s.videoQuality) ? R.id.video_480p
                 : "720p".equals(s.videoQuality) ? R.id.video_720p : R.id.video_1080p);
@@ -292,6 +298,7 @@ public final class MainActivity extends Activity {
         s.windows = windows.getText().toString().trim();
         s.days = (int) Math.round(decimal(days, R.string.days_label));
         s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
+        s.phoneName = phoneName.getText().toString().trim();
         String p = s.problem();
         if (p != null) throw new IllegalArgumentException(p);
         return s;
@@ -388,6 +395,7 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
             setFromExtra(intent, "heat_limit_c", heatLimitC);
+            setFromExtra(intent, "phone_name", phoneName);
             // The square has no field on this screen: save it, settingsOnScreen then loads it.
             SessionSettings saved = SessionSettings.load(this);
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
@@ -469,23 +477,28 @@ public final class MainActivity extends Activity {
     private void refresh() {
         boolean running = CaptureService.running;
         boolean session = CaptureService.sessionRunning;
+        int title;
         if (session) {
-            statusTitle.setText(SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session);
+            title = SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session;
             show(sessionStatus, SessionRunner.status);
             show(sessionProgress, SessionRunner.progress);
             show(sessionWarning, SessionRunner.warning);
         } else if (running) {
-            statusTitle.setText(R.string.status_test);
+            title = R.string.status_test;
             show(sessionStatus, getString(R.string.status_running, CaptureService.START_DELAY_MS / 1000));
             show(sessionProgress, "");
             show(sessionWarning, "");
         } else {
             if (lastSession == null) lastSession = lastSession();
-            statusTitle.setText(R.string.status_ready);
+            title = R.string.status_ready;
             show(sessionStatus, lastSession);
             show(sessionProgress, "");
             show(sessionWarning, "");
         }
+        // The phone name on top tells the phones of a team apart.
+        String name = SessionSettings.load(this).phoneName;
+        String titleText = getString(title) + (name.isEmpty() ? "" : " · " + name);
+        if (!titleText.contentEquals(statusTitle.getText())) statusTitle.setText(titleText);
         if (running) lastSession = null; // read again when it has ended
         CaptureService.Battery b = CaptureService.Battery.read(this);
         battery.setText(getString(R.string.battery_line, b.percent >= 0 ? b.percent + " %" : "?",

@@ -39,7 +39,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 1. **At home, once per phone:** install the app, open it and allow the camera (on Android 10 or
    older also the storage). Under *2 · Schedule* tap *Change settings* and set the schedule; it stays
    saved on the phone. Check that the phone time is right. With several phones, set them all up
-   this way before you go out.
+   this way before you go out, and give each a short phone name (for example P1, P2): it is added
+   to the session folder names, so the files do not mix on the computer.
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
    than a few hours, connect a power bank.
 3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the

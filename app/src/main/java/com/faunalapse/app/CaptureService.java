@@ -204,7 +204,8 @@ public final class CaptureService extends Service {
         }
         // Held for the whole session (the phone stays awake between bursts); released when it ends.
         wakeLock.acquire(plan.end() - now + 10 * 60000L);
-        String name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now));
+        String name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
+                + (settings.phoneName.isEmpty() ? "" : "_" + settings.phoneName); // still sorts by time
         File dir = new File(sessionsDir(this), name);
         if (!dir.mkdirs()) {
             dir = new File(appSessionsDir(this), name); // the shared folder refused it

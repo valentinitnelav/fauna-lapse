@@ -57,7 +57,7 @@ Last update: 2026-10-04.
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
-| Output | `Documents/FaunaLapse/<start time>/` (survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
+| Output | `Documents/FaunaLapse/<start time>[_<phone name>]/` (survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
 | Wake lock | held for the whole session (plan end + 10 min) | `CaptureService.startSession` |
 | Phase 0 test defaults (start delay 10 s, wake lead 5 s, speed test sizes) | | `CaptureService`, `Camera1Backend`, `SpeedTest` |
 

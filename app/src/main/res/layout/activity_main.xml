@@ -116,6 +116,11 @@
                     android:inputType="numberDecimal" tools:targetApi="o" />
                 <TextView style="@style/Hint" android:text="@string/heat_hint" />
 
+                <TextView style="@style/Label" android:labelFor="@id/device_name" android:text="@string/phone_name_label" />
+                <EditText android:id="@+id/device_name" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="text" android:maxLength="20" tools:targetApi="o" />
+                <TextView style="@style/Hint" android:text="@string/phone_name_hint" />
+
                 <Button android:id="@+id/defaults" style="@style/SecondaryButton" android:layout_marginTop="16dp"
                     android:text="@string/defaults" />
             </LinearLayout>
