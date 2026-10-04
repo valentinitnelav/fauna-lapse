@@ -151,6 +151,7 @@ final class Camera1Session implements SessionCamera {
         Camera.Size preview = camera.getParameters().getPreviewSize();
         put("preview_size", preview.width + "x" + preview.height);
         put("focus", canFocus ? "auto, once per burst" : "fixed");
+        put("fixed_focus_possible", false); // Camera1 cannot set a lens distance
         if (info.canDisableShutterSound) put("shutter_sound_off", camera.enableShutterSound(false));
         camera.startPreview();
     }
@@ -203,6 +204,16 @@ final class Camera1Session implements SessionCamera {
             throw new IllegalStateException("no preview frame after " + FRAME_TIMEOUT_MS + " ms");
         }
         return jpeg[0];
+    }
+
+    @Override
+    public void setFixedFocus(Float diopters) {
+        // not possible with Camera1: focus() keeps autofocusing
+    }
+
+    @Override
+    public float lensDiopters() {
+        return Float.NaN;
     }
 
     @Override

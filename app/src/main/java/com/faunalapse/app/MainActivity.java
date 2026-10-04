@@ -255,14 +255,15 @@ public final class MainActivity extends Activity {
 
     /** The square as saved by the aim screen (photo mode), or what the aim screen is for (video). */
     private void showAimSummary() {
+        SessionSettings s = SessionSettings.load(this);
+        String focus = getString(s.focusFixed ? R.string.summary_focus_fixed : R.string.summary_focus_auto);
         if (mode.getCheckedRadioButtonId() == R.id.mode_video) {
-            aimSummary.setText(R.string.aim_summary_video);
+            aimSummary.setText(getString(R.string.aim_summary_video, focus));
             return;
         }
-        SessionSettings s = SessionSettings.load(this);
         boolean middle = Math.abs(s.squareX - 0.5) < 0.005 && Math.abs(s.squareY - 0.5) < 0.005;
         aimSummary.setText(getString(R.string.aim_summary_photo, s.squarePercent,
-                getString(middle ? R.string.aim_square_middle : R.string.aim_square_placed)));
+                getString(middle ? R.string.aim_square_middle : R.string.aim_square_placed), focus));
     }
 
     /** The schedule in words, from the values on the screen; or what is wrong with them. */
@@ -427,6 +428,11 @@ public final class MainActivity extends Activity {
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
             saved.squareX = fromExtra(intent, "square_x", saved.squareX);
             saved.squareY = fromExtra(intent, "square_y", saved.squareY);
+            if (intent.hasExtra("focus_diopters")) { // below 0: autofocus
+                double d = fromExtra(intent, "focus_diopters", -1);
+                saved.focusFixed = d >= 0;
+                if (d >= 0) saved.focusDiopters = d;
+            }
             saved.save(this);
             startSession();
         }

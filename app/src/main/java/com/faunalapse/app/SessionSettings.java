@@ -6,6 +6,7 @@ import android.media.CamcorderProfile;
 
 import org.json.JSONObject;
 
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -26,6 +27,8 @@ final class SessionSettings {
     int squarePercent = 100;     // square side as a share of the short side of the photo
     double squareX = 0.5;        // square centre as shares of the photo width and height (RoiMath
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
+    boolean focusFixed = false;  // autofocus works on every phone; fixed needs Camera2 and the aim screen
+    double focusDiopters = 0;    // fixed focus: 1 / distance in m (0 = far away)
     int savedSidePx = 1280;      // input size of many insect detectors (owner, 2026-10-04)
     String videoQuality = "1080p";
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
@@ -49,6 +52,8 @@ final class SessionSettings {
         s.squarePercent = p.getInt("square_percent", s.squarePercent);
         s.squareX = p.getFloat("square_x", (float) s.squareX);
         s.squareY = p.getFloat("square_y", (float) s.squareY);
+        s.focusFixed = p.getBoolean("focus_fixed", s.focusFixed);
+        s.focusDiopters = p.getFloat("focus_diopters", (float) s.focusDiopters);
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoQuality = p.getString("video_quality", s.videoQuality);
         s.videoFps = p.getInt("video_fps", s.videoFps);
@@ -71,6 +76,8 @@ final class SessionSettings {
                 .putInt("square_percent", squarePercent)
                 .putFloat("square_x", (float) squareX)
                 .putFloat("square_y", (float) squareY)
+                .putBoolean("focus_fixed", focusFixed)
+                .putFloat("focus_diopters", (float) focusDiopters)
                 .putInt("saved_side_px", savedSidePx)
                 .putString("video_quality", videoQuality)
                 .putInt("video_fps", videoFps)
@@ -93,6 +100,7 @@ final class SessionSettings {
         if (savedSidePx != 640 && savedSidePx != 1024 && savedSidePx != 1280) {
             return "Saved square side: use 640, 1024 or 1280 px.";
         }
+        if (focusFixed && (focusDiopters < 0 || focusDiopters > 50)) return "Fixed focus: set it again on the aim screen.";
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
         if (!validPhoneName(phoneName)) return "Phone name: use up to 20 letters (a to z), digits, - or _.";
         if (daily) {
@@ -103,6 +111,14 @@ final class SessionSettings {
             }
         }
         return null;
+    }
+
+    /** A lens distance in words ({@code diopters} = 1 / distance in m), for the screen and the record. */
+    static String distanceWords(double diopters) {
+        if (diopters < 0.05) return "far away";
+        double cm = 100 / diopters;
+        return cm < 100 ? String.format(Locale.US, "about %d cm", Math.round(cm))
+                : String.format(Locale.US, "about %.1f m", cm / 100);
     }
 
     /** Letters a to z, digits, - and _ only: safe in folder names on every computer. */
@@ -158,6 +174,8 @@ final class SessionSettings {
             SessionLog.put(j, "saved_side_px", savedSidePx);
             SessionLog.put(j, "saved_jpeg_quality", PhotoSaver.JPEG_QUALITY);
         }
+        SessionLog.put(j, "focus", focusFixed ? "fixed" : "auto, once per " + (video ? "clip" : "burst"));
+        if (focusFixed) SessionLog.put(j, "focus_diopters", round(focusDiopters));
         SessionLog.put(j, "break_min", round(breakMin));
         SessionLog.put(j, "heat_pause_c", round(heatLimitC));
         SessionLog.put(j, "heat_resume_c", round(heatLimitC - Guards.RESUME_GAP_C));

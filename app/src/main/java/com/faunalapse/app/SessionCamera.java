@@ -19,7 +19,16 @@ interface SessionCamera {
      *  allows it; exposure follows at once, focus at the next focus(). */
     void setSquare(double sideShare, double centreX, double centreY) throws Exception;
 
-    /** Photo mode: one autofocus; the lens then stays where it is. Returns the result for the log. */
+    /** Fixed focus at {@code diopters} (1 / distance in m; 0 = far away): the lens stays there and
+     *  focus() no longer autofocuses. Null: autofocus again. Does nothing where the phone cannot fix
+     *  the focus (describe(): "fixed_focus_possible"). Not during a clip. */
+    void setFixedFocus(Float diopters) throws Exception;
+
+    /** Where the lens is now, in diopters, as the camera last reported it; NaN when unknown. */
+    float lensDiopters();
+
+    /** One autofocus (on the square in photo mode); the lens then stays where it is. With a fixed
+     *  focus, no autofocus. Returns the result for the log. */
     String focus() throws Exception;
 
     /** Photo mode: one full-size JPEG photo. */

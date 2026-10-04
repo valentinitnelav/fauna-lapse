@@ -9,6 +9,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -19,8 +20,8 @@ import java.util.concurrent.Executors;
 
 /**
  * Aim screen: the live camera view, to point the phone at the flower. In photo mode the ROI square
- * is moved with a finger and sized with the slider; it is saved at once, and focus and exposure
- * follow it. The camera is open only while this screen is shown. "Start session here" starts the
+ * is moved with a finger and sized with two fingers or the slider; it is saved at once, and focus
+ * and exposure follow it. Focus is automatic, or fixed at a distance where Camera2 allows it. The camera is open only while this screen is shown. "Start session here" starts the
  * session with the saved settings while the phone is already in its place (its position counts).
  *
  * The screen stays upright (portrait, set in the manifest), so the view turns with the phone like
@@ -48,6 +49,15 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private int videoFps;
     private int savedSidePx;
     private boolean resumed;
+    private RadioGroup focusMode;
+    private SeekBar focusSlider;
+    private TextView focusDistance;
+    private TextView focusHint;
+    private boolean canFixFocus;     // from the open camera
+    private double closestDiopters;  // the nearest lens distance
+    private boolean calibrated;      // the camera's lens distances are real distances
+    private boolean focusFixed;      // as saved
+    private double focusDiopters;    // as saved
     private JSONObject facts; // from the open camera; null until then
 
     @Override
@@ -58,6 +68,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         video = s.video;
         videoQuality = s.videoQualityConstant();
         videoFps = s.videoFps;
+        focusFixed = s.focusFixed;
+        focusDiopters = s.focusDiopters;
         savedSidePx = s.savedSidePx;
 
         view = findViewById(R.id.camera_view);
@@ -105,6 +117,29 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             @Override
             public void onStopTrackingTouch(SeekBar bar) {
                 squareChanged();
+            }
+        });
+
+        focusMode = findViewById(R.id.focus_mode);
+        focusSlider = findViewById(R.id.focus_slider);
+        focusDistance = findViewById(R.id.focus_distance);
+        focusHint = findViewById(R.id.focus_hint);
+        focusSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                focusDiopters = closestDiopters * (1 - progress / 1000.0); // left near, right far
+                showFocus();
+                applyFixedFocus();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar bar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar bar) {
+                saveFocus();
             }
         });
 
@@ -217,23 +252,119 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             }
         });
         showInfo();
-        focus(); // a sharp view from the start
+        canFixFocus = d.optBoolean("fixed_focus_possible");
+        closestDiopters = d.optDouble("closest_focus_diopters", 0);
+        String calibration = d.optString("focus_distance_calibration");
+        calibrated = "calibrated".equals(calibration) || "approximate".equals(calibration);
+        findViewById(R.id.focus_group).setVisibility(View.VISIBLE);
+        focusMode.setVisibility(canFixFocus ? View.VISIBLE : View.GONE);
+        focusMode.setOnCheckedChangeListener(null);
+        focusMode.check(focusFixed ? R.id.focus_fixed : R.id.focus_auto);
+        focusMode.setOnCheckedChangeListener((g, id) -> setFocusFixed(id == R.id.focus_fixed));
+        showFocus();
+        if (canFixFocus && focusFixed) {
+            applyFixedFocus(); // the lens goes to the saved distance
+            focusResult.setText(getString(R.string.aim_focus_result, SessionSettings.distanceWords(focusDiopters)));
+        } else {
+            focus(); // a sharp view from the start
+        }
     }
 
+    // ---- Focus: auto or fixed ---------------------------------------------------------------
+
+    /** Auto to fixed starts where autofocus left the lens; fixed to auto focuses again. */
+    private void setFocusFixed(final boolean fixed) {
+        if (fixed == focusFixed) return;
+        focusFixed = fixed;
+        if (!fixed) {
+            worker.execute(() -> {
+                try {
+                    if (camera != null) camera.setFixedFocus(null);
+                } catch (Exception ignored) {
+                    // the next focus() reports camera problems
+                }
+            });
+            saveFocus();
+            showFocus();
+            focus();
+            return;
+        }
+        worker.execute(() -> {
+            final float lens = camera == null ? Float.NaN : camera.lensDiopters();
+            runOnUiThread(() -> {
+                if (!Float.isNaN(lens)) focusDiopters = lens;
+                focusDiopters = Math.max(0, Math.min(closestDiopters, focusDiopters));
+                applyFixedFocus();
+                saveFocus();
+                showFocus();
+            });
+        });
+    }
+
+    private void applyFixedFocus() {
+        final float d = (float) focusDiopters;
+        worker.execute(() -> {
+            try {
+                if (camera != null) camera.setFixedFocus(d);
+            } catch (Exception ignored) {
+                // the lens stays; the session sets it again
+            }
+        });
+    }
+
+    private void showFocus() {
+        boolean fixed = canFixFocus && focusFixed;
+        findViewById(R.id.fixed_group).setVisibility(fixed ? View.VISIBLE : View.GONE);
+        focusHint.setText(!canFixFocus ? R.string.focus_not_possible : fixed ? R.string.focus_hint_fixed
+                : video ? R.string.focus_hint_auto_video : R.string.focus_hint_auto);
+        if (!fixed || closestDiopters <= 0) return;
+        int progress = (int) Math.round((1 - focusDiopters / closestDiopters) * 1000);
+        focusSlider.setProgress(progress);
+        focusDistance.setText(calibrated
+                ? getString(R.string.focus_distance, SessionSettings.distanceWords(focusDiopters))
+                : getString(R.string.focus_position, Math.round(progress / 10f)));
+    }
+
+    private void saveFocus() {
+        SessionSettings s = SessionSettings.load(this);
+        s.focusFixed = focusFixed;
+        s.focusDiopters = focusDiopters;
+        s.save(this);
+    }
+
+    /** Autofocus once. With a fixed focus: autofocus once, then fix the focus where the lens is. */
     private void focus() {
         focusButton.setEnabled(false);
         focusResult.setText(R.string.aim_focusing);
+        final boolean fixed = canFixFocus && focusFixed;
+        final float before = (float) focusDiopters;
         worker.execute(() -> {
             String result;
+            float lens = Float.NaN;
             try {
-                result = camera == null ? "camera not open" : camera.focus();
+                if (camera == null) {
+                    result = "camera not open";
+                } else if (!fixed) {
+                    result = camera.focus();
+                } else {
+                    camera.setFixedFocus(null);
+                    result = camera.focus();
+                    lens = camera.lensDiopters();
+                    camera.setFixedFocus(Float.isNaN(lens) ? before : lens);
+                }
             } catch (Exception e) {
                 result = e.toString();
             }
             final String text = result;
+            final float found = lens;
             runOnUiThread(() -> {
                 focusButton.setEnabled(true);
                 focusResult.setText(getString(R.string.aim_focus_result, text));
+                if (fixed && !Float.isNaN(found)) {
+                    focusDiopters = found;
+                    saveFocus();
+                    showFocus();
+                }
             });
         });
     }

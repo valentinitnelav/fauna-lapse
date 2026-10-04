@@ -255,6 +255,7 @@ final class SessionRunner implements Runnable {
         try {
             c.open();
             if (!settings.video) c.setSquare(settings.squarePercent / 100.0, settings.squareX, settings.squareY);
+            if (settings.focusFixed) c.setFixedFocus((float) settings.focusDiopters);
         } catch (Exception e) {
             c.close();
             throw e;
@@ -266,6 +267,13 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "camera", c.describe());
         if (!settings.video) SessionLog.put(r, "saved_photo_turn_deg", photoTurn);
         log.write(r);
+        if (settings.focusFixed && !c.describe().optBoolean("fixed_focus_possible") && warning.isEmpty()) {
+            warning = "This phone cannot fix the focus, so it focuses automatically at each "
+                    + (settings.video ? "clip." : "burst.");
+            JSONObject w = SessionLog.record("warning");
+            SessionLog.put(w, "warning", warning);
+            log.write(w);
+        }
     }
 
     private void closeCamera() {

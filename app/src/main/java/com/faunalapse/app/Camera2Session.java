@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -87,6 +88,10 @@ final class Camera2Session implements SessionCamera {
     private boolean exposureOnSquare;
     private MeteringRectangle[] square;
     private boolean canFocus;
+    private boolean canFixFocus;    // the lens can be set to a distance (autofocus off)
+    private float closestDiopters;  // the nearest distance the lens reaches
+    private Float fixedDiopters;    // fixed focus, or null for autofocus
+    private volatile Float lensDiopters; // where the lens is, from the camera's last report
     private boolean recording;
 
     private final CameraCaptureSession.CaptureCallback afWatcher = new CameraCaptureSession.CaptureCallback() {
@@ -95,6 +100,8 @@ final class Camera2Session implements SessionCamera {
             // Earlier frames still report the last focus ("sharp" in a short break).
             if (r.getTag() == FOCUS_START) focusStarted = true;
             if (focusStarted) afState = result.get(CaptureResult.CONTROL_AF_STATE);
+            Float lens = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
+            if (lens != null) lensDiopters = lens;
         }
     };
 
@@ -136,7 +143,16 @@ final class Camera2Session implements SessionCamera {
         CameraCharacteristics c = manager.getCameraCharacteristics(id);
         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         int[] afModes = c.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
-        if (afModes != null) for (int m : afModes) canFocus |= m == CameraMetadata.CONTROL_AF_MODE_AUTO;
+        boolean afOff = false;
+        if (afModes != null) {
+            for (int m : afModes) {
+                canFocus |= m == CameraMetadata.CONTROL_AF_MODE_AUTO;
+                afOff |= m == CameraMetadata.CONTROL_AF_MODE_OFF;
+            }
+        }
+        Float closest = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+        canFixFocus = afOff && closest != null && closest > 0;
+        if (canFixFocus) closestDiopters = closest;
         Range<Integer>[] ranges = c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
         pixelArray = c.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
         Integer afRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
@@ -147,7 +163,17 @@ final class Camera2Session implements SessionCamera {
         put("camera_id", id);
         Integer orientation = c.get(CameraCharacteristics.SENSOR_ORIENTATION);
         put("sensor_orientation", orientation == null ? 0 : orientation);
-        put("focus", canFocus ? "auto, once per burst" : "fixed");
+        put("focus", canFocus ? "auto, once per " + (video ? "clip" : "burst") : "fixed lens");
+        put("fixed_focus_possible", canFixFocus);
+        if (canFixFocus) {
+            put("closest_focus_diopters", closestDiopters);
+            Integer cal = c.get(CameraCharacteristics.LENS_INFO_FOCUS_DISTANCE_CALIBRATION);
+            // Uncalibrated: the lens positions are in order, but not real distances.
+            put("focus_distance_calibration", cal == null ? "unknown"
+                    : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED ? "calibrated"
+                    : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE ? "approximate"
+                    : "uncalibrated");
+        }
 
         Size shape;
         if (video) {
@@ -230,15 +256,41 @@ final class Camera2Session implements SessionCamera {
     }
 
     private void setCommon(CaptureRequest.Builder b) {
-        // Autofocus mode "auto": the lens moves only when focus() asks, then stays.
-        if (canFocus) b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
+        if (fixedDiopters != null) {
+            b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+            b.set(CaptureRequest.LENS_FOCUS_DISTANCE, fixedDiopters);
+        } else if (canFocus) {
+            // Autofocus mode "auto": the lens moves only when focus() asks, then stays.
+            b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
+        }
         if (fpsRange != null) b.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
         if (square != null && focusOnSquare) b.set(CaptureRequest.CONTROL_AF_REGIONS, square);
         if (square != null && exposureOnSquare) b.set(CaptureRequest.CONTROL_AE_REGIONS, square);
     }
 
     @Override
+    public void setFixedFocus(Float diopters) throws Exception {
+        if (!canFixFocus) return;
+        fixedDiopters = diopters == null ? null : Math.max(0, Math.min(closestDiopters, diopters));
+        put("focus", fixedDiopters == null ? "auto, once per " + (video ? "clip" : "burst")
+                : String.format(Locale.US, "fixed at %.2f diopters", fixedDiopters));
+        setCommon(previewRequest);
+        session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
+        if (!video) buildStill();
+    }
+
+    @Override
+    public float lensDiopters() {
+        Float d = lensDiopters;
+        return d == null ? Float.NaN : d;
+    }
+
+    @Override
     public String focus() throws Exception {
+        if (fixedDiopters != null) {
+            return String.format(Locale.US, "fixed at %s (%.2f diopters)",
+                    SessionSettings.distanceWords(fixedDiopters), fixedDiopters);
+        }
         if (!canFocus) return "fixed focus";
         long t = SpeedTest.now();
         focusStarted = false;

@@ -16,8 +16,9 @@ Last update: 2026-10-04.
 - **Main screen**: status card (live counts, battery, phone time; Stop asks first), then 1 Aim
   (photos or video, aim screen), 2 Schedule (one summary in words; the settings open on Change), 3
   Start. Light theme, dark in the phone's dark mode; phase 0 tests (one photo, speed test) folded away.
-- **Aim screen**: live camera view in the session's own camera setup; drag the square, slider for
-  its size; focus and exposure follow the square; a triangle ("top") marks the top of the saved
+- **Aim screen**: live camera view in the session's own camera setup; drag the square, pinch or
+  slider for its size; focus and exposure follow the square; focus auto or fixed (Camera2: slider
+  near to far, Focus again fixes it where autofocus put it); a triangle marks the top of the saved
   photos; "Start session here" starts with the phone already in its place.
 - **Guards**: heat pause (camera off); clean stop on low battery without charging or too little storage.
 
@@ -66,7 +67,7 @@ Last update: 2026-10-04.
 | File | Job |
 |---|---|
 | `MainActivity.java` | Main screen (status card, aim and schedule cards, Start, Stop) and phase 0 test buttons; permissions; phone turn at Start; adb hooks in debug builds |
-| `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square and its size, focus check |
+| `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Session values: defaults, saving, checks, `CapturePlan` and the record line |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |

@@ -24,10 +24,10 @@
     <string name="mode_photo">Photos</string>
     <string name="mode_video">Video</string>
     <string name="aim_button">Aim the camera</string>
-    <string name="aim_summary_photo">Square: %1$d %% of the short side of the photo, %2$s. Only the square is saved; focus and exposure follow it.</string>
+    <string name="aim_summary_photo">Square: %1$d %% of the short side of the photo, %2$s. Only the square is saved; focus and exposure follow it. %3$s</string>
     <string name="aim_square_middle">in the middle</string>
     <string name="aim_square_placed">where you placed it</string>
-    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view.</string>
+    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view. %1$s</string>
 
     <!-- 2 Schedule -->
     <string name="card_schedule">2 · Schedule</string>
@@ -97,6 +97,19 @@
     <string name="aim_start">Start session here</string>
     <string name="aim_top">top</string>
     <string name="aim_focusing">Focusing…</string>
+    <string name="focus_label">Focus</string>
+    <string name="focus_auto">Auto</string>
+    <string name="focus_fixed">Fixed</string>
+    <string name="focus_near">Near</string>
+    <string name="focus_far">Far</string>
+    <string name="focus_distance">Lens set to %1$s.</string>
+    <string name="focus_position">Lens position: %1$d of 100, from near to far (this phone does not tell the distance).</string>
+    <string name="focus_hint_auto">Auto (default, works on every phone): the camera focuses on the square at the start of each burst, then the lens stays.</string>
+    <string name="focus_hint_auto_video">Auto (default, works on every phone): the camera focuses on the middle of the view at the start of each clip, then the lens stays.</string>
+    <string name="focus_hint_fixed">Fixed: the lens stays at this distance for the whole session and never focuses by itself, so bursts start faster and wind or a passing insect cannot pull the focus away. Tap Focus again to focus once and fix the focus there, then adjust with the slider while you watch the view. Keep the phone where it is.</string>
+    <string name="focus_not_possible">This phone can only focus automatically, at the start of each burst or clip.</string>
+    <string name="summary_focus_auto">Focus: automatic at the start of each burst or clip.</string>
+    <string name="summary_focus_fixed">Focus: fixed at one distance (set on the aim screen).</string>
     <string name="aim_focus_result">Focus: %1$s</string>
     <string name="aim_hint">Drag the square onto the flower with a finger; pinch it with two fingers (or use the slider) to make it larger or smaller. The small triangle marks the top of the saved photos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
     <string name="aim_hint_video">Fix the phone in its place, then tap Start session here.</string>
