@@ -11,11 +11,11 @@ FaunaLapse has no artificial intelligence (AI). Its sister app,
 
 ## Status
 
-Early development, not ready for field use. Scheduled photo and video sessions with the screen off
-work on the first test phone. Setting up a phone takes a few taps: aim the camera and place the
-square on a live camera view, check the schedule (saved on the phone), start. Phase 0 tests on more
-phones (speed, power, heat) are running. See [docs/PHONES.md](docs/PHONES.md) for the phones tested
-so far.
+Early development: ready for test sessions, not yet for field studies. Scheduled photo and video
+sessions with the screen off work on the first test phone. Setting up a phone takes a few taps: aim
+the camera and place the square on a live camera view, check the schedule (saved on the phone),
+start. Phase 0 tests on more phones (speed, power, heat) are running. See
+[docs/PHONES.md](docs/PHONES.md) for the phones tested so far.
 
 ## Planned features
 
@@ -33,6 +33,29 @@ so far.
 - A session log of every photo and event, ready for analysis in R or Python.
 - Files in `Documents/FaunaLapse` on the phone, one folder per session: easy to copy to a computer
   over USB, and kept when the app is removed.
+
+## Using it in the field
+
+1. **At home, once per phone:** install the app, open it and allow the camera (on Android 10 or
+   older also the storage). Under *2 · Schedule* tap *Change settings* and set the schedule; it stays
+   saved on the phone. Check that the phone time is right. With several phones, set them all up
+   this way before you go out.
+2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
+   than a few hours, connect a power bank.
+3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the
+   flower and set its size. When the focus line says "sharp", tap *Start session here*.
+4. Switch the screen off with the power button. The session goes on; the camera is off in the
+   breaks.
+5. To stop early: open the app, tap *Stop session*, then *Stop*.
+6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
+   phone and copy `Internal storage/Documents/FaunaLapse/<start time>/`. Each folder holds the photos
+   (or videos) and `session.jsonl`, the record of every photo and event.
+
+Tips: a daily window may cross midnight (22:00-04:00), and 00:00-24:00 records all day, for example
+under the midnight sun. The session pauses while the battery is too warm (45 °C by default) and stops
+cleanly when the battery falls to 15 % without charging. Some phones stop apps in the background to
+save power: if a session ends too early, allow FaunaLapse to run in the background in the phone's
+battery settings.
 
 ## Build from source
 
