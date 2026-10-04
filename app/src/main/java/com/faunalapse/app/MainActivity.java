@@ -18,9 +18,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.Editable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.format.Formatter;
 import android.text.style.ImageSpan;
 import android.view.OrientationEventListener;
@@ -51,7 +54,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Main screen: a status card (ready, or what the running session does; where the files go), then
+ * Main screen: a status card (the phone name, what runs now, where the files go; the last session,
+ * battery and clock fold away), then
  * the steps of a setup: 1 aim (photos or video, the aim screen), 2 field metadata (FieldInfo, with
  * the GPS position), 3 schedule (a short summary; the settings open on "Change"), 4 the phone for
  * the field (PhoneCheck), then Start. The phase 0 test buttons are folded away at the bottom.
@@ -81,9 +85,16 @@ public final class MainActivity extends Activity {
     };
     private ScrollView scroll;
     private TextView statusTitle;
+    private TextView sessionState;
     private TextView sessionStatus;
     private TextView sessionProgress;
     private TextView sessionWarning;
+    private LinearLayout sessionChecks;
+    private TextView detailsToggle;
+    private View details;
+    private boolean detailsOpen;
+    private String detailsShown; // the toggle as drawn: rebuilt only when it changes
+    private TextView lastSessionText;
     private TextView battery;
     private TextView phoneTime;
     private TextView storage;
@@ -100,6 +111,7 @@ public final class MainActivity extends Activity {
     private Button changeButton;
     private View settingsGroup;
     private LinearLayout phoneChecks;
+    private LinearLayout checks; // where the phone check lines go now: card 4, or the status card
     private String phoneState; // the PhoneCheck shown, as JSON text: rebuilt only when it changes
     private TextView startMessage;
     private Button startButton;
@@ -130,15 +142,18 @@ public final class MainActivity extends Activity {
     private EditText sampleId;
     private EditText sessionId;
     private EditText phoneName;
+    private EditText latitude;
+    private EditText longitude;
     private TextView locationText;
     private Button locationButton;
-    private Location location; // the saved GPS position, or null
+    private Location location; // the saved position (GPS or typed), or null
     private GpsFix gps;        // while searching
     private int requested;
     private boolean cameraDenied;
     private String problem; // why Start or Aim did not go on, shown above Start until the next tap
     private Boolean controlsEnabled; // null until first set
     private String lastSession; // from the log; null = read it again
+    private String lastWarning; // the last session's warning or early end, or ""
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,9 +161,19 @@ public final class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         scroll = findViewById(R.id.scroll);
         statusTitle = findViewById(R.id.status_title);
+        sessionState = findViewById(R.id.session_state);
         sessionStatus = findViewById(R.id.session_status);
         sessionProgress = findViewById(R.id.session_progress);
         sessionWarning = findViewById(R.id.session_warning);
+        sessionChecks = findViewById(R.id.session_checks);
+        detailsToggle = findViewById(R.id.details_toggle);
+        details = findViewById(R.id.details);
+        detailsToggle.setOnClickListener(v -> {
+            detailsOpen = !detailsOpen;
+            showDetailsToggle();
+        });
+        lastSessionText = findViewById(R.id.last_session);
+        ((TextView) findViewById(R.id.phone_id)).setText(getString(R.string.phone_id, FieldInfo.phoneId(this)));
         battery = findViewById(R.id.battery);
         phoneTime = findViewById(R.id.phone_time);
         storage = findViewById(R.id.storage);
@@ -214,6 +239,24 @@ public final class MainActivity extends Activity {
         sampleId = findViewById(R.id.sample_id);
         sessionId = findViewById(R.id.session_id);
         phoneName = findViewById(R.id.device_name);
+        latitude = findViewById(R.id.latitude);
+        longitude = findViewById(R.id.longitude);
+        TextWatcher typed = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (gps == null) showLocation(null); // GPS or typed by hand
+            }
+        };
+        latitude.addTextChangedListener(typed);
+        longitude.addTextChangedListener(typed);
         locationText = findViewById(R.id.location_text);
         locationButton = findViewById(R.id.get_location);
         locationButton.setOnClickListener(v -> getLocation());
@@ -407,12 +450,19 @@ public final class MainActivity extends Activity {
         sampleId.setText(f.sampleId);
         sessionId.setText(f.sessionId);
         phoneName.setText(f.phoneName);
-        location = f.location;
+        showPosition(f.location);
+    }
+
+    /** Puts a position into the latitude and longitude fields (empty for none). */
+    private void showPosition(Location l) {
+        location = l;
+        latitude.setText(l == null ? "" : FieldInfo.degrees(l.getLatitude()));
+        longitude.setText(l == null ? "" : FieldInfo.degrees(l.getLongitude()));
         showLocation(null);
     }
 
     /** The field metadata on the screen; throws with a plain-language message when the phone name
-     *  is not usable. An empty phone name gets the default again. */
+     *  or the position is not usable. An empty phone name gets the default again. */
     private FieldInfo fieldOnScreen() {
         FieldInfo f = new FieldInfo();
         f.site = text(site);
@@ -425,7 +475,7 @@ public final class MainActivity extends Activity {
             f.phoneName = FieldInfo.defaultPhoneName(this);
             phoneName.setText(f.phoneName);
         }
-        f.location = location;
+        f.location = locationOnScreen();
         String p = f.problem();
         if (p != null) throw new IllegalArgumentException(p);
         return f;
@@ -435,16 +485,42 @@ public final class MainActivity extends Activity {
         return field.getText().toString().trim();
     }
 
-    /** The saved position in words, after {@code note} (null: none). */
+    /** The position in the fields: the GPS position while they still show it, else typed by hand;
+     *  null when both are empty. Throws with a plain-language message when it is not usable. */
+    private Location locationOnScreen() {
+        String lat = text(latitude);
+        String lon = text(longitude);
+        if (lat.isEmpty() && lon.isEmpty()) return null;
+        if (lat.isEmpty() || lon.isEmpty()) throw new IllegalArgumentException(getString(R.string.location_both));
+        double la = decimal(latitude, R.string.field_latitude);
+        double lo = decimal(longitude, R.string.field_longitude);
+        if (location != null && lat.equals(FieldInfo.degrees(location.getLatitude()))
+                && lon.equals(FieldInfo.degrees(location.getLongitude()))) {
+            return location;
+        }
+        return FieldInfo.typed(la, lo);
+    }
+
+    /** Where the position in the fields comes from, or what is wrong with it; after {@code note}
+     *  (null: none). */
     private void showLocation(String note) {
         String text;
-        if (location == null) {
-            text = getString(R.string.location_none);
-        } else {
-            text = getString(R.string.location_saved, FieldInfo.coordinates(location),
-                    Math.round(location.getAccuracy()),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(location.getTime())));
-            if (location.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
+        try {
+            Location l = locationOnScreen();
+            String p = l == null ? null : FieldInfo.coordinateProblem(l.getLatitude(), l.getLongitude());
+            if (p != null) {
+                text = p;
+            } else if (l == null) {
+                text = getString(R.string.location_none);
+            } else if (!l.hasAccuracy()) {
+                text = getString(R.string.location_typed);
+            } else {
+                text = getString(R.string.location_saved, Math.round(l.getAccuracy()),
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(l.getTime())));
+                if (l.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
+            }
+        } catch (IllegalArgumentException e) {
+            text = e.getMessage();
         }
         locationText.setText(note == null ? text : note + "\n" + text);
     }
@@ -471,7 +547,8 @@ public final class MainActivity extends Activity {
             @Override
             public void onSearching(Location best, long elapsedMs) {
                 String text = getString(R.string.location_searching, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
-                if (best != null) text += " " + getString(R.string.location_best, Math.round(best.getAccuracy()));
+                // Its own line: the seconds before it would move it at each tick.
+                if (best != null) text += "\n" + getString(R.string.location_best, Math.round(best.getAccuracy()));
                 locationText.setText(text);
             }
 
@@ -482,11 +559,10 @@ public final class MainActivity extends Activity {
                     showLocation(getString(R.string.location_failed, GpsFix.TIMEOUT_MS / 1000));
                     return;
                 }
-                location = best;
+                showPosition(best);
                 FieldInfo saved = FieldInfo.load(MainActivity.this);
                 saved.location = best;
                 saved.save(MainActivity.this);
-                showLocation(null);
             }
         });
         gps.start();
@@ -536,9 +612,18 @@ public final class MainActivity extends Activity {
 
     /** Where the files go, what FaunaLapse uses there and what is free; in the app's own folder
      *  (Android 10 and older without the storage permission) also that it goes with the app.
+     *  During a session: its folder and what it saved so far. Reading the free space costs almost
+     *  nothing; the folder is counted only when the screen opens and after a session.
      *  UsableSpace: leaves out caches Android could clear, a cautious number (as SessionRunner). */
     @SuppressLint("UsableSpace")
     private void showStorage() {
+        File folder = SessionRunner.folder;
+        if (CaptureService.sessionRunning && folder != null) {
+            show(storage, getString(R.string.storage_session, CaptureService.shownPath(folder),
+                    Formatter.formatShortFileSize(this, SessionRunner.savedBytes.get()),
+                    Formatter.formatShortFileSize(this, folder.getUsableSpace())));
+            return;
+        }
         File dir = CaptureService.sessionsDir(this);
         String path = CaptureService.shownPath(dir);
         String free = Formatter.formatShortFileSize(this, dir.getUsableSpace());
@@ -697,26 +782,27 @@ public final class MainActivity extends Activity {
     private void refresh() {
         boolean running = CaptureService.running;
         boolean session = CaptureService.sessionRunning;
-        int title;
         if (session) {
-            title = SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session;
+            show(sessionState, getString(SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session));
             show(sessionStatus, SessionRunner.status);
             show(sessionProgress, SessionRunner.progress);
             show(sessionWarning, SessionRunner.warning);
         } else if (running) {
-            title = R.string.status_test;
+            show(sessionState, getString(R.string.status_test));
             show(sessionStatus, getString(R.string.status_running, CaptureService.START_DELAY_MS / 1000));
             show(sessionProgress, "");
             show(sessionWarning, "");
-        } else {
-            if (lastSession == null) lastSession = lastSession();
-            title = R.string.status_ready;
-            show(sessionStatus, lastSession);
+        } else { // nothing runs: no state line; the last session folds away, its warning stays
+            if (lastSession == null) readLastSession();
+            show(sessionState, "");
+            show(sessionStatus, "");
             show(sessionProgress, "");
-            show(sessionWarning, "");
+            show(sessionWarning, lastWarning);
         }
+        show(lastSessionText, running ? "" : lastSession);
+        showDetailsToggle();
         // The phone name on top tells the phones of a team apart.
-        String titleText = getString(title) + " · " + FieldInfo.load(this).phoneName;
+        String titleText = getString(R.string.status_title, FieldInfo.load(this).phoneName);
         if (!titleText.contentEquals(statusTitle.getText())) statusTitle.setText(titleText);
         if (running) lastSession = null; // read again when it has ended
         if (wasRunning && !running) countStorage();
@@ -734,7 +820,7 @@ public final class MainActivity extends Activity {
         startHint.setVisibility(running ? View.GONE : View.VISIBLE);
         setControlsEnabled(!running);
         if (!running) showScheduleSummary();
-        showPhoneCheck();
+        showPhoneCheck(session);
         String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
         show(startMessage, message == null ? "" : message);
         if (testsGroup.getVisibility() == View.VISIBLE) showTestStatus(running && !session);
@@ -772,6 +858,22 @@ public final class MainActivity extends Activity {
         return s;
     }
 
+    /** The line that opens and closes the last session, battery and clock, with an arrow after it. */
+    private void showDetailsToggle() {
+        String words = getString(CaptureService.running ? R.string.details_running : R.string.details_idle);
+        if ((words + detailsOpen).equals(detailsShown)) return;
+        detailsShown = words + detailsOpen;
+        details.setVisibility(detailsOpen ? View.VISIBLE : View.GONE);
+        Drawable d = getDrawable(detailsOpen ? R.drawable.ic_less : R.drawable.ic_more);
+        int size = Math.round(detailsToggle.getTextSize());
+        d.setBounds(0, 0, size, size);
+        SpannableStringBuilder s = new SpannableStringBuilder(words).append("  ");
+        s.setSpan(new ImageSpan(d, ImageSpan.ALIGN_BASELINE), s.length() - 1, s.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        detailsToggle.setText(s);
+        detailsToggle.setContentDescription(words + ". " + getString(detailsOpen ? R.string.help_hide : R.string.help_show));
+    }
+
     /** Sets the text, and hides the view while there is none. */
     private static void show(TextView view, String text) {
         if (!text.contentEquals(view.getText())) view.setText(text);
@@ -779,18 +881,22 @@ public final class MainActivity extends Activity {
     }
 
     /** What to change on the phone before a field session (PhoneCheck), each with the button that
-     *  opens its settings page; apps cannot change these settings themselves. BatteryLife: Google
-     *  Play allows the battery dialog only for some kinds of apps; FaunaLapse is not on Google Play,
-     *  and its core work (long sessions with the screen off) is what the battery limits stop. */
+     *  opens its settings page; apps cannot change these settings themselves. During a session the
+     *  lines move into the status card (only what should change), so something forgotten shows
+     *  there. BatteryLife: Google Play allows the battery dialog only for some kinds of apps;
+     *  FaunaLapse is not on Google Play, and its core work (long sessions with the screen off) is
+     *  what the battery limits stop. */
     @SuppressLint("BatteryLife")
-    private void showPhoneCheck() {
+    private void showPhoneCheck(boolean session) {
         PhoneCheck c = PhoneCheck.read(this);
-        String state = c.toJson().toString();
+        String state = session + c.toJson().toString();
         if (state.equals(phoneState)) return;
         phoneState = state;
         phoneChecks.removeAllViews();
+        sessionChecks.removeAllViews();
+        checks = session ? sessionChecks : phoneChecks;
         if (c.ready()) {
-            addCheck(getString(R.string.check_ok), 0, null);
+            if (!session) addCheck(getString(R.string.check_ok), 0, null);
             return;
         }
         List<String> radios = new ArrayList<>();
@@ -818,7 +924,7 @@ public final class MainActivity extends Activity {
 
     /** One line of the phone check; {@code button} 0: text only. */
     private void addCheck(String text, int button, final Intent page) {
-        View line = getLayoutInflater().inflate(R.layout.phone_check, phoneChecks, false);
+        View line = getLayoutInflater().inflate(R.layout.phone_check, checks, false);
         ((TextView) line.findViewById(R.id.check_text)).setText(text);
         Button b = line.findViewById(R.id.check_button);
         if (button == 0) {
@@ -827,7 +933,7 @@ public final class MainActivity extends Activity {
             b.setText(button);
             b.setOnClickListener(v -> openPage(page));
         }
-        phoneChecks.addView(line);
+        checks.addView(line);
     }
 
     private void openPage(Intent page) {
@@ -838,8 +944,9 @@ public final class MainActivity extends Activity {
         }
     }
 
-    /** The last session from the log (it also survives a restart of the app), in words. */
-    private String lastSession() {
+    /** The last session from the log (it also survives a restart of the app), in words; its
+     *  warning or early end apart, as it stays visible. */
+    private void readLastSession() {
         JSONObject last = null;
         for (String line : lines(CaptureService.logFile(this))) {
             try {
@@ -849,13 +956,21 @@ public final class MainActivity extends Activity {
                 // not a record
             }
         }
-        if (last == null) return getString(R.string.no_session);
+        lastWarning = "";
+        if (last == null) {
+            lastSession = getString(R.string.no_session);
+            return;
+        }
         String text = getString(R.string.last_session, last.optString("file"), last.optString("counts"),
                 last.optString("reason"));
         String battery = last.optString("battery");
-        if (!battery.isEmpty()) text += " " + battery;
-        String warning = last.optString("warning");
-        return warning.isEmpty() ? text : text + "\n" + warning;
+        lastSession = battery.isEmpty() ? text : text + " " + battery;
+        List<String> problems = new ArrayList<>();
+        if ("error".equals(last.optString("result"))) {
+            problems.add(getString(R.string.last_session_early, last.optString("reason")));
+        }
+        if (!last.optString("warning").isEmpty()) problems.add(last.optString("warning"));
+        if (!problems.isEmpty()) lastWarning = getString(R.string.last_session_warning, TextUtils.join(" ", problems));
     }
 
     /** Phase 0 tests: the last test record, key by key. */

@@ -19,16 +19,26 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Status: ready, or what the running session does now -->
+        <!-- Status: the phone name, what runs now (nothing while idle), warnings, where the files
+             go; the last session, battery and clock fold away under their own line. -->
         <LinearLayout style="@style/Card" android:layout_marginTop="0dp">
             <TextView android:id="@+id/status_title" style="@style/CardTitle" android:textSize="20sp" />
+            <TextView android:id="@+id/session_state" style="@style/Body" android:textStyle="bold" />
             <TextView android:id="@+id/session_status" style="@style/Body" />
             <TextView android:id="@+id/session_progress" style="@style/Body" />
             <TextView android:id="@+id/session_warning" style="@style/Body" android:textColor="@color/warning" android:textStyle="bold" />
-            <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
-            <TextView android:id="@+id/phone_time" style="@style/Hint" />
+            <LinearLayout android:id="@+id/session_checks" style="@style/Group" />
             <TextView android:id="@+id/storage" style="@style/Body" android:layout_marginTop="8dp"
                 android:textSize="15sp" />
+            <TextView android:id="@+id/details_toggle" style="@style/Body" android:minHeight="48dp"
+                android:gravity="center_vertical" android:textColor="@color/heading" />
+            <LinearLayout android:id="@+id/details" style="@style/Group" android:visibility="gone">
+                <TextView android:id="@+id/last_session" style="@style/Body" android:layout_marginTop="0dp"
+                    android:textSize="15sp" />
+                <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
+                <TextView android:id="@+id/phone_time" style="@style/Hint" />
+                <TextView android:id="@+id/phone_id" style="@style/Hint" />
+            </LinearLayout>
             <Button android:id="@+id/stop_session" style="@style/BigButton"
                 android:backgroundTint="@color/stop" android:text="@string/stop_session" />
         </LinearLayout>
@@ -80,7 +90,17 @@
                 <EditText android:id="@+id/device_name" style="@style/Field.Row" android:maxLength="20"
                     android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
             </LinearLayout>
-            <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="12dp"
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/latitude" android:text="@string/field_latitude" />
+                <EditText android:id="@+id/latitude" style="@style/Field.Row" android:hint="@string/field_latitude_hint"
+                    android:importantForAutofill="no" android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/longitude" android:text="@string/field_longitude" />
+                <EditText android:id="@+id/longitude" style="@style/Field.Row" android:hint="@string/field_longitude_hint"
+                    android:importantForAutofill="no" android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+            </LinearLayout>
+            <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="8dp"
                 android:textSize="15sp" />
             <Button android:id="@+id/get_location" style="@style/SecondaryButton" android:text="@string/location_get" />
         </LinearLayout>
@@ -172,7 +192,8 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 4: the phone for the field (PhoneCheck); only what should change is listed -->
+        <!-- 4: the phone for the field (PhoneCheck); only what should change is listed (during a
+             session in the status card instead) -->
         <LinearLayout android:id="@+id/phone_card" style="@style/Card">
             <TextView style="@style/CardTitle" android:text="@string/card_phone" />
             <LinearLayout android:id="@+id/phone_checks" style="@style/Group" />

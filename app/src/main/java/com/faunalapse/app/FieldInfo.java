@@ -28,9 +28,12 @@ final class FieldInfo {
     String plant = "";
     String sampleId = "";
     String sessionId = "";
-    /** The last GPS position saved with "Get location"; null when there is none. */
+    /** The position: from "Get location" (provider GPS, with its accuracy and time) or typed by
+     *  hand from another device (provider TYPED, no accuracy); null when there is none. */
     Location location;
 
+    static final String GPS = "gps";
+    static final String TYPED = "typed";
     private static final String PREFS = "field_info";
 
     static FieldInfo load(Context context) {
@@ -44,13 +47,19 @@ final class FieldInfo {
         f.sampleId = p.getString("sample_id", "");
         f.sessionId = p.getString("session_id", "");
         if (p.contains("latitude")) {
-            Location l = new Location("gps");
             // Strings: a float would round the position to about 1 m.
-            l.setLatitude(Double.parseDouble(p.getString("latitude", "0")));
-            l.setLongitude(Double.parseDouble(p.getString("longitude", "0")));
-            l.setAccuracy(p.getFloat("accuracy_m", 0));
-            l.setTime(p.getLong("fix_time", 0));
-            f.location = l;
+            double lat = Double.parseDouble(p.getString("latitude", "0"));
+            double lon = Double.parseDouble(p.getString("longitude", "0"));
+            if (TYPED.equals(p.getString("location_source", GPS))) {
+                f.location = typed(lat, lon);
+            } else {
+                Location l = new Location(GPS);
+                l.setLatitude(lat);
+                l.setLongitude(lon);
+                l.setAccuracy(p.getFloat("accuracy_m", 0));
+                l.setTime(p.getLong("fix_time", 0));
+                f.location = l;
+            }
         }
         return f;
     }
@@ -63,13 +72,14 @@ final class FieldInfo {
                 .putString("plant", plant)
                 .putString("sample_id", sampleId)
                 .putString("session_id", sessionId);
-        if (location == null) {
-            e.remove("latitude").remove("longitude").remove("accuracy_m").remove("fix_time");
-        } else {
+        e.remove("latitude").remove("longitude").remove("location_source").remove("accuracy_m").remove("fix_time");
+        if (location != null) {
             e.putString("latitude", String.valueOf(location.getLatitude()))
                     .putString("longitude", String.valueOf(location.getLongitude()))
-                    .putFloat("accuracy_m", location.getAccuracy())
-                    .putLong("fix_time", location.getTime());
+                    .putString("location_source", location.getProvider());
+            if (location.hasAccuracy()) {
+                e.putFloat("accuracy_m", location.getAccuracy()).putLong("fix_time", location.getTime());
+            }
         }
         e.apply();
     }
@@ -77,7 +87,22 @@ final class FieldInfo {
     /** A plain-language problem with the values, or null when they are usable. */
     String problem() {
         if (!validPhoneName(phoneName)) return "Phone name: use 1 to 20 letters (a to z), digits, - or _.";
+        return location == null ? null : coordinateProblem(location.getLatitude(), location.getLongitude());
+    }
+
+    /** What is wrong with a position in decimal degrees, or null. */
+    static String coordinateProblem(double latitude, double longitude) {
+        if (!(latitude >= -90 && latitude <= 90)) return "Latitude: use -90 to 90 (decimal degrees; south is negative).";
+        if (!(longitude >= -180 && longitude <= 180)) return "Longitude: use -180 to 180 (decimal degrees; west is negative).";
         return null;
+    }
+
+    /** A position typed by hand: no accuracy or time. */
+    static Location typed(double latitude, double longitude) {
+        Location l = new Location(TYPED);
+        l.setLatitude(latitude);
+        l.setLongitude(longitude);
+        return l;
     }
 
     /** Letters a to z, digits, - and _ only: safe in folder names on every computer. */
@@ -112,13 +137,13 @@ final class FieldInfo {
         return id.substring(0, 8).toUpperCase(Locale.US);
     }
 
-    /** "48.858370, 2.294481": WGS 84 degrees (as GPS gives them), 6 decimals (about 0.1 m). */
-    static String coordinates(Location l) {
-        return String.format(Locale.US, "%.6f, %.6f", l.getLatitude(), l.getLongitude());
+    /** "48.858370": WGS 84 decimal degrees (as GPS gives them), 6 decimals (about 0.1 m). */
+    static String degrees(double d) {
+        return String.format(Locale.US, "%.6f", d);
     }
 
-    /** For the session record: every key always present (empty text, or null without a
-     *  location), so tables built from many records have the same columns. */
+    /** For the session record: every key always present (empty text, or null when not known),
+     *  so tables built from many records have the same columns. */
     JSONObject toJson(Context context) {
         JSONObject j = new JSONObject();
         SessionLog.put(j, "phone_name", phoneName);
@@ -135,8 +160,10 @@ final class FieldInfo {
             SessionLog.put(l, "latitude", Math.round(location.getLatitude() * 1e6) / 1e6);
             SessionLog.put(l, "longitude", Math.round(location.getLongitude() * 1e6) / 1e6);
             SessionLog.put(l, "datum", "WGS 84");
-            SessionLog.put(l, "accuracy_m", Math.round(location.getAccuracy() * 10) / 10.0);
-            SessionLog.put(l, "fix_time", SessionLog.isoTime(location.getTime()));
+            SessionLog.put(l, "source", location.getProvider()); // "gps" of this phone, or "typed" by hand
+            boolean gps = location.hasAccuracy();
+            SessionLog.put(l, "accuracy_m", gps ? Math.round(location.getAccuracy() * 10) / 10.0 : JSONObject.NULL);
+            SessionLog.put(l, "fix_time", gps ? SessionLog.isoTime(location.getTime()) : JSONObject.NULL);
             SessionLog.put(j, "location", l);
         }
         return j;

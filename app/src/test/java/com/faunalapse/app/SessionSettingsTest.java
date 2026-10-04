@@ -2,6 +2,7 @@ package com.faunalapse.app;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -19,6 +20,17 @@ public class SessionSettingsTest {
         assertFalse(FieldInfo.validPhoneName("a/b"));
         assertFalse(FieldInfo.validPhoneName("Wiese-Ü"));
         assertFalse(FieldInfo.validPhoneName("123456789012345678901")); // 21 characters
+    }
+
+    @Test
+    public void typedPositionsInDecimalDegrees() {
+        assertNull(FieldInfo.coordinateProblem(48.858370, 2.294481));
+        assertNull(FieldInfo.coordinateProblem(-33.8568, -151.2153)); // south and west are negative
+        assertNull(FieldInfo.coordinateProblem(90, 180));
+        assertNotNull(FieldInfo.coordinateProblem(90.1, 0));
+        assertNotNull(FieldInfo.coordinateProblem(0, -180.5));
+        assertNotNull(FieldInfo.coordinateProblem(Double.NaN, 0));
+        assertEquals("48.858370", FieldInfo.degrees(48.85837));
     }
 
     @Test

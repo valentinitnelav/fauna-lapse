@@ -3,7 +3,6 @@
 A short snapshot for coding agents (humans may read it too), read at the start of every session; at
 most 100 lines. Each entry says only what is true now and where it lives: replace or remove text when
 it changes, never add history. Rules and their reasons are in `AGENTS.md`; history is in git.
-
 Last update: 2026-10-04.
 
 ## What works now
@@ -11,19 +10,19 @@ Last update: 2026-10-04.
 - **Sessions** on a schedule, with the screen off: daily windows for N days or a run of Z hours;
   photo bursts (step, burst length, break) or video clips (clip length, 5, 10 or 15 fps, break); both
   save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone; every
-  event in `session.jsonl`, battery use at the end (`BatteryMeter`). Tested on the Samsung M12.
-- **Main screen**: status card (live counts, battery, phone time, files folder, FaunaLapse use and
-  free storage; Stop asks first); 1 Aim (photos or video, aim screen); 2 Field metadata (site,
-  transect, plant, sample ID, session ID, phone name; Get location: GPS on until within 10 m or 3 min,
-  then off; `field` in `session_start`); 3 Schedule (a summary; settings open on Change); 4 Phone for
-  the field (airplane mode, Wi-Fi, Bluetooth, location, battery limits, each with its settings page;
-  also in `session_start`); Start. Explanations behind the (i) of a label; light or dark as the phone.
+  event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off), clean
+  stop on low battery without charging or too little storage. Tested on the Samsung M12.
+- **Main screen**: status card (phone name; while running: state, counts, warnings, phone check
+  lines, session folder and MB so far; files folder, FaunaLapse use, free storage; last session,
+  battery, clock and phone ID fold away; Stop asks first); 1 Aim; 2 Field metadata (site, transect,
+  plant, sample ID, session ID, phone name, latitude and longitude typed or from Get location: GPS
+  on until within 10 m or 3 min; `field` in `session_start`); 3 Schedule (summary; settings on
+  Change); 4 Phone for the field (radios, location, battery limits, each with its settings page).
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch anywhere or slider for
   its size, real and saved pixels live under the slider; focus and exposure follow the square; focus
-  fixed (Camera2, default 20 cm, slider, Focus again fixes it where autofocus put it) or auto.
-  Controls scroll under the view ("More below"); Done and Start stay at the bottom.
-- **Guards**: heat pause (camera off); clean stop on low battery without charging or too little storage.
+  fixed (Camera2, default 20 cm, slider, Focus again fixes it where autofocus put it) or auto;
+  controls scroll under the view ("More below"); Done and Start stay at the bottom.
 
 ## Key invariants
 
@@ -44,7 +43,8 @@ Last update: 2026-10-04.
 - Video square: camera -> `SquareRecorder` texture -> GPU -> hardware encoder -> MP4. Texture corners
   address the frame as stored (top row first), using only the valid area of the SurfaceTexture
   transform (Camera2 adds the sensor turn there, Camera1 not). Camera2 zooms first (crop region).
-- Records: `time` = phone clock time with time zone; durations in ms (`SystemClock.elapsedRealtime`).
+- Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
+  present (null where it does not apply), so tables from many sessions get the same columns.
 - `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 153 KB).
 
 ## Defaults

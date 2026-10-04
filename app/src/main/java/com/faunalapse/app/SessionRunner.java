@@ -14,9 +14,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Runs one session: follows the CapturePlan, opens the camera shortly before each photo burst or
@@ -58,6 +60,10 @@ final class SessionRunner implements Runnable {
     static volatile String progress = "";
     static volatile String warning = "";
     static volatile boolean heatPaused;
+    /** The running session's folder, and the bytes of the photos and clips saved there so far
+     *  (counted here, so the screen never has to walk through thousands of files). */
+    static volatile File folder;
+    static final AtomicLong savedBytes = new AtomicLong();
 
     private final Context context;
     private final SessionSettings settings;
@@ -116,6 +122,8 @@ final class SessionRunner implements Runnable {
         status = "Session starting.";
         warning = "";
         heatPaused = false;
+        folder = dir;
+        savedBytes.set(0);
         updateProgress();
         writeStart();
         Thread meterThread = new Thread(meter, "battery");
@@ -234,6 +242,8 @@ final class SessionRunner implements Runnable {
         }
     }
 
+    /** UsableSpace: the cautious free space, as in stopReason. */
+    @SuppressLint("UsableSpace")
     private void writeStart() {
         JSONObject r = SessionLog.record("session_start");
         SessionLog.put(r, "field", FieldInfo.load(context).toJson(context)); // site, plant, location
@@ -246,6 +256,8 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "phone_state", PhoneCheck.read(context).toJson()); // radios, battery limits
         SessionLog.put(r, "folder", dir.getName());
         SessionLog.put(r, "folder_path", dir.getAbsolutePath());
+        SessionLog.put(r, "storage_free_mb", dir.getUsableSpace() / (1024 * 1024));
+        SessionLog.put(r, "time_zone", TimeZone.getDefault().getID()); // the times also carry the UTC offset
         SessionLog.put(r, "wake_lead_s", WAKE_LEAD_MS / 1000.0);
         SessionLog.put(r, "focus_lead_s", FOCUS_LEAD_MS / 1000.0);
         SessionLog.put(r, "keep_camera_on_if_break_below_s", KEEP_ON_MS / 1000.0);
@@ -437,6 +449,7 @@ final class SessionRunner implements Runnable {
                 SessionLog.put(r, "saved_side_px", sides[1]);
                 SessionLog.put(r, "save_ms", SpeedTest.now() - s0);
                 SessionLog.put(r, "kb", file.length() / 1024);
+                savedBytes.addAndGet(file.length());
             } catch (Exception e) {
                 SessionLog.put(r, "error", e.toString());
             }
@@ -481,6 +494,7 @@ final class SessionRunner implements Runnable {
         }
         SessionLog.put(r, "saved_side_px", camera.describe().optInt("saved_side_px"));
         SessionLog.put(r, "kb", file.length() / 1024);
+        savedBytes.addAndGet(file.length());
         if (stoppedEarly) SessionLog.put(r, "stopped_early", true);
         if (hot) SessionLog.put(r, "stopped_for_heat", true);
         log.write(r);
@@ -494,7 +508,8 @@ final class SessionRunner implements Runnable {
         String counts = settings.video ? count(clips, "clip")
                 : count(photos, "photo") + " in " + count(bursts, "burst")
                         + (skipped > 0 ? " (" + count(skipped, "photo time") + " skipped)" : "");
-        progress = "So far: " + counts + ". The session ends at " + clock(plan.end()) + ".";
+        // Two lines: the growing counts would push the end time along.
+        progress = "So far: " + counts + ".\nThe session ends at " + clock(plan.end()) + ".";
     }
 
     private void putBurstFacts(JSONObject r, CapturePlan.Burst b) {

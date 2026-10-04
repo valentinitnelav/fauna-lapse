@@ -153,33 +153,35 @@ final class SessionSettings {
         return Math.round(value * 10000) / 10000.0;
     }
 
-    /** All settings, for the session record (only those that apply to the chosen mode). */
+    /** All settings, for the session record. Every key in every record, null where it does not
+     *  apply (for example the photo step in a video session), so tables built from many sessions
+     *  have the same columns and no value that was not used. */
     JSONObject toJson() {
         JSONObject j = new JSONObject();
         SessionLog.put(j, "mode", video ? "video" : "photo");
-        if (video) {
-            SessionLog.put(j, "clip_min", round(clipMin));
-            SessionLog.put(j, "video_fps", videoFps);
-        } else {
-            SessionLog.put(j, "photo_step_s", round(stepS));
-            SessionLog.put(j, "burst_s", round(burstS));
-            SessionLog.put(j, "saved_jpeg_quality", PhotoSaver.JPEG_QUALITY);
-        }
+        SessionLog.put(j, "photo_step_s", only(!video, round(stepS)));
+        SessionLog.put(j, "burst_s", only(!video, round(burstS)));
+        SessionLog.put(j, "saved_jpeg_quality", only(!video, PhotoSaver.JPEG_QUALITY));
+        SessionLog.put(j, "clip_min", only(video, round(clipMin)));
+        SessionLog.put(j, "video_fps", only(video, videoFps));
+        SessionLog.put(j, "break_min", round(breakMin));
         SessionLog.put(j, "square_percent_of_short_side", squarePercent);
         SessionLog.put(j, "square_centre_x", round(squareX)); // shares of the full photo, before turning
         SessionLog.put(j, "square_centre_y", round(squareY));
         SessionLog.put(j, "saved_side_px", savedSidePx);
         SessionLog.put(j, "focus", focusFixed ? "fixed" : "auto, once per " + (video ? "clip" : "burst"));
-        if (focusFixed) SessionLog.put(j, "focus_diopters", round(focusDiopters));
-        SessionLog.put(j, "break_min", round(breakMin));
+        SessionLog.put(j, "focus_diopters", only(focusFixed, round(focusDiopters)));
+        SessionLog.put(j, "focus_distance", only(focusFixed, distanceWords(focusDiopters)));
         SessionLog.put(j, "heat_pause_c", round(heatLimitC));
         SessionLog.put(j, "heat_resume_c", round(heatLimitC - Guards.RESUME_GAP_C));
-        if (daily) {
-            SessionLog.put(j, "daily_windows", windows);
-            SessionLog.put(j, "days", days);
-        } else {
-            SessionLog.put(j, "run_min", runMin);
-        }
+        SessionLog.put(j, "schedule", daily ? "daily windows" : "run from start");
+        SessionLog.put(j, "run_min", only(!daily, runMin));
+        SessionLog.put(j, "daily_windows", only(daily, windows));
+        SessionLog.put(j, "days", only(daily, days));
         return j;
+    }
+
+    private static Object only(boolean applies, Object value) {
+        return applies ? value : JSONObject.NULL;
     }
 }

@@ -40,12 +40,14 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
 - Field metadata for each session: site, transect, plant (or sample ID), session ID and the phone
-  name; one GPS position on a tap (the GPS switches off again when the position is within 10 m).
+  name; one GPS position on a tap (the GPS switches off again when the position is within 10 m), or
+  latitude and longitude typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone, one folder per session (phone name, start time,
   photo or video): easy to copy to a computer over USB, and kept when the app is removed. The main
-  screen shows how much space FaunaLapse uses and how much is free.
+  screen shows how much space FaunaLapse uses and how much is free; during a session, what it saved
+  so far and any phone setting that wastes energy (for example Wi-Fi left on).
 
 ## Using it in the field
 
@@ -64,7 +66,7 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    20 cm: tap *Focus again* to focus once on the square and fix it there, or move the focus slider
    until the flower is sharp. Tap *Done*, fill in *2 · Field metadata* (site, transect, plant) and,
    if you want the position, tap *Get location* outdoors (Location must be on; turn it off again
-   afterwards). Then tap *Start session*.
+   afterwards) or type latitude and longitude from another GPS device. Then tap *Start session*.
 4. Switch the screen off with the power button. The session goes on; the camera is off in the
    breaks.
 5. To stop early: open the app, tap *Stop session*, then *Stop*.
