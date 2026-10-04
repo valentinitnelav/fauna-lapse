@@ -11,7 +11,7 @@ Last update: 2026-10-04.
 
 - **Sessions** on a schedule, with the screen off: daily windows for N days or a run of Z hours;
   photo bursts (step, burst length, break; the ROI square is saved upright) or video clips (clip
-  length, break; full frame, 15 fps); camera off in long breaks; Camera2 or Camera1 chosen per phone;
+  length, 5, 10 or 15 fps, break; full frame); camera off in long breaks; Camera2 or Camera1 per phone;
   every event in `session.jsonl`. Tested on the Samsung M12.
 - **Main screen**: status card (live counts, battery, phone time; Stop asks first), then 1 Aim
   (photos or video, aim screen), 2 Schedule (one summary in words; the settings open on Change), 3
@@ -50,9 +50,9 @@ Last update: 2026-10-04.
 
 | Default | Value | Where |
 |---|---|---|
-| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 4 min, run 2 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, saved side 1024 px, video 1080p) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
-| Video frame rate | 15 fps, bit rate = phone preset scaled to 15 fps | `SessionSettings.VIDEO_FPS`, `Camera1Session.bitRate` |
-| Wake lead / autofocus lead / keep camera on if off for less than | 5 s / 3 s / 30 s | `SessionRunner` constants |
+| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 4 min, run 2 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, saved side 1024 px, video 1080p at 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
+| Video frame rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps), every n-th frame kept: Camera2 by a repeating group of requests, Camera1 by time-lapse mode, then `slowDown` restores real time stamps; bit rate asked = preset bits per frame | `FrameRates`, `Camera2Session.startClip`, `Camera1Session` |
+| Wake lead / autofocus lead / keep camera on if off for less than / shortest clip | 5 s / 3 s / 30 s / 3 s | `SessionRunner` constants |
 | Stop after camera errors in a row | 3 | `SessionRunner.MAX_ERRORS_IN_A_ROW` |
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
@@ -70,6 +70,7 @@ Last update: 2026-10-04.
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Session values: defaults, saving, checks, `CapturePlan` and the record line |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
+| `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate and frames kept (unit tested) |
 | `Guards.java` | Heat pause, low battery and storage rules (unit tested) |
 | `SessionRunner.java` | Follows the plan: camera on and off, bursts and clips, saver thread, `session.jsonl`, screen status |
 | `SessionCamera.java` | Interface of a session camera; `Camera2Session.java` and `Camera1Session.java` implement it |
@@ -85,12 +86,11 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 1. Long breaks: alarms instead of holding the wake lock (measure first with the USB power meter).
 2. Lock exposure and white balance for each burst (no jumps; exposure already meters on the square);
    Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
-3. Time-lapse video below 15 fps (5 asked gave 3.7 on the Samsung M12: ask a little more).
-4. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
-5. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
+3. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
+4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
    (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against
    `jpeg_largest` shows photos enlarged in software).
-6. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
+5. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
    available (update with the Android build plugin).
 
 ## Pointers

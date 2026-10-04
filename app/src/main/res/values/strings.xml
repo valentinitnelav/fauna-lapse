@@ -35,8 +35,8 @@
     <string name="change_close">Close settings</string>
     <string name="summary_photo">Photos: one every %1$s s for %2$s s, then %3$s min off.</string>
     <string name="summary_photo_no_break">Photos: one every %1$s s, without breaks.</string>
-    <string name="summary_video">Video %1$s: clips of %2$s min, then %3$s min off.</string>
-    <string name="summary_video_no_break">Video %1$s: clips of %2$s min, one after the other.</string>
+    <string name="summary_video" tools:ignore="PluralsCandidate">Video %1$s, %2$d frames per s: clips of %3$s min, then %4$s min off.</string>
+    <string name="summary_video_no_break" tools:ignore="PluralsCandidate">Video %1$s, %2$d frames per s: clips of %3$s min, one after the other.</string>
     <string name="summary_run">For %1$s h from Start.</string>
     <string name="summary_daily">Daily windows: %1$s. Days: %2$d.</string>
     <string name="summary_heat">Heat pause at %1$s °C.</string>
@@ -47,12 +47,17 @@
     <string name="saved_side_label">Saved square side (px)</string>
     <string name="saved_side_hint">Default 1024 px: enough pixels on a small insect. Never more than the real pixels inside the square.</string>
     <string name="clip_label">Clip length (min)</string>
-    <string name="clip_hint">One video file per clip, 15 frames per s. Default 5 min.</string>
+    <string name="clip_hint">One video file per clip. Default 5 min.</string>
     <string name="video_size_label">Video size</string>
     <string name="video_1080p">1080p</string>
     <string name="video_720p">720p</string>
     <string name="video_480p">480p</string>
-    <string name="video_size_hint">On the Samsung M12, 10 s of video took about 9 MB at 1080p, 7 MB at 720p and 2 MB at 480p.</string>
+    <string name="video_size_hint">On the Samsung M12, one hour of video at 5 frames per s took about 2.2 GB at 1080p, 1.2 GB at 720p and 0.6 GB at 480p.</string>
+    <string name="video_fps_label">Frames per s</string>
+    <string name="video_fps_5">5</string>
+    <string name="video_fps_10">10</string>
+    <string name="video_fps_15">15</string>
+    <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast flying insects. Fewer frames give smaller files, but not in proportion: on the Samsung M12, 5 frames per s took about 55 % of the storage of 15, and 10 about 80 %.</string>
     <string name="break_label">Break between bursts or clips (min)</string>
     <string name="break_hint">Default 4 min: the camera rests about 80 % of the time. It is switched off when the break is longer than 30 s. 0 = no break.</string>
     <string name="schedule_label">Record</string>

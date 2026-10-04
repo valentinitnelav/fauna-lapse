@@ -4,6 +4,10 @@ import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
+import android.media.MediaCodec;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
+import android.media.MediaMuxer;
 import android.media.MediaRecorder;
 import android.view.Surface;
 
@@ -11,6 +15,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -42,6 +48,9 @@ final class Camera1Session implements SessionCamera {
     private Surface recorderPreview;
     private MediaRecorder recorder;
     private CamcorderProfile profile;
+    private int cameraFps;     // video: the fixed camera rate, a multiple of fps (FrameRates)
+    private int keepEvery = 1; // video: only every n-th camera frame goes into the clip
+    private File clipFile;
     private boolean canFocus;
     private boolean unlocked;
     private boolean recording;
@@ -89,8 +98,21 @@ final class Camera1Session implements SessionCamera {
         put("sensor_orientation", info.orientation);
         if (video) {
             profile = videoProfile(id, videoQuality);
-            int[] range = Camera1Backend.fpsRangeFor(p.getSupportedPreviewFpsRange(), fps);
-            p.setPreviewFpsRange(range[0], range[1]);
+            List<int[]> ranges = p.getSupportedPreviewFpsRange();
+            int[][] perS = new int[ranges.size()][];
+            for (int i = 0; i < perS.length; i++) {
+                perS[i] = new int[] {ranges.get(i)[0] / 1000, ranges.get(i)[1] / 1000};
+            }
+            int[] fixed = FrameRates.fixedRateFor(perS, fps);
+            if (fixed != null) {
+                cameraFps = fixed[0];
+                keepEvery = fixed[1];
+                p.setPreviewFpsRange(cameraFps * 1000, cameraFps * 1000);
+            } else {
+                cameraFps = fps; // the clip then gets every camera frame
+                int[] range = Camera1Backend.fpsRangeFor(ranges, fps);
+                p.setPreviewFpsRange(range[0], range[1]);
+            }
             Camera.Size preview = p.getPreferredPreviewSizeForVideo();
             if (shown != null) {
                 // The aim screen shows the video's own shape (the preview for recording may be 4:3).
@@ -106,7 +128,8 @@ final class Camera1Session implements SessionCamera {
             p.setRecordingHint(true);
             put("video_size", profile.videoFrameWidth + "x" + profile.videoFrameHeight);
             put("video_fps", fps);
-            put("video_bit_rate_mbit_s", Math.round(bitRate(profile, fps) / 1e5) / 10.0);
+            put("video_keeps_every_nth_camera_frame", keepEvery);
+            put("video_bit_rate_asked_mbit_s", Math.round(bitRate(profile, fps) / 1e5) / 10.0);
         } else {
             Camera.Size picture = Camera1Backend.largest(p.getSupportedPictureSizes());
             p.setPictureSize(picture.width, picture.height);
@@ -193,9 +216,14 @@ final class Camera1Session implements SessionCamera {
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         recorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
-        recorder.setVideoFrameRate(fps);
-        recorder.setVideoEncodingBitRate(bitRate(profile, fps));
+        // Below the camera's rate: time-lapse mode keeps every n-th frame (asked halfway between the
+        // (n-1)-th and the n-th, so small delays do not matter), but the file then plays n times
+        // too fast; stopClip() fixes the timing.
+        recorder.setVideoFrameRate(cameraFps);
+        recorder.setVideoEncodingBitRate(bitRate(profile, cameraFps));
+        if (keepEvery > 1) recorder.setCaptureRate(cameraFps / (keepEvery - 0.5));
         recorder.setOutputFile(file.getAbsolutePath());
+        clipFile = file;
         recorderPreview = new Surface(texture);
         recorder.setPreviewDisplay(recorderPreview);
         recorder.prepare();
@@ -209,13 +237,48 @@ final class Camera1Session implements SessionCamera {
     }
 
     @Override
-    public void stopClip() {
+    public void stopClip() throws IOException {
         try {
             recorder.stop(); // throws if no frame arrived; the clip file is then useless
         } finally {
             recording = false;
             releaseRecorder();
         }
+        if (keepEvery > 1) slowDown(clipFile, keepEvery);
+    }
+
+    /** Copies the clip with each frame's time stamp times {@code factor} (no new encoding), so a
+     *  time-lapse clip plays in real time. Keeps the fast clip when this fails. */
+    static void slowDown(File file, int factor) throws IOException {
+        File copy = new File(file.getPath() + ".part");
+        MediaExtractor in = new MediaExtractor();
+        MediaMuxer out = null;
+        try {
+            in.setDataSource(file.getPath());
+            MediaFormat format = in.getTrackFormat(0); // the only track: no sound is recorded
+            in.selectTrack(0);
+            out = new MediaMuxer(copy.getPath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            int track = out.addTrack(format);
+            out.start();
+            ByteBuffer buffer = ByteBuffer.allocate(format.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)
+                    ? format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE) : 4 << 20);
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            int size;
+            while ((size = in.readSampleData(buffer, 0)) >= 0) {
+                boolean key = (in.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
+                info.set(0, size, in.getSampleTime() * factor, key ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0);
+                out.writeSampleData(track, buffer, info);
+                in.advance();
+            }
+            out.stop();
+        } catch (RuntimeException e) {
+            copy.delete();
+            throw new IOException("the clip plays " + factor + " times too fast: " + e, e);
+        } finally {
+            in.release();
+            if (out != null) out.release();
+        }
+        if (!copy.renameTo(file)) throw new IOException("the clip plays " + factor + " times too fast");
     }
 
     private void releaseRecorder() {
@@ -244,7 +307,7 @@ final class Camera1Session implements SessionCamera {
         if (recording) {
             try {
                 stopClip();
-            } catch (RuntimeException ignored) {
+            } catch (IOException | RuntimeException ignored) {
                 // closing anyway
             }
         }

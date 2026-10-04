@@ -44,6 +44,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
     private boolean video;
     private int videoQuality;
+    private int videoFps;
     private int savedSidePx;
     private boolean resumed;
     private JSONObject facts; // from the open camera; null until then
@@ -55,6 +56,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         SessionSettings s = SessionSettings.load(this); // the main screen saved its values
         video = s.video;
         videoQuality = s.videoQualityConstant();
+        videoFps = s.videoFps;
         savedSidePx = s.savedSidePx;
 
         view = findViewById(R.id.camera_view);
@@ -172,7 +174,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         final double y = square.centreY;
         worker.execute(() -> {
             if (camera != null) return;
-            SessionCamera c = SessionRunner.newCamera(this, SessionRunner.useCamera2(this), video, videoQuality, texture);
+            SessionCamera c = SessionRunner.newCamera(this, SessionRunner.useCamera2(this), video, videoQuality,
+                    videoFps, texture);
             try {
                 c.open();
                 if (!video) c.setSquare(share, x, y);
@@ -276,7 +279,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         String api = "camera2".equals(facts.optString("camera_api")) ? "Camera2" : "Camera1";
         if (video) {
             info.setText(getString(R.string.aim_video_info, facts.optString("video_size"),
-                    SessionSettings.VIDEO_FPS, api));
+                    videoFps, api));
             return;
         }
         int[] photo = size(facts.optString("photo_size"));

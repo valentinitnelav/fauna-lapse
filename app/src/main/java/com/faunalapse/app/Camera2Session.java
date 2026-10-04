@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -76,6 +77,7 @@ final class Camera2Session implements SessionCamera {
     private Surface recorderSurface;
     private CamcorderProfile profile;
     private Range<Integer> fpsRange;
+    private int keepEvery = 1; // video: only every n-th camera frame goes into the clip (FrameRates)
     private Size photoSize;
     private Rect pixelArray;
     private boolean focusOnSquare;
@@ -141,10 +143,17 @@ final class Camera2Session implements SessionCamera {
         if (video) {
             profile = Camera1Session.videoProfile(numericId(id), videoQuality);
             shape = new Size(profile.videoFrameWidth, profile.videoFrameHeight);
-            fpsRange = rangeFor(ranges, fps);
+            int[] fixed = ranges == null ? null : FrameRates.fixedRateFor(asArrays(ranges), fps);
+            if (fixed != null) {
+                fpsRange = new Range<>(fixed[0], fixed[0]);
+                keepEvery = fixed[1];
+            } else {
+                fpsRange = rangeFor(ranges, fps); // the clip then gets every camera frame
+            }
             put("video_size", shape.getWidth() + "x" + shape.getHeight());
             put("video_fps", fps);
-            put("video_bit_rate_mbit_s", Math.round(Camera1Session.bitRate(profile, fps) / 1e5) / 10.0);
+            put("video_keeps_every_nth_camera_frame", keepEvery);
+            put("video_bit_rate_asked_mbit_s", Math.round(Camera1Session.bitRate(profile, fps) / 1e5) / 10.0);
         } else {
             shape = largest(map.getOutputSizes(ImageFormat.JPEG));
             reader = ImageReader.newInstance(shape.getWidth(), shape.getHeight(), ImageFormat.JPEG, 2);
@@ -272,14 +281,20 @@ final class Camera2Session implements SessionCamera {
     public void startClip() throws Exception {
         recorder.start();
         recording = true;
+        // A repeating group of requests: the first sends its frame to the clip too, the others only
+        // to the invisible preview. The clip so gets every n-th frame with its real time stamp.
         previewRequest.addTarget(recorderSurface);
-        session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
+        List<CaptureRequest> group = new ArrayList<>();
+        group.add(previewRequest.build());
+        previewRequest.removeTarget(recorderSurface);
+        CaptureRequest previewOnly = previewRequest.build();
+        for (int i = 1; i < keepEvery; i++) group.add(previewOnly);
+        session.setRepeatingBurst(group, afWatcher, handler);
     }
 
     @Override
     public void stopClip() throws Exception {
         try {
-            previewRequest.removeTarget(recorderSurface);
             session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
             recorder.stop(); // throws if no frame arrived; the clip file is then useless
         } finally {
@@ -423,6 +438,12 @@ final class Camera2Session implements SessionCamera {
             }
         }
         return best;
+    }
+
+    private static int[][] asArrays(Range<Integer>[] ranges) {
+        int[][] a = new int[ranges.length][];
+        for (int i = 0; i < ranges.length; i++) a[i] = new int[] {ranges[i].getLower(), ranges[i].getUpper()};
+        return a;
     }
 
     /** The range that contains {@code fps} with the lowest maximum (best a fixed rate); else the

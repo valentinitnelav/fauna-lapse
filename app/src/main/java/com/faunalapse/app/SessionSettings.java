@@ -14,8 +14,6 @@ import java.util.TimeZone;
  */
 final class SessionSettings {
 
-    static final int VIDEO_FPS = 15; // fixed for now; slower rates need time-lapse mode (later)
-
     boolean video = false;
     double stepS = 2;            // a 3 s step caught about 90 % of visits (Edwards et al. 2015)
     double burstS = 60;          // longer than a typical visit (about 11 s)
@@ -30,6 +28,7 @@ final class SessionSettings {
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
     int savedSidePx = 1024;      // pixels on the insect (FaunaPulse default)
     String videoQuality = "1080p";
+    int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
     String phoneName = "";       // optional, added to the folder name: files from several phones do not mix
 
@@ -52,6 +51,7 @@ final class SessionSettings {
         s.squareY = p.getFloat("square_y", (float) s.squareY);
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoQuality = p.getString("video_quality", s.videoQuality);
+        s.videoFps = p.getInt("video_fps", s.videoFps);
         s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
         s.phoneName = p.getString("phone_name", s.phoneName);
         return s;
@@ -73,6 +73,7 @@ final class SessionSettings {
                 .putFloat("square_y", (float) squareY)
                 .putInt("saved_side_px", savedSidePx)
                 .putString("video_quality", videoQuality)
+                .putInt("video_fps", videoFps)
                 .putFloat("heat_limit_c", (float) heatLimitC)
                 .putString("phone_name", phoneName)
                 .apply();
@@ -83,6 +84,7 @@ final class SessionSettings {
         if (!video && (stepS < 0.2 || stepS > 3600)) return "Photo step: use 0.2 to 3600 s.";
         if (!video && (burstS < stepS || burstS > 86400)) return "Burst length: use the photo step to 86400 s.";
         if (video && (clipMin < 0.1 || clipMin > 1440)) return "Clip length: use 0.1 to 1440 min.";
+        if (video && videoFps != 5 && videoFps != 10 && videoFps != 15) return "Video frames per s: use 5, 10 or 15.";
         if (breakMin < 0 || breakMin > 1440) return "Break: use 0 to 1440 min.";
         if (!daily && (runH <= 0 || runH > 720)) return "Run length: use more than 0 and up to 720 h.";
         if (daily && (days < 1 || days > 365)) return "Days: use 1 to 365.";
@@ -144,7 +146,7 @@ final class SessionSettings {
         if (video) {
             SessionLog.put(j, "clip_min", round(clipMin));
             SessionLog.put(j, "video_quality", videoQuality);
-            SessionLog.put(j, "video_fps", VIDEO_FPS);
+            SessionLog.put(j, "video_fps", videoFps);
         } else {
             SessionLog.put(j, "photo_step_s", round(stepS));
             SessionLog.put(j, "burst_s", round(burstS));

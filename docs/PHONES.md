@@ -37,7 +37,8 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | **Video 15 fps** 1080p / 720p / 480p | works, 15.0 fps measured; 9 / 7 / 2 MB per 10 s |
 | Video 5 fps asked directly | fails ("start failed"): the camera cannot run slower than 8 fps |
 | **Time-lapse video** 1080p, 1 frame per s | works: 10 frames in 10 s, 1 MB; plays at 15 fps |
-| Time-lapse video 1080p, 5 frames per s asked | 3.7 frames per s (37 in 10 s): the recorder takes every 4th camera frame at 15 fps; ask a little more than 5 |
+| **Video 5 / 10 fps** 1080p (camera fixed at 15 / 20 fps, every 3rd / 2nd frame kept), Camera2 and Camera1 | frames exactly 200 / 100 ms apart, real time stamps. Camera2: 4.8 / 6.9 Mbit/s although 2.8 / 5.7 were asked (the encoder ignores lower asks: 1.4 asked still gave 4.9; at 15 fps 8.6 as asked), so 5 fps needs about 55 % of the storage of 15. Camera1: 3.0 / 5.8 Mbit/s as asked; fixing the time stamps after a clip took 1.4 s for 40 MB (2 min) |
+| Video 5 fps, 720p / 480p, Camera2 | 2.6 / 1.3 Mbit/s (about 1.2 / 0.6 GB per hour; 1080p 2.2 GB) |
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 

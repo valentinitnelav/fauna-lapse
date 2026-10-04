@@ -23,7 +23,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00, also across
   midnight or all day under the midnight sun) for several days, or a run of some hours.
 - Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 4 minute break) or
-  video clips (for example 5 minutes of video, then a 10 minute break).
+  video clips (for example 5 minutes of video, then a 10 minute break) at 5, 10 or 15 frames per
+  second; fewer frames give smaller files, enough to follow insects from frame to frame on a computer.
 - If a phone cannot take photos as fast as asked, the app suggests video instead.
 - Photos keep only a square region of interest that you drag over the subject, at up to
   1024 x 1024 pixels, never enlarged.

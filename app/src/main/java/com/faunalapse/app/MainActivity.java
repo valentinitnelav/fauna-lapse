@@ -97,6 +97,7 @@ public final class MainActivity extends Activity {
     private RadioGroup mode;
     private RadioGroup schedule;
     private RadioGroup videoQuality;
+    private RadioGroup videoFps;
     private EditText stepS;
     private EditText burstS;
     private EditText savedSidePx;
@@ -168,6 +169,7 @@ public final class MainActivity extends Activity {
         mode = findViewById(R.id.mode);
         schedule = findViewById(R.id.schedule);
         videoQuality = findViewById(R.id.video_quality);
+        videoFps = findViewById(R.id.video_fps);
         stepS = findViewById(R.id.step_s);
         burstS = findViewById(R.id.burst_s);
         savedSidePx = findViewById(R.id.saved_side_px);
@@ -221,6 +223,7 @@ public final class MainActivity extends Activity {
         schedule.check(s.daily ? R.id.schedule_daily : R.id.schedule_run);
         videoQuality.check("480p".equals(s.videoQuality) ? R.id.video_480p
                 : "720p".equals(s.videoQuality) ? R.id.video_720p : R.id.video_1080p);
+        videoFps.check(s.videoFps == 15 ? R.id.video_fps_15 : s.videoFps == 10 ? R.id.video_fps_10 : R.id.video_fps_5);
         stepS.setText(number(s.stepS));
         burstS.setText(number(s.burstS));
         savedSidePx.setText(String.valueOf(s.savedSidePx));
@@ -269,8 +272,9 @@ public final class MainActivity extends Activity {
         try {
             SessionSettings s = settingsOnScreen();
             String what = s.video
-                    ? s.breakMin > 0 ? getString(R.string.summary_video, s.videoQuality, number(s.clipMin), number(s.breakMin))
-                            : getString(R.string.summary_video_no_break, s.videoQuality, number(s.clipMin))
+                    ? s.breakMin > 0 ? getString(R.string.summary_video, s.videoQuality, s.videoFps, number(s.clipMin),
+                            number(s.breakMin))
+                            : getString(R.string.summary_video_no_break, s.videoQuality, s.videoFps, number(s.clipMin))
                     : s.breakMin > 0 ? getString(R.string.summary_photo, number(s.stepS), number(s.burstS), number(s.breakMin))
                             : getString(R.string.summary_photo_no_break, number(s.stepS));
             String when = s.daily ? getString(R.string.summary_daily, s.windows, s.days)
@@ -298,6 +302,8 @@ public final class MainActivity extends Activity {
         s.video = mode.getCheckedRadioButtonId() == R.id.mode_video;
         s.daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
         s.videoQuality = chosenVideoQuality();
+        int fps = videoFps.getCheckedRadioButtonId();
+        s.videoFps = fps == R.id.video_fps_15 ? 15 : fps == R.id.video_fps_10 ? 10 : 5;
         s.stepS = decimal(stepS, R.string.step_label);
         s.burstS = decimal(burstS, R.string.burst_label);
         s.savedSidePx = (int) Math.round(decimal(savedSidePx, R.string.saved_side_label));
@@ -394,6 +400,10 @@ public final class MainActivity extends Activity {
             if (vq != null) {
                 videoQuality.check("480p".equals(vq) ? R.id.video_480p
                         : "720p".equals(vq) ? R.id.video_720p : R.id.video_1080p);
+            }
+            String fps = intent.getStringExtra("video_fps");
+            if (fps != null) {
+                videoFps.check("15".equals(fps) ? R.id.video_fps_15 : "10".equals(fps) ? R.id.video_fps_10 : R.id.video_fps_5);
             }
             setFromExtra(intent, "step_s", stepS);
             setFromExtra(intent, "burst_s", burstS);
