@@ -22,8 +22,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - Android 7.0 or newer; old phones are welcome.
 - Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00, also across
   midnight or all day under the midnight sun) for several days, or a run of some hours.
-- Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 4 minute break) or
-  video clips (for example 5 minutes of video, then a 10 minute break) at 5, 10 or 15 frames per
+- Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 5 minute break) or
+  video clips (for example 5 minutes of video, then a 5 minute break) at 5, 10 or 15 frames per
   second; fewer frames give smaller files, enough to follow insects from frame to frame on a computer.
   Videos also keep only the square; where the phone allows it, the camera zooms onto the square in
   hardware, so a small square keeps its real detail.
@@ -39,37 +39,45 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
-- A session log of every photo and event, ready for analysis in R or Python.
-- Files in `Documents/FaunaLapse` on the phone, one folder per session: easy to copy to a computer
-  over USB, and kept when the app is removed.
+- Field metadata for each session: site, transect, plant (or sample ID), session ID and the phone
+  name; one GPS position on a tap (the GPS switches off again when the position is within 10 m).
+- A session log of every photo and event, ready for analysis in R or Python, with the battery use
+  of the session.
+- Files in `Documents/FaunaLapse` on the phone, one folder per session (phone name, start time,
+  photo or video): easy to copy to a computer over USB, and kept when the app is removed. The main
+  screen shows how much space FaunaLapse uses and how much is free.
 
 ## Using it in the field
 
 1. **At home, once per phone:** install the app, open it and allow the camera (on Android 10 or
-   older also the storage). Under *2 · Schedule* tap *Change settings* and set the schedule; it stays
+   older also the storage). Under *3 · Schedule* tap *Change settings* and set the schedule; it stays
    saved on the phone. Check that the phone time is right. With several phones, set them all up
-   this way before you go out, and give each a short phone name (for example P1, P2): it is added
-   to the session folder names, so the files do not mix on the computer. For a phone used only as
-   a camera, follow *3 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane
-   mode, and open its (i) for the full checklist (factory reset, no account, unneeded apps off).
+   this way before you go out. Each phone has its own name under *2 · Field metadata* (the phone
+   model and part of its ID; you may change it to P1, P2 and so on): it starts the session folder
+   names, so the files do not mix on the computer. For a phone used only as a camera, follow
+   *4 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane mode, and open
+   its (i) for the full checklist (factory reset, no account, unneeded apps off).
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
    than a few hours, connect a power bank.
 3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the
-   flower (put your finger inside the square) and pinch it to size. The focus starts fixed at about 20 cm: tap *Focus again* to focus
-   once on the square and fix it there, or move the focus slider until the flower is sharp. Then tap
-   *Start session here*.
+   flower (put your finger inside the square) and pinch it to size. The focus starts fixed at about
+   20 cm: tap *Focus again* to focus once on the square and fix it there, or move the focus slider
+   until the flower is sharp. Tap *Done*, fill in *2 · Field metadata* (site, transect, plant) and,
+   if you want the position, tap *Get location* outdoors (Location must be on; turn it off again
+   afterwards). Then tap *Start session*.
 4. Switch the screen off with the power button. The session goes on; the camera is off in the
    breaks.
 5. To stop early: open the app, tap *Stop session*, then *Stop*.
 6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
-   phone and copy `Internal storage/Documents/FaunaLapse/<start time>/`. Each folder holds the photos
-   (or videos) and `session.jsonl`, the record of every photo and event.
+   phone and copy the session folders from `Internal storage/Documents/FaunaLapse/`. Each folder
+   holds the photos (or videos) and `session.jsonl`, the record of every photo and event with the
+   field metadata and the battery use.
 
 Tips: a daily window may cross midnight (22:00-04:00), and 00:00-24:00 records all day, for example
 under the midnight sun. The session pauses while the battery is too warm (45 °C by default) and stops
 cleanly when the battery falls to 15 % without charging. Some phones stop apps in the background to
 save power with their own battery manager (Huawei, Xiaomi, Samsung): the checklist under the (i) of
-*3 · Phone for the field* says where to allow FaunaLapse.
+*4 · Phone for the field* says where to allow FaunaLapse.
 
 ## Build from source
 

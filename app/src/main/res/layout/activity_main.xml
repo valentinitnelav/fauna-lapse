@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Main screen: a status card, then the steps of a setup (aim, schedule, phone check, start), so a
-     phone is ready in a few taps. The detailed settings open only on "Change"; saved values stay on
-     the phone. Explanations open with the (i) of their label (HelpToggles). fitsSystemWindows keeps the content clear of the status and navigation bars.
+<!-- Main screen: a status card, then the steps of a setup (aim, field metadata, schedule, phone
+     check, start), so a phone is ready in a few taps. The detailed settings open only on "Change";
+     saved values stay on the phone. Explanations open with the (i) of their label (HelpToggles).
+     fitsSystemWindows keeps the content clear of the status and navigation bars.
      importantForAutofill="no": these are settings, not personal data (Android 8+). TooManyViews:
      the screen is built once, and each setting needs its views. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -26,6 +27,8 @@
             <TextView android:id="@+id/session_warning" style="@style/Body" android:textColor="@color/warning" android:textStyle="bold" />
             <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
             <TextView android:id="@+id/phone_time" style="@style/Hint" />
+            <TextView android:id="@+id/storage" style="@style/Body" android:layout_marginTop="8dp"
+                android:textSize="15sp" />
             <Button android:id="@+id/stop_session" style="@style/BigButton"
                 android:backgroundTint="@color/stop" android:text="@string/stop_session" />
         </LinearLayout>
@@ -42,7 +45,47 @@
             <TextView android:id="@+id/aim_summary" style="@style/Hint" android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <!-- 2: when and how often; the details open on "Change" -->
+        <!-- 2: where and what (FieldInfo); it changes at each site or plant, so the fields stay open.
+             LabelFor: each field has its label, and the grey hint inside gives an example. -->
+        <LinearLayout android:id="@+id/field_card" style="@style/Card" tools:ignore="LabelFor">
+            <TextView style="@style/CardTitle.Help" android:text="@string/card_field" />
+            <TextView style="@style/Hint.Help" android:text="@string/field_help" />
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/site" android:text="@string/field_site" />
+                <EditText android:id="@+id/site" style="@style/Field.Row" android:hint="@string/field_site_hint"
+                    android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/transect" android:text="@string/field_transect" />
+                <EditText android:id="@+id/transect" style="@style/Field.Row" android:hint="@string/field_transect_hint"
+                    android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/plant" android:text="@string/field_plant" />
+                <EditText android:id="@+id/plant" style="@style/Field.Row" android:hint="@string/field_plant_hint"
+                    android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/sample_id" android:text="@string/field_sample" />
+                <EditText android:id="@+id/sample_id" style="@style/Field.Row" android:hint="@string/field_optional"
+                    android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/session_id" android:text="@string/field_session" />
+                <EditText android:id="@+id/session_id" style="@style/Field.Row" android:hint="@string/field_optional"
+                    android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/device_name" android:text="@string/field_phone" />
+                <EditText android:id="@+id/device_name" style="@style/Field.Row" android:maxLength="20"
+                    android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+            </LinearLayout>
+            <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="12dp"
+                android:textSize="15sp" />
+            <Button android:id="@+id/get_location" style="@style/SecondaryButton" android:text="@string/location_get" />
+        </LinearLayout>
+
+        <!-- 3: when and how often; the details open on "Change" -->
         <LinearLayout android:id="@+id/schedule_card" style="@style/Card">
             <TextView style="@style/CardTitle" android:text="@string/card_schedule" />
             <TextView android:id="@+id/schedule_summary" style="@style/Body" />
@@ -88,9 +131,17 @@
                 </RadioGroup>
 
                 <LinearLayout android:id="@+id/run_settings" style="@style/Group">
-                    <TextView style="@style/Label.Help" android:labelFor="@id/run_h" android:text="@string/run_label" />
-                    <EditText android:id="@+id/run_h" style="@style/Field" android:importantForAutofill="no"
-                        android:inputType="numberDecimal" tools:targetApi="o" />
+                    <TextView style="@style/Label.Help" android:text="@string/run_label" />
+                    <LinearLayout style="@style/FieldRow" android:layout_marginTop="0dp">
+                        <EditText android:id="@+id/run_h" style="@style/Field.Row" android:importantForAutofill="no"
+                            android:inputType="number" android:contentDescription="@string/run_hours" tools:targetApi="o" />
+                        <TextView style="@style/Body" android:layout_width="wrap_content" android:layout_marginTop="0dp"
+                            android:layout_marginStart="8dp" android:layout_marginEnd="16dp" android:text="@string/unit_h" />
+                        <EditText android:id="@+id/run_m" style="@style/Field.Row" android:importantForAutofill="no"
+                            android:inputType="number" android:contentDescription="@string/run_minutes" tools:targetApi="o" />
+                        <TextView style="@style/Body" android:layout_width="wrap_content" android:layout_marginTop="0dp"
+                            android:layout_marginStart="8dp" android:text="@string/unit_min" />
+                    </LinearLayout>
                     <TextView style="@style/Hint.Help" android:text="@string/run_hint" />
                 </LinearLayout>
 
@@ -116,17 +167,12 @@
                     android:inputType="numberDecimal" tools:targetApi="o" />
                 <TextView style="@style/Hint.Help" android:text="@string/heat_hint" />
 
-                <TextView style="@style/Label.Help" android:labelFor="@id/device_name" android:text="@string/phone_name_label" />
-                <EditText android:id="@+id/device_name" style="@style/Field" android:importantForAutofill="no"
-                    android:inputType="text" android:maxLength="20" tools:targetApi="o" />
-                <TextView style="@style/Hint.Help" android:text="@string/phone_name_hint" />
-
                 <Button android:id="@+id/defaults" style="@style/SecondaryButton" android:layout_marginTop="16dp"
                     android:text="@string/defaults" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 3: the phone for the field (PhoneCheck); only what should change is listed -->
+        <!-- 4: the phone for the field (PhoneCheck); only what should change is listed -->
         <LinearLayout android:id="@+id/phone_card" style="@style/Card">
             <TextView style="@style/CardTitle" android:text="@string/card_phone" />
             <LinearLayout android:id="@+id/phone_checks" style="@style/Group" />
@@ -138,7 +184,8 @@
         <TextView android:id="@+id/start_message" style="@style/Body" android:layout_marginTop="12dp"
             android:textColor="@color/warning" android:textStyle="bold" android:visibility="gone" />
         <Button android:id="@+id/start_session" style="@style/BigButton" android:text="@string/start_session" />
-        <TextView android:id="@+id/start_hint" style="@style/Hint" android:layout_marginTop="4dp" />
+        <TextView android:id="@+id/start_hint" style="@style/Hint" android:layout_marginTop="4dp"
+            android:text="@string/start_hint" />
 
         <!-- Phone tests (phase 0): folded away -->
         <Button android:id="@+id/tests_toggle" style="?android:attr/borderlessButtonStyle"

@@ -11,16 +11,18 @@ Last update: 2026-10-04.
 - **Sessions** on a schedule, with the screen off: daily windows for N days or a run of Z hours;
   photo bursts (step, burst length, break) or video clips (clip length, 5, 10 or 15 fps, break); both
   save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone; every
-  event in `session.jsonl`. Tested on the Samsung M12.
-- **Main screen**: status card (live counts, battery, phone time; Stop asks first); 1 Aim (photos
-  or video, aim screen); 2 Schedule (a summary in words; settings open on Change); 3 Phone for the
-  field (airplane mode, Wi-Fi, Bluetooth, location, battery limits, each with its settings page; also
-  in `session_start`); Start. Explanations behind the (i) of a label; light or dark as the phone.
-- **Aim screen**: camera view in the session's camera setup; the square moves only from a finger
-  inside it or within 24 dp of its edge; pinch anywhere or slider for its size, real and saved pixels
-  live under the slider; focus and exposure follow the square; focus fixed (Camera2, default 20 cm,
-  slider, Focus again fixes it where autofocus put it) or auto. Controls scroll under the view
-  ("More below"; the view shrinks so they keep 150 dp); Done and Start stay at the bottom.
+  event in `session.jsonl`, battery use at the end (`BatteryMeter`). Tested on the Samsung M12.
+- **Main screen**: status card (live counts, battery, phone time, files folder, FaunaLapse use and
+  free storage; Stop asks first); 1 Aim (photos or video, aim screen); 2 Field metadata (site,
+  transect, plant, sample ID, session ID, phone name; Get location: GPS on until within 10 m or 3 min,
+  then off; `field` in `session_start`); 3 Schedule (a summary; settings open on Change); 4 Phone for
+  the field (airplane mode, Wi-Fi, Bluetooth, location, battery limits, each with its settings page;
+  also in `session_start`); Start. Explanations behind the (i) of a label; light or dark as the phone.
+- **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
+  square moves only from a finger inside it or within 24 dp of its edge; pinch anywhere or slider for
+  its size, real and saved pixels live under the slider; focus and exposure follow the square; focus
+  fixed (Camera2, default 20 cm, slider, Focus again fixes it where autofocus put it) or auto.
+  Controls scroll under the view ("More below"); Done and Start stay at the bottom.
 - **Guards**: heat pause (camera off); clean stop on low battery without charging or too little storage.
 
 ## Key invariants
@@ -30,35 +32,33 @@ Last update: 2026-10-04.
   `CapturePlan`, square maths in `RoiMath`: no Android classes, unit tests in `app/src/test/`. Every
   answer comes from the clock time passed in, never from counters.
 - `SessionRunner` asks the plan for the burst at or after `max(now, end of the last burst handled)`,
-  so a burst never runs twice. Grid times passed during a photo: `skipped_photo_times`; before a burst
-  could start: `photo_times_missed_at_start`.
-- The session plan starts one wake lead (5 s) after the tap, so the first burst also warms up.
+  so a burst never runs twice; the plan starts one wake lead (5 s) after the tap. Grid times passed
+  during a photo: `skipped_photo_times`; before a burst could start: `photo_times_missed_at_start`.
 - Square position: shares of the full photo in sensor orientation; the portrait-only aim screen
   shows it turned by the sensor orientation; saved squares turn by that + the phone turn at Start.
 - Camera1 calls back on the thread that opened it: sessions, `SpeedTest` and the aim screen open it on
   a plain thread, so callbacks go to the main thread (never block it); `Camera1Backend` has its own.
-- `CaptureService.running` = a test or session runs; `sessionRunning` = a session. Stop =
-  `Thread.interrupt()` of the session thread; an open clip is finished, recorded `"stopped_early"`.
-  Photos are cut and saved on a saver thread (queue of 2; when full, the session thread saves).
+- `CaptureService.running` = a test or session runs; `sessionRunning` = a session. Stop = interrupt
+  the session thread (an open clip is finished, `"stopped_early"`). Photos are cut on a saver thread
+  (queue of 2; when full, the session thread saves).
 - Video square: camera -> `SquareRecorder` texture -> GPU -> hardware encoder -> MP4. Texture corners
   address the frame as stored (top row first), using only the valid area of the SurfaceTexture
   transform (Camera2 adds the sensor turn there, Camera1 not). Camera2 zooms first (crop region).
 - Records: `time` = phone clock time with time zone; durations in ms (`SystemClock.elapsedRealtime`).
-- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 140 KB).
+- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 153 KB).
 
 ## Defaults
 
 | Default | Value | Where |
 |---|---|---|
-| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 4 min, run 2 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
+| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 5 min, run 1 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
 | Video frame rate and bit rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps); Camera2 sends every n-th frame to the recorder (repeating group), with Camera1 `FrameRates.Picker` keeps frames on the time grid; real time stamps; bit rate asked = the phone's best preset in bits per pixel, encoder's own rate control (best detail, owner's choice; Samsung 3.9 Mbit/s at 1280 px); key frame every 2 s | `FrameRates`, `Camera2Session.startClip`, `SquareRecorder` |
 | Wake lead / autofocus lead / keep camera on if off for less than / shortest clip | 5 s / 3 s / 30 s / 3 s | `SessionRunner` constants |
-| Stop after camera errors in a row | 3 | `SessionRunner.MAX_ERRORS_IN_A_ROW` |
+| Stop after camera errors in a row; wake lock | 3; held for the whole session (plan end + 10 min) | `SessionRunner.MAX_ERRORS_IN_A_ROW`, `CaptureService.startSession` |
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
-| Output | `Documents/FaunaLapse/<start time>[_<phone name>]/` (survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
-| Wake lock | held for the whole session (plan end + 10 min) | `CaptureService.startSession` |
+| Output | `Documents/FaunaLapse/<phone name>_<start time>_<photo or video>/` (phone name default: model + 4 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
 | Phase 0 test defaults (start delay 10 s, wake lead 5 s, speed test sizes) | | `CaptureService`, `Camera1Backend`, `SpeedTest` |
 
 ## File map
@@ -68,7 +68,9 @@ Last update: 2026-10-04.
 | `MainActivity.java` | Main screen (status card, aim and schedule cards, Start, Stop) and phase 0 test buttons; permissions; phone turn at Start; adb hooks in debug builds |
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
-| `SessionSettings.java` | Session values: defaults, saving, checks, `CapturePlan` and the record line |
+| `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
+| `FieldInfo.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone name and ID); one GPS position, then the GPS off |
+| `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |
 | `Guards.java` | Heat pause, low battery and storage rules (unit tested) |
@@ -85,13 +87,12 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 
 ## Open problems and next steps
 
-1. Long breaks: alarms instead of holding the wake lock. Measure first: the owner's USB meter has
-   a display only (read by hand; phone at 100 % on USB, so it shows the phone's own use).
+1. Battery per hour (for users and the README): 1 h photo and 1 h video (5 min clips, 5 min breaks)
+   sessions off the charger (the owner unplugs; `battery` in `session_end`). Then long breaks:
+   alarms instead of holding the wake lock. The owner's USB meter has a display only.
 2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
-3. Photo cut in the camera hardware (Camera2 crop region and a smaller JPEG): the owner decides.
-   The app's cut takes 0.43 s per 1280 px photo (20 % of one core at a 2 s step, about 5 % of a
-   burst's energy by the power profile); the Samsung lists square photos of 2992 and 1088 px only.
-   Camera1 video has no hardware zoom (a centred zoom could help small squares).
+3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
+   the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
 4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi): battery first, then the
    speed test (`sensor_pixels` above `jpeg_largest`: enlarged photos; `all_camera1_parameters`).
 5. Lint warnings left on purpose: `allowBackup`, newer Gradle (update with the Android plugin).

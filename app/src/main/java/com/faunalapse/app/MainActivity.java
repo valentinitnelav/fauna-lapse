@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,10 +21,12 @@ import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 import android.text.style.ImageSpan;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -48,10 +51,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Main screen: a status card (ready, or what the running session does), then the steps of a setup:
- * 1 aim (photos or video, the aim screen), 2 schedule (a one-line summary; the settings open on
- * "Change"), 3 the phone for the field (PhoneCheck), then Start. The phase 0 test buttons are folded
- * away at the bottom.
+ * Main screen: a status card (ready, or what the running session does; where the files go), then
+ * the steps of a setup: 1 aim (photos or video, the aim screen), 2 field metadata (FieldInfo, with
+ * the GPS position), 3 schedule (a short summary; the settings open on "Change"), 4 the phone for
+ * the field (PhoneCheck), then Start. The phase 0 test buttons are folded away at the bottom.
  */
 public final class MainActivity extends Activity {
 
@@ -62,6 +65,7 @@ public final class MainActivity extends Activity {
     private static final String EXTRA_AIM = "aim";
     private static final String EXTRA_CAMERA1 = "camera1";
     private static final int PERMISSION_REQUEST = 1;
+    private static final int LOCATION_REQUEST = 2;
     private static final int TEST_PHOTO = 0;
     private static final int SPEED_TEST = 1;
     private static final int SESSION = 2;
@@ -82,8 +86,12 @@ public final class MainActivity extends Activity {
     private TextView sessionWarning;
     private TextView battery;
     private TextView phoneTime;
+    private TextView storage;
+    private long[] storageUse; // bytes and sessions in the sessions folder; null until counted
+    private boolean wasRunning;
     private Button stopButton;
     private View aimCard;
+    private View fieldCard;
     private View scheduleCard;
     private Button aimButton;
     private TextView aimSummary;
@@ -112,10 +120,20 @@ public final class MainActivity extends Activity {
     private EditText clipMin;
     private EditText breakMin;
     private EditText runH;
+    private EditText runM;
     private EditText windows;
     private EditText days;
     private EditText heatLimitC;
+    private EditText site;
+    private EditText transect;
+    private EditText plant;
+    private EditText sampleId;
+    private EditText sessionId;
     private EditText phoneName;
+    private TextView locationText;
+    private Button locationButton;
+    private Location location; // the saved GPS position, or null
+    private GpsFix gps;        // while searching
     private int requested;
     private boolean cameraDenied;
     private String problem; // why Start or Aim did not go on, shown above Start until the next tap
@@ -133,10 +151,12 @@ public final class MainActivity extends Activity {
         sessionWarning = findViewById(R.id.session_warning);
         battery = findViewById(R.id.battery);
         phoneTime = findViewById(R.id.phone_time);
+        storage = findViewById(R.id.storage);
         stopButton = findViewById(R.id.stop_session);
         stopButton.setOnClickListener(v -> askToStop());
         stopButton.setText(withIcon(stopButton, R.drawable.ic_stop, R.string.stop_session));
         aimCard = findViewById(R.id.aim_card);
+        fieldCard = findViewById(R.id.field_card);
         scheduleCard = findViewById(R.id.schedule_card);
         aimButton = findViewById(R.id.aim);
         aimButton.setOnClickListener(v -> start(AIM));
@@ -184,12 +204,22 @@ public final class MainActivity extends Activity {
         clipMin = findViewById(R.id.clip_min);
         breakMin = findViewById(R.id.break_min);
         runH = findViewById(R.id.run_h);
+        runM = findViewById(R.id.run_m);
         windows = findViewById(R.id.windows);
         days = findViewById(R.id.days);
         heatLimitC = findViewById(R.id.heat_limit_c);
+        site = findViewById(R.id.site);
+        transect = findViewById(R.id.transect);
+        plant = findViewById(R.id.plant);
+        sampleId = findViewById(R.id.sample_id);
+        sessionId = findViewById(R.id.session_id);
         phoneName = findViewById(R.id.device_name);
+        locationText = findViewById(R.id.location_text);
+        locationButton = findViewById(R.id.get_location);
+        locationButton.setOnClickListener(v -> getLocation());
         HelpToggles.wire(scroll);
         showSettings(SessionSettings.load(this), true);
+        showField(FieldInfo.load(this));
         mode.setOnCheckedChangeListener((group, id) -> showGroups());
         schedule.setOnCheckedChangeListener((group, id) -> showGroups());
         showGroups();
@@ -207,8 +237,8 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
         showAimSummary(); // the aim screen may have moved the square
-        showStartHint(); // the storage permission may have changed
         lastSession = null;
+        countStorage();
         if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
         handler.post(refresher);
     }
@@ -217,18 +247,28 @@ public final class MainActivity extends Activity {
     protected void onPause() {
         orientationListener.disable();
         handler.removeCallbacks(refresher);
+        if (gps != null) { // the GPS is not left on in the background
+            gps.cancel();
+            locationDone();
+            showLocation(getString(R.string.location_stopped));
+        }
+        try { // keep what was typed, if it is usable
+            if (!CaptureService.running) {
+                settingsOnScreen().save(this);
+                fieldOnScreen().save(this);
+            }
+        } catch (IllegalArgumentException ignored) {
+            // shown at the next Start
+        }
         super.onPause();
     }
 
     // ---- Session settings -------------------------------------------------------------------
 
-    /** Puts the values on the screen; {@code all}: also photos or video (card 1) and the phone name,
-     *  which "Default values" keeps. */
+    /** Puts the values on the screen; {@code all}: also photos or video (card 1), which "Default
+     *  values" keeps. */
     private void showSettings(SessionSettings s, boolean all) {
-        if (all) {
-            mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
-            phoneName.setText(s.phoneName);
-        }
+        if (all) mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
         schedule.check(s.daily ? R.id.schedule_daily : R.id.schedule_run);
         videoFps.check(s.videoFps == 15 ? R.id.video_fps_15 : s.videoFps == 10 ? R.id.video_fps_10 : R.id.video_fps_5);
         stepS.setText(number(s.stepS));
@@ -236,7 +276,8 @@ public final class MainActivity extends Activity {
         savedSide.setText(String.valueOf(s.savedSidePx));
         clipMin.setText(number(s.clipMin));
         breakMin.setText(number(s.breakMin));
-        runH.setText(number(s.runH));
+        runH.setText(String.valueOf(s.runMin / 60));
+        runM.setText(String.valueOf(s.runMin % 60));
         windows.setText(s.windows);
         days.setText(String.valueOf(s.days));
         heatLimitC.setText(number(s.heatLimitC));
@@ -285,7 +326,7 @@ public final class MainActivity extends Activity {
                     : s.breakMin > 0 ? getString(R.string.summary_photo, number(s.stepS), number(s.burstS), number(s.breakMin))
                             : getString(R.string.summary_photo_no_break, number(s.stepS));
             String when = s.daily ? getString(R.string.summary_daily, s.windows, s.days)
-                    : getString(R.string.summary_run, number(s.runH));
+                    : getString(R.string.summary_run, duration(s.runMin));
             text = what + "\n" + when + "\n" + getString(R.string.summary_heat, number(s.heatLimitC));
         } catch (IllegalArgumentException e) {
             text = e.getMessage();
@@ -315,30 +356,148 @@ public final class MainActivity extends Activity {
         s.savedSidePx = (int) Math.round(decimal(savedSide, R.string.saved_side_label));
         s.clipMin = decimal(clipMin, R.string.clip_label);
         s.breakMin = decimal(breakMin, R.string.break_label);
-        s.runH = decimal(runH, R.string.run_label);
+        s.runMin = (int) Math.round(wholeOrZero(runH) * 60 + wholeOrZero(runM));
         s.windows = windows.getText().toString().trim();
         s.days = (int) Math.round(decimal(days, R.string.days_label));
         s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
-        s.phoneName = phoneName.getText().toString().trim();
         String p = s.problem();
         if (p != null) throw new IllegalArgumentException(p);
         return s;
     }
 
-    /** Saves the values on the screen; false (and the reason shown, the settings open) when a value
-     *  is not usable. */
+    /** Saves the values on the screen; false (and the reason shown) when a value is not usable. */
     private boolean saveSettings() {
         try {
-            settingsOnScreen().save(this);
+            FieldInfo f = fieldOnScreen();
+            try {
+                settingsOnScreen().save(this);
+            } catch (IllegalArgumentException e) {
+                showSettingsGroup(true);
+                throw e;
+            }
+            f.save(this);
             problem = null;
             return true;
         } catch (IllegalArgumentException e) {
             problem = e.getMessage();
-            showSettingsGroup(true);
             return false;
         } finally {
             refresh();
         }
+    }
+
+    /** "1 h 30 min", "2 h", "45 min". */
+    private static String duration(int minutes) {
+        int h = minutes / 60;
+        int m = minutes % 60;
+        return h == 0 ? m + " min" : m == 0 ? h + " h" : h + " h " + m + " min";
+    }
+
+    /** A number, or 0 for an empty field (for example no minutes). */
+    private double wholeOrZero(EditText field) {
+        return field.getText().toString().trim().isEmpty() ? 0 : decimal(field, R.string.run_label);
+    }
+
+    // ---- Field metadata ---------------------------------------------------------------------
+
+    private void showField(FieldInfo f) {
+        site.setText(f.site);
+        transect.setText(f.transect);
+        plant.setText(f.plant);
+        sampleId.setText(f.sampleId);
+        sessionId.setText(f.sessionId);
+        phoneName.setText(f.phoneName);
+        location = f.location;
+        showLocation(null);
+    }
+
+    /** The field metadata on the screen; throws with a plain-language message when the phone name
+     *  is not usable. An empty phone name gets the default again. */
+    private FieldInfo fieldOnScreen() {
+        FieldInfo f = new FieldInfo();
+        f.site = text(site);
+        f.transect = text(transect);
+        f.plant = text(plant);
+        f.sampleId = text(sampleId);
+        f.sessionId = text(sessionId);
+        f.phoneName = text(phoneName);
+        if (f.phoneName.isEmpty()) {
+            f.phoneName = FieldInfo.defaultPhoneName(this);
+            phoneName.setText(f.phoneName);
+        }
+        f.location = location;
+        String p = f.problem();
+        if (p != null) throw new IllegalArgumentException(p);
+        return f;
+    }
+
+    private static String text(EditText field) {
+        return field.getText().toString().trim();
+    }
+
+    /** The saved position in words, after {@code note} (null: none). */
+    private void showLocation(String note) {
+        String text;
+        if (location == null) {
+            text = getString(R.string.location_none);
+        } else {
+            text = getString(R.string.location_saved, FieldInfo.coordinates(location),
+                    Math.round(location.getAccuracy()),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(location.getTime())));
+            if (location.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
+        }
+        locationText.setText(note == null ? text : note + "\n" + text);
+    }
+
+    /** Get location: the GPS runs until the position is good enough (GpsFix); a second tap stops it
+     *  and keeps the best position so far. */
+    private void getLocation() {
+        if (gps != null) {
+            gps.stop();
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Both: Android 12+ then offers "precise" or "approximate"; the GPS needs precise.
+            requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST);
+            return;
+        }
+        if (!GpsFix.gpsOn(this)) {
+            showLocation(getString(R.string.location_off));
+            openPage(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            return;
+        }
+        gps = new GpsFix(this, new GpsFix.Listener() {
+            @Override
+            public void onSearching(Location best, long elapsedMs) {
+                String text = getString(R.string.location_searching, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
+                if (best != null) text += " " + getString(R.string.location_best, Math.round(best.getAccuracy()));
+                locationText.setText(text);
+            }
+
+            @Override
+            public void onDone(Location best) {
+                locationDone();
+                if (best == null) {
+                    showLocation(getString(R.string.location_failed, GpsFix.TIMEOUT_MS / 1000));
+                    return;
+                }
+                location = best;
+                FieldInfo saved = FieldInfo.load(MainActivity.this);
+                saved.location = best;
+                saved.save(MainActivity.this);
+                showLocation(null);
+            }
+        });
+        gps.start();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // a screen timeout would stop it
+        locationButton.setText(R.string.location_stop);
+    }
+
+    private void locationDone() {
+        gps = null;
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        locationButton.setText(R.string.location_get);
     }
 
     private double decimal(EditText field, int labelId) {
@@ -353,13 +512,42 @@ public final class MainActivity extends Activity {
         return d == Math.rint(d) ? String.valueOf((long) d) : String.valueOf(d);
     }
 
-    /** Where the files go; in the app's own folder (Android 10 and older without the storage
-     *  permission) also that they are removed with the app. */
-    private void showStartHint() {
+    /** Counts what the sessions folder holds, on a second thread: many files take a moment. */
+    private void countStorage() {
+        final File dir = CaptureService.sessionsDir(this);
+        new Thread(() -> {
+            File[] sessions = dir.listFiles(File::isDirectory);
+            long[] use = {0, sessions == null ? 0 : sessions.length};
+            if (sessions != null) for (File f : sessions) use[0] += bytes(f);
+            handler.post(() -> {
+                storageUse = use;
+                showStorage();
+            });
+        }, "storage").start();
+    }
+
+    private static long bytes(File f) {
+        File[] inside = f.listFiles();
+        if (inside == null) return f.length();
+        long sum = 0;
+        for (File g : inside) sum += bytes(g);
+        return sum;
+    }
+
+    /** Where the files go, what FaunaLapse uses there and what is free; in the app's own folder
+     *  (Android 10 and older without the storage permission) also that it goes with the app.
+     *  UsableSpace: leaves out caches Android could clear, a cautious number (as SessionRunner). */
+    @SuppressLint("UsableSpace")
+    private void showStorage() {
         File dir = CaptureService.sessionsDir(this);
-        String hint = getString(R.string.start_hint, CaptureService.shownPath(dir));
-        if (dir.equals(CaptureService.appSessionsDir(this))) hint += " " + getString(R.string.start_hint_app_folder);
-        startHint.setText(hint);
+        String path = CaptureService.shownPath(dir);
+        String free = Formatter.formatShortFileSize(this, dir.getUsableSpace());
+        String text = storageUse == null ? getString(R.string.storage_counting, path, free)
+                : getString(R.string.storage_line, path, Formatter.formatShortFileSize(this, storageUse[0]),
+                        getResources().getQuantityString(R.plurals.sessions, (int) storageUse[1], (int) storageUse[1]),
+                        free);
+        if (dir.equals(CaptureService.appSessionsDir(this))) text += " " + getString(R.string.storage_app_folder);
+        show(storage, text);
     }
 
     private void startSession() {
@@ -392,7 +580,7 @@ public final class MainActivity extends Activity {
         if (intent.getBooleanExtra(CaptureService.EXTRA_SPEED_TEST, false)) start(SPEED_TEST);
         if (intent.getBooleanExtra(EXTRA_STOP_SESSION, false)) stopSession();
         if (intent.getBooleanExtra(EXTRA_START_SESSION, false)) {
-            // Optional values, for example: --es mode video --es clip_min 0.5 --es run_h 0.1
+            // Optional values, for example: --es mode video --es clip_min 0.5 --es run_min 6
             String m = intent.getStringExtra("mode");
             if (m != null) mode.check("video".equals(m) ? R.id.mode_video : R.id.mode_photo);
             String sc = intent.getStringExtra("schedule");
@@ -406,7 +594,11 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "saved_side_px", savedSide);
             setFromExtra(intent, "clip_min", clipMin);
             setFromExtra(intent, "break_min", breakMin);
-            setFromExtra(intent, "run_h", runH);
+            String run = intent.getStringExtra("run_min");
+            if (run != null) {
+                runH.setText(String.valueOf(Integer.parseInt(run) / 60));
+                runM.setText(String.valueOf(Integer.parseInt(run) % 60));
+            }
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
             setFromExtra(intent, "heat_limit_c", heatLimitC);
@@ -463,6 +655,14 @@ public final class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        if (requestCode == LOCATION_REQUEST) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                getLocation();
+            } else {
+                showLocation(getString(R.string.location_permission));
+            }
+            return;
+        }
         // The notification and storage permissions are optional: without them the camera works.
         if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             start(requested);
@@ -516,10 +716,12 @@ public final class MainActivity extends Activity {
             show(sessionWarning, "");
         }
         // The phone name on top tells the phones of a team apart.
-        String name = SessionSettings.load(this).phoneName;
-        String titleText = getString(title) + (name.isEmpty() ? "" : " · " + name);
+        String titleText = getString(title) + " · " + FieldInfo.load(this).phoneName;
         if (!titleText.contentEquals(statusTitle.getText())) statusTitle.setText(titleText);
         if (running) lastSession = null; // read again when it has ended
+        if (wasRunning && !running) countStorage();
+        wasRunning = running;
+        showStorage();
         CaptureService.Battery b = CaptureService.Battery.read(this);
         battery.setText(getString(R.string.battery_line, b.percent >= 0 ? b.percent + " %" : "?",
                 getString(b.charging ? R.string.charging : R.string.not_charging),
@@ -542,10 +744,10 @@ public final class MainActivity extends Activity {
     private void setControlsEnabled(boolean enabled) {
         if (controlsEnabled != null && controlsEnabled == enabled) return;
         controlsEnabled = enabled;
-        setEnabled(aimCard, enabled);
-        setEnabled(scheduleCard, enabled);
-        aimCard.setAlpha(enabled ? 1 : 0.5f);
-        scheduleCard.setAlpha(enabled ? 1 : 0.5f);
+        for (View card : new View[] {aimCard, fieldCard, scheduleCard}) {
+            setEnabled(card, enabled);
+            card.setAlpha(enabled ? 1 : 0.5f);
+        }
         startButton.setEnabled(enabled);
         photoButton.setEnabled(enabled);
         speedButton.setEnabled(enabled);
@@ -623,15 +825,17 @@ public final class MainActivity extends Activity {
             b.setVisibility(View.GONE);
         } else {
             b.setText(button);
-            b.setOnClickListener(v -> {
-                try {
-                    startActivity(page);
-                } catch (ActivityNotFoundException e) {
-                    startActivity(new Intent(Settings.ACTION_SETTINGS)); // a phone without that page
-                }
-            });
+            b.setOnClickListener(v -> openPage(page));
         }
         phoneChecks.addView(line);
+    }
+
+    private void openPage(Intent page) {
+        try {
+            startActivity(page);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Settings.ACTION_SETTINGS)); // a phone without that page
+        }
     }
 
     /** The last session from the log (it also survives a restart of the app), in words. */
@@ -648,6 +852,8 @@ public final class MainActivity extends Activity {
         if (last == null) return getString(R.string.no_session);
         String text = getString(R.string.last_session, last.optString("file"), last.optString("counts"),
                 last.optString("reason"));
+        String battery = last.optString("battery");
+        if (!battery.isEmpty()) text += " " + battery;
         String warning = last.optString("warning");
         return warning.isEmpty() ? text : text + "\n" + warning;
     }

@@ -21,8 +21,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Runs one session: follows the CapturePlan, opens the camera shortly before each photo burst or
  * video clip, closes it again when the break is long, saves the ROI square of each photo or one MP4
- * per clip, and writes every event into session.jsonl. Guards: a heat pause, and clean stops when
- * the battery runs low or the storage is nearly full.
+ * per clip, and writes every event into session.jsonl, with the battery use at the end
+ * (BatteryMeter). Guards: a heat pause, and clean stops when the battery runs low or the storage is
+ * nearly full.
  *
  * Runs on its own thread without a message loop (Camera1Session needs that) and simply waits between
  * events. All times come from the phone clock, so a late wake-up or a changed clock heals itself on
@@ -67,6 +68,7 @@ final class SessionRunner implements Runnable {
     private final boolean useCamera2;
     private final int phoneTurn;
     private final long videoBitRate; // for the storage check
+    private final BatteryMeter meter;
     private SessionCamera camera;
     private int photoTurn;
     private ThreadPoolExecutor saver;
@@ -90,6 +92,7 @@ final class SessionRunner implements Runnable {
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
         this.useCamera2 = useCamera2(context);
+        this.meter = new BatteryMeter(context);
         // Twice the asked rate: some encoders keep a quality floor (Samsung M12: 3.9 Mbit/s for 2.2 asked).
         this.videoBitRate = settings.video ? 2L * SquareRecorder.bitRate(Camera1Backend.backCameraId(),
                 settings.savedSidePx, settings.videoFps) : 0;
@@ -115,6 +118,8 @@ final class SessionRunner implements Runnable {
         heatPaused = false;
         updateProgress();
         writeStart();
+        Thread meterThread = new Thread(meter, "battery");
+        meterThread.start();
         // Photos are cut and saved on a second thread; when two are waiting, the session thread
         // saves the next one itself, which slows the photos instead of filling the memory.
         saver = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
@@ -179,6 +184,7 @@ final class SessionRunner implements Runnable {
             reason = "error: " + e;
         } finally {
             closeCamera();
+            meterThread.interrupt();
             saver.shutdown();
             try {
                 saver.awaitTermination(30, TimeUnit.SECONDS);
@@ -194,6 +200,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(end, "errors", errors);
             SessionLog.put(end, "heat_pauses", heatPauses);
             SessionLog.put(end, "heat_pause_min", Math.round(heatPauseMs / 6000.0) / 10.0);
+            SessionLog.put(end, "battery", meter.toJson());
             log.write(end);
             if (Build.VERSION.SDK_INT <= 29) {
                 // Android 10 and older add new files to their file index (which a PC sees over USB)
@@ -221,6 +228,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(summary, "reason", reason);
             SessionLog.put(summary, "counts", counts);
             SessionLog.put(summary, "errors", errors);
+            SessionLog.put(summary, "battery", meter.words());
             if (!warning.isEmpty()) SessionLog.put(summary, "warning", warning);
             onDone.onDone(summary);
         }
@@ -228,6 +236,7 @@ final class SessionRunner implements Runnable {
 
     private void writeStart() {
         JSONObject r = SessionLog.record("session_start");
+        SessionLog.put(r, "field", FieldInfo.load(context).toJson(context)); // site, plant, location
         SessionLog.put(r, "settings", settings.toJson());
         SessionLog.put(r, "camera_api", useCamera2 ? "camera2" : "camera1");
         SessionLog.put(r, "phone_turn_deg", phoneTurn); // 0 upright or flat, 90 left side up
@@ -263,6 +272,7 @@ final class SessionRunner implements Runnable {
             throw e;
         }
         camera = c;
+        meter.cameraOpen(true);
         photoTurn = RoiMath.photoTurn(c.describe().optInt("sensor_orientation"), phoneTurn);
         JSONObject r = SessionLog.record("camera_open");
         SessionLog.put(r, "open_ms", SpeedTest.now() - t);
@@ -282,6 +292,7 @@ final class SessionRunner implements Runnable {
         if (camera == null) return;
         camera.close();
         camera = null;
+        meter.cameraOpen(false);
         log.write(SessionLog.record("camera_close"));
     }
 

@@ -9,8 +9,9 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * The session settings: shown on the screen, saved on the phone, and written into the session
- * record. The reasons for the defaults are in the screen texts (strings.xml).
+ * The camera and schedule settings: shown on the screen, saved on the phone, and written into the
+ * session record. The reasons for the defaults are in the screen texts (strings.xml). Where and
+ * what is recorded (site, plant, location) is in FieldInfo.
  */
 final class SessionSettings {
 
@@ -18,9 +19,9 @@ final class SessionSettings {
     double stepS = 2;            // a 3 s step caught about 90 % of visits (Edwards et al. 2015)
     double burstS = 60;          // longer than a typical visit (about 11 s)
     double clipMin = 5;
-    double breakMin = 4;         // camera off about 80 % of the time
+    double breakMin = 5;         // camera off about 83 % of the time with photo bursts, half with clips (owner)
     boolean daily = false;
-    double runH = 2;
+    int runMin = 60;             // one hour, a usual observation period (owner, 2026-10-04)
     String windows = "05:00-21:00"; // early morning and evening visits count (Toivonen and Humberg 2026)
     int days = 1;
     int squarePercent = 100;     // square side as a share of the short side of the photo
@@ -31,7 +32,6 @@ final class SessionSettings {
     int savedSidePx = 1280;      // photos and video; input size of many insect detectors (owner, 2026-10-04)
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
-    String phoneName = "";       // optional, added to the folder name: files from several phones do not mix
 
     /** Saved square side limits: the smallest common classifier input; a sanity bound (squares are
      *  never enlarged beyond their real pixels anyway). */
@@ -49,7 +49,7 @@ final class SessionSettings {
         s.clipMin = p.getFloat("clip_min", (float) s.clipMin);
         s.breakMin = p.getFloat("break_min", (float) s.breakMin);
         s.daily = p.getBoolean("daily", s.daily);
-        s.runH = p.getFloat("run_h", (float) s.runH);
+        s.runMin = p.getInt("run_min", s.runMin);
         s.windows = p.getString("windows", s.windows);
         s.days = p.getInt("days", s.days);
         s.squarePercent = p.getInt("square_percent", s.squarePercent);
@@ -60,7 +60,6 @@ final class SessionSettings {
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoFps = p.getInt("video_fps", s.videoFps);
         s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
-        s.phoneName = p.getString("phone_name", s.phoneName);
         return s;
     }
 
@@ -72,7 +71,8 @@ final class SessionSettings {
                 .putFloat("clip_min", (float) clipMin)
                 .putFloat("break_min", (float) breakMin)
                 .putBoolean("daily", daily)
-                .putFloat("run_h", (float) runH)
+                .putInt("run_min", runMin)
+                .remove("run_h") // the run length in hours, saved by older versions
                 .putString("windows", windows)
                 .putInt("days", days)
                 .putInt("square_percent", squarePercent)
@@ -83,7 +83,6 @@ final class SessionSettings {
                 .putInt("saved_side_px", savedSidePx)
                 .putInt("video_fps", videoFps)
                 .putFloat("heat_limit_c", (float) heatLimitC)
-                .putString("phone_name", phoneName)
                 .apply();
     }
 
@@ -94,7 +93,7 @@ final class SessionSettings {
         if (video && (clipMin < 0.1 || clipMin > 1440)) return "Clip length: use 0.1 to 1440 min.";
         if (video && videoFps != 5 && videoFps != 10 && videoFps != 15) return "Video frames per s: use 5, 10 or 15.";
         if (breakMin < 0 || breakMin > 1440) return "Break: use 0 to 1440 min.";
-        if (!daily && (runH <= 0 || runH > 720)) return "Run length: use more than 0 and up to 720 h.";
+        if (!daily && (runMin < 1 || runMin > 720 * 60)) return "Run length: use 1 min to 720 h.";
         if (daily && (days < 1 || days > 365)) return "Days: use 1 to 365.";
         if (squarePercent < 10 || squarePercent > 100) return "Square side: use 10 to 100 %.";
         if (squareX < 0 || squareX > 1 || squareY < 0 || squareY > 1) return "Square position: use 0 to 1.";
@@ -103,7 +102,6 @@ final class SessionSettings {
         }
         if (focusFixed && (focusDiopters < 0 || focusDiopters > 50)) return "Fixed focus: set it again on the aim screen.";
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
-        if (!validPhoneName(phoneName)) return "Phone name: use up to 20 letters (a to z), digits, - or _.";
         if (daily) {
             try {
                 CapturePlan.parseWindows(windows);
@@ -131,11 +129,6 @@ final class SessionSettings {
                 : String.format(Locale.US, "about %.1f m", cm / 100);
     }
 
-    /** Letters a to z, digits, - and _ only: safe in folder names on every computer. */
-    static boolean validPhoneName(String name) {
-        return name.matches("[A-Za-z0-9_-]{0,20}");
-    }
-
     long stepMs() {
         return Math.round(round(stepS) * 1000);
     }
@@ -152,7 +145,7 @@ final class SessionSettings {
         return daily
                 ? CapturePlan.daily(sessionStart, CapturePlan.parseWindows(windows), days, TimeZone.getDefault(),
                         burstMs(), breakMs())
-                : CapturePlan.run(sessionStart, Math.round(round(runH) * 3600000), burstMs(), breakMs());
+                : CapturePlan.run(sessionStart, runMin * 60000L, burstMs(), breakMs());
     }
 
     /** Saved values are floats (0.06 comes back as 0.0599999986): round them for the record. */
@@ -163,7 +156,6 @@ final class SessionSettings {
     /** All settings, for the session record (only those that apply to the chosen mode). */
     JSONObject toJson() {
         JSONObject j = new JSONObject();
-        if (!phoneName.isEmpty()) SessionLog.put(j, "phone_name", phoneName);
         SessionLog.put(j, "mode", video ? "video" : "photo");
         if (video) {
             SessionLog.put(j, "clip_min", round(clipMin));
@@ -186,7 +178,7 @@ final class SessionSettings {
             SessionLog.put(j, "daily_windows", windows);
             SessionLog.put(j, "days", days);
         } else {
-            SessionLog.put(j, "run_h", round(runH));
+            SessionLog.put(j, "run_min", runMin);
         }
         return j;
     }

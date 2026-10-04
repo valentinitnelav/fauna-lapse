@@ -17,7 +17,7 @@ plain language at first use, and write plain English with short sentences and no
 
 ## Hard constraints (change only with the owner's approval)
 
-- Android only for now (iOS, if ever, as a separate app). No AI. No network access.
+- Android only for now (iOS as a separate app, if ever). No AI. No network access; GPS only on tap.
 - Java 8 language level; no Kotlin, no C/C++ (the image work runs in the camera hardware, so native
   code would not be faster or cooler). minSdk 24 (Android 7.0, the oldest phone we can test);
   compile and target SDK 36.
@@ -36,9 +36,9 @@ plain language at first use, and write plain English with short sentences and no
 - Schedule: daily windows for some days, or a run of some hours; inside them photo bursts or video
   clips with breaks, on a fixed grid from each window start (no drift, same clock times every day).
 - If the phone cannot reach the asked photo step, the app says so and suggests video or a longer step.
-- File names use the time (`yyyyMMdd_HHmmss_SSS`), so they sort correctly across midnight.
-- Every setting gets a control on screen, a saved value, a reason for its default and a line in the
-  session record.
+- File names use the time (`yyyyMMdd_HHmmss_SSS`), so they sort correctly across midnight; session
+  folders start with the phone name, so files from several phones never mix on one computer.
+- Every setting gets a control on screen, a saved value, a reason for its default and a record line.
 
 ## Code origin and licence
 
@@ -71,13 +71,14 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez aim true    # the ai
 # Add --ez camera1 true to any hook to use Camera1 on a Camera2 phone (until the app is closed)
 # Start a session; any setting can be given (names as in SessionSettings), the rest stays as saved
 adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
-    --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_h 0.06
+    --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_min 4
 adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
 # Guards, with the owner's OK: dumpsys battery set temp 460 | unplug | set level 10; then reset
 ```
 
 Keep schedule and maths code in classes without Android code, and test it. On the phone: sessions in
-`/sdcard/Documents/FaunaLapse/<start time>/`, tests in `/sdcard/Android/data/com.faunalapse.app/files/phase0/`.
+`/sdcard/Documents/FaunaLapse/<phone name>_<start time>_<photo or video>/`, tests in
+`/sdcard/Android/data/com.faunalapse.app/files/phase0/`.
 
 ## Where knowledge lives (keep these files short)
 
@@ -86,9 +87,8 @@ Keep schedule and maths code in classes without Android code, and test it. On th
 - `docs/PHONES.md`: phone facts and measurements; read it only for camera or energy work.
 - `README.md`: for humans. Git commit messages: the history (`git log --oneline -- <file>`).
 - Upkeep: one home per fact. When something changes, replace or remove its text; never add history,
-  dates of changes or "replaces X" notes. If an edit would pass a line limit, merge or remove lines
-  first. A reason goes in one clause next to its rule or in a code comment; longer reasoning goes in
-  the commit message.
+  dates of changes or "replaces X" notes. Merge or remove lines before passing a line limit. A reason
+  goes in one clause next to its rule or in a code comment; longer reasoning in the commit message.
 
 ## Git
 

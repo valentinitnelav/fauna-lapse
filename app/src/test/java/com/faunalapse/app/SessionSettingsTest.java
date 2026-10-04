@@ -11,13 +11,36 @@ public class SessionSettingsTest {
 
     @Test
     public void phoneNamesAreSafeInFolderNames() {
-        assertTrue(SessionSettings.validPhoneName(""));
-        assertTrue(SessionSettings.validPhoneName("P1"));
-        assertTrue(SessionSettings.validPhoneName("Meadow-3_b"));
-        assertFalse(SessionSettings.validPhoneName("P 1")); // space
-        assertFalse(SessionSettings.validPhoneName("a/b"));
-        assertFalse(SessionSettings.validPhoneName("Wiese-Ü"));
-        assertFalse(SessionSettings.validPhoneName("123456789012345678901")); // 21 characters
+        assertFalse(FieldInfo.validPhoneName("")); // the folder name starts with it
+        assertTrue(FieldInfo.validPhoneName("P1"));
+        assertTrue(FieldInfo.validPhoneName("Meadow-3_b"));
+        assertTrue(FieldInfo.validPhoneName("SM-M127F-3A9C"));
+        assertFalse(FieldInfo.validPhoneName("P 1")); // space
+        assertFalse(FieldInfo.validPhoneName("a/b"));
+        assertFalse(FieldInfo.validPhoneName("Wiese-Ü"));
+        assertFalse(FieldInfo.validPhoneName("123456789012345678901")); // 21 characters
+    }
+
+    @Test
+    public void runLengthFromOneMinuteTo720Hours() {
+        SessionSettings s = new SessionSettings();
+        for (int min : new int[] {1, 45, 60, 90, 720 * 60}) {
+            s.runMin = min;
+            assertNull(s.problem());
+        }
+        s.runMin = 0;
+        assertEquals("Run length: use 1 min to 720 h.", s.problem());
+        s.runMin = 720 * 60 + 1;
+        assertEquals("Run length: use 1 min to 720 h.", s.problem());
+    }
+
+    @Test
+    public void batteryCurrentInMilliamperes() {
+        assertEquals(350.0, BatteryMeter.milliamperes(-350), 0);        // Samsung M12: mA
+        assertEquals(350.0, BatteryMeter.milliamperes(-350000), 0);     // Android's documented µA
+        assertEquals(42.5, BatteryMeter.milliamperes(42500), 0);
+        assertNull(BatteryMeter.milliamperes(0));                       // not reported
+        assertNull(BatteryMeter.milliamperes(Integer.MIN_VALUE));
     }
 
     @Test

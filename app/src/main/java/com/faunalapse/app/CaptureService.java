@@ -79,7 +79,7 @@ public final class CaptureService extends Service {
         return dir;
     }
 
-    /** Sessions: one folder per session (named by its start time) with the photos or videos and
+    /** Sessions: one folder per session (phone name, start time, photo or video) with the files and
      *  session.jsonl. Documents/FaunaLapse in the shared storage, so the files survive an uninstall
      *  and are easy to find over USB. Android 11+ lets apps write there without a permission;
      *  Android 10 and older need the storage permission, else the app's own folder is used. */
@@ -204,8 +204,10 @@ public final class CaptureService extends Service {
         }
         // Held for the whole session (the phone stays awake between bursts); released when it ends.
         wakeLock.acquire(plan.end() - now + 10 * 60000L);
-        String name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
-                + (settings.phoneName.isEmpty() ? "" : "_" + settings.phoneName); // still sorts by time
+        // Phone first: folders from several phones never get the same name on one computer.
+        String name = FieldInfo.load(this).phoneName + "_"
+                + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
+                + (settings.video ? "_video" : "_photo");
         File dir = new File(sessionsDir(this), name);
         if (!dir.mkdirs()) {
             dir = new File(appSessionsDir(this), name); // the shared folder refused it
@@ -284,22 +286,25 @@ public final class CaptureService extends Service {
     static final class Battery {
         final Double tempC;    // null if unknown
         final int percent;     // -1 if unknown
-        final boolean charging;
+        final boolean charging; // on a charger (it may be full)
+        final int mv;          // voltage, -1 if unknown
 
-        private Battery(Double tempC, int percent, boolean charging) {
+        private Battery(Double tempC, int percent, boolean charging, int mv) {
             this.tempC = tempC;
             this.percent = percent;
             this.charging = charging;
+            this.mv = mv;
         }
 
         static Battery read(Context context) {
             Intent b = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-            if (b == null) return new Battery(null, -1, false);
+            if (b == null) return new Battery(null, -1, false, -1);
             int level = b.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = b.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             return new Battery(b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10.0, // tenths of a °C
                     level >= 0 && scale > 0 ? level * 100 / scale : -1,
-                    b.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0);
+                    b.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0,
+                    b.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1));
         }
     }
 

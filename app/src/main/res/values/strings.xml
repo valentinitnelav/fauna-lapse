@@ -13,6 +13,13 @@
     <string name="charging">charging</string>
     <string name="not_charging">not charging</string>
     <string name="phone_time">Phone time: %1$s. Check it before a field session: the session record uses it.</string>
+    <string name="storage_line">Files are saved in %1$s. FaunaLapse uses %2$s there (%3$s); %4$s free on the phone.</string>
+    <string name="storage_counting">Files are saved in %1$s; %2$s free on the phone.</string>
+    <plurals name="sessions">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+    <string name="storage_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
     <string name="stop_session">Stop session</string>
     <string name="stop_question">Stop the session?</string>
     <string name="stop_question_text">The camera closes; the photos and videos so far are kept.</string>
@@ -28,15 +35,40 @@
     <string name="aim_square_middle">in the middle</string>
     <string name="aim_square_placed">where you placed it</string>
 
-    <!-- 2 Schedule -->
-    <string name="card_schedule">2 · Schedule</string>
+    <!-- 2 Field metadata -->
+    <string name="card_field">2 · Field metadata</string>
+    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions.\n• Phone name: it starts each session folder name, so folders from several phones never mix on one computer. Letters a to z, digits, - or _. Default: the phone model and part of the phone\'s ID.\n• Get location: the GPS stays on until the position is within 10 m, then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. Saved in degrees (WGS 84), with its accuracy and time.</string>
+    <string name="field_site">Site</string>
+    <string name="field_site_hint">for example Meadow 2</string>
+    <string name="field_transect">Transect</string>
+    <string name="field_transect_hint">for example 3</string>
+    <string name="field_plant">Plant</string>
+    <string name="field_plant_hint">common or Latin name</string>
+    <string name="field_sample">Sample ID</string>
+    <string name="field_session">Session ID</string>
+    <string name="field_phone">Phone name</string>
+    <string name="field_optional">optional</string>
+    <string name="location_get">Get location</string>
+    <string name="location_stop">Stop and keep the best</string>
+    <string name="location_none">No location saved.</string>
+    <string name="location_saved">Location: %1$s (± %2$d m), from %3$s.</string>
+    <string name="location_weak">Less exact than 10 m: try again under open sky if you need more.</string>
+    <string name="location_searching">Searching for GPS satellites: %1$d s (at most %2$d s). Keep the phone outdoors, under open sky.</string>
+    <string name="location_best">Best so far: ± %1$d m.</string>
+    <string name="location_failed">No GPS position in %1$d s. Try again outdoors, away from buildings and trees.</string>
+    <string name="location_stopped">The search stopped when the screen was left.</string>
+    <string name="location_off">Location is off: turn it on, then tap Get location again. Turn it off again when the position is saved.</string>
+    <string name="location_permission">FaunaLapse needs the precise location permission to save where the phone is. Tap Get location again to allow it.</string>
+
+    <!-- 3 Schedule -->
+    <string name="card_schedule">3 · Schedule</string>
     <string name="change_open">Change settings</string>
     <string name="change_close">Close settings</string>
     <string name="summary_photo">Photos: one every %1$s s for %2$s s, then %3$s min off.</string>
     <string name="summary_photo_no_break">Photos: one every %1$s s, without breaks.</string>
     <string name="summary_video" tools:ignore="PluralsCandidate">Video, %1$d frames per s: clips of %2$s min, then %3$s min off.</string>
     <string name="summary_video_no_break" tools:ignore="PluralsCandidate">Video, %1$d frames per s: clips of %2$s min, one after the other.</string>
-    <string name="summary_run">For %1$s h from Start.</string>
+    <string name="summary_run">For %1$s from Start.</string>
     <string name="summary_daily">Daily windows: %1$s. Days: %2$d.</string>
     <string name="summary_heat">Heat pause at %1$s °C.</string>
     <string name="step_label">Photo step (s)</string>
@@ -53,31 +85,33 @@
     <string name="video_fps_15">15</string>
     <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast flying insects. Fewer frames give smaller files, but not in proportion: on the Samsung M12, 5 frames per s took about 55 % of the storage of 15, and 10 about 80 %.</string>
     <string name="break_label">Break between bursts or clips (min)</string>
-    <string name="break_hint">Default 4 min: the camera rests about 80 % of the time. It is switched off when the break is longer than 30 s. 0 = no break.</string>
+    <string name="break_hint">Default 5 min: the camera rests about 83 % of the time with 60 s photo bursts, and half of the time with 5 min clips. It is switched off when the break is longer than 30 s. 0 = no break.</string>
     <string name="schedule_label">Record</string>
     <string name="schedule_run">Hours from Start</string>
     <string name="schedule_daily">Daily windows</string>
-    <string name="run_label">Run length (h)</string>
-    <string name="run_hint">Default 2 h. Up to 720 h (30 days) without a break at night, for example under the midnight sun.</string>
+    <string name="run_label">Run length</string>
+    <string name="run_hours">Run length, hours</string>
+    <string name="run_minutes">Run length, minutes</string>
+    <string name="unit_h">h</string>
+    <string name="unit_min">min</string>
+    <string name="run_hint">Default 1 h, a usual observation period. Up to 720 h (30 days) without a break at night, for example under the midnight sun.</string>
     <string name="windows_label">Daily windows</string>
     <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. A window may cross midnight (22:00-04:00), and 00:00-24:00 records all day (for example under the midnight sun). Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
     <string name="days_label">Days</string>
     <string name="days_hint">Default 1. Counted from the first window that is not over yet: a phone started in the evening records from the next morning. For more days, keep the phone on a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
-    <string name="phone_name_label">Phone name (optional)</string>
-    <string name="phone_name_hint">A short name such as P1 or Meadow-3 (letters a to z, digits, - or _). It is added to the session folder name and the record, so files from several phones do not mix. Default values keep it.</string>
     <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
 
-    <!-- 3 Phone for the field -->
-    <string name="card_phone">3 · Phone for the field</string>
+    <!-- 4 Phone for the field -->
+    <string name="card_phone">4 · Phone for the field</string>
     <string name="check_radios">On: %1$s. For the field, turn on airplane mode (flight mode) and keep Wi-Fi and Bluetooth off: radios use energy.</string>
     <string name="radio_mobile">mobile network</string>
     <string name="radio_wifi">Wi-Fi</string>
     <string name="radio_bluetooth">Bluetooth</string>
     <string name="check_radios_button">Open settings</string>
-    <string name="check_location">Location is on: other apps may use GPS. Turn it off for the field.</string>
+    <string name="check_location">Location is on: other apps may use GPS. Turn it off for the field (after Get location).</string>
     <string name="check_location_button">Open settings</string>
     <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions.</string>
     <string name="check_battery_button">Allow</string>
@@ -89,8 +123,7 @@
 
     <!-- Start -->
     <string name="start_session">Start session</string>
-    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on. Files are saved in %1$s.</string>
-    <string name="start_hint_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
+    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on.</string>
 
     <!-- Aim screen -->
     <string name="square_label">Square side</string>
