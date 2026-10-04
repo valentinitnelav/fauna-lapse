@@ -21,7 +21,7 @@
             <TextView android:id="@+id/status_title" style="@style/CardTitle" android:textSize="20sp" />
             <TextView android:id="@+id/session_status" style="@style/Body" />
             <TextView android:id="@+id/session_progress" style="@style/Body" />
-            <TextView android:id="@+id/session_warning" style="@style/Body" android:textColor="@color/warning" />
+            <TextView android:id="@+id/session_warning" style="@style/Body" android:textColor="@color/warning" android:textStyle="bold" />
             <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
             <TextView android:id="@+id/phone_time" style="@style/Hint" />
             <Button android:id="@+id/stop_session" style="@style/BigButton"
@@ -128,7 +128,7 @@
 
         <!-- 3: start -->
         <TextView android:id="@+id/start_message" style="@style/Body" android:layout_marginTop="12dp"
-            android:textColor="@color/warning" android:visibility="gone" />
+            android:textColor="@color/warning" android:textStyle="bold" android:visibility="gone" />
         <Button android:id="@+id/start_session" style="@style/BigButton" android:text="@string/start_session" />
         <TextView android:id="@+id/start_hint" style="@style/Hint" android:layout_marginTop="4dp" />
 

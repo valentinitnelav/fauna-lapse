@@ -74,6 +74,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         findViewById(R.id.done).setOnClickListener(v -> finish());
         startButton = findViewById(R.id.start_here);
         startButton.setOnClickListener(v -> startHere());
+        startButton.setText(MainActivity.withIcon(startButton, R.drawable.ic_start, R.string.aim_start));
         View middle = findViewById(R.id.middle);
         middle.setVisibility(video ? View.GONE : View.VISIBLE);
         middle.setOnClickListener(v -> {

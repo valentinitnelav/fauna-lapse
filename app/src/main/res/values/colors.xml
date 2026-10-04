@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Light theme colours; values-night has the dark ones. Green for nature; buttons keep white text
-     on the same green in both themes, for contrast in the sun. -->
+     on the same green in both themes, for contrast in the sun. Red and green look alike to many
+     colour-blind people, so colour is never the only sign: Start and Stop carry a shape (play,
+     stop) and never show together, chosen segments are filled, warnings are bold. -->
 <resources>
     <color name="window">#FFEEF1EA</color>
     <color name="card">#FFFFFFFF</color>

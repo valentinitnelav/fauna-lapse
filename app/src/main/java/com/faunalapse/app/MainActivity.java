@@ -7,10 +7,15 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
@@ -121,6 +126,7 @@ public final class MainActivity extends Activity {
         phoneTime = findViewById(R.id.phone_time);
         stopButton = findViewById(R.id.stop_session);
         stopButton.setOnClickListener(v -> askToStop());
+        stopButton.setText(withIcon(stopButton, R.drawable.ic_stop, R.string.stop_session));
         aimCard = findViewById(R.id.aim_card);
         scheduleCard = findViewById(R.id.schedule_card);
         aimButton = findViewById(R.id.aim);
@@ -135,6 +141,7 @@ public final class MainActivity extends Activity {
         startMessage = findViewById(R.id.start_message);
         startButton = findViewById(R.id.start_session);
         startButton.setOnClickListener(v -> startSession());
+        startButton.setText(withIcon(startButton, R.drawable.ic_start, R.string.start_session));
         startHint = findViewById(R.id.start_hint);
         testsToggle = findViewById(R.id.tests_toggle);
         testsGroup = findViewById(R.id.tests);
@@ -276,9 +283,11 @@ public final class MainActivity extends Activity {
         if (!text.contentEquals(scheduleSummary.getText())) scheduleSummary.setText(text);
         if (ok) {
             scheduleSummary.setTextColor(bodyColor);
+            scheduleSummary.setTypeface(null, Typeface.NORMAL);
             problem = null; // fixed since the last tap
         } else {
             scheduleSummary.setTextColor(getColor(R.color.warning));
+            scheduleSummary.setTypeface(null, Typeface.BOLD); // a problem shows also without colour
         }
     }
 
@@ -506,7 +515,10 @@ public final class MainActivity extends Activity {
                 b.tempC == null ? "?" : String.format(Locale.US, "%.1f", b.tempC)));
         phoneTime.setText(getString(R.string.phone_time,
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())));
+        // One big button at a time: Start while idle, Stop during a session.
         stopButton.setVisibility(session ? View.VISIBLE : View.GONE);
+        startButton.setVisibility(running ? View.GONE : View.VISIBLE);
+        startHint.setVisibility(running ? View.GONE : View.VISIBLE);
         setControlsEnabled(!running);
         if (!running) showScheduleSummary();
         String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
@@ -536,6 +548,17 @@ public final class MainActivity extends Activity {
     }
 
     /** Sets the text, and hides the view while there is none. */
+    /** The text with a shape before it (play, stop), so the big buttons differ also for people who
+     *  do not see red and green apart. Sized to the height of a capital letter. */
+    static CharSequence withIcon(TextView view, int icon, int text) {
+        Drawable d = view.getContext().getDrawable(icon);
+        int size = Math.round(view.getTextSize() * 0.72f);
+        d.setBounds(0, 0, size, size);
+        SpannableString s = new SpannableString("  " + view.getContext().getString(text));
+        s.setSpan(new ImageSpan(d, ImageSpan.ALIGN_BASELINE), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return s;
+    }
+
     private static void show(TextView view, String text) {
         if (!text.contentEquals(view.getText())) view.setText(text);
         view.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
