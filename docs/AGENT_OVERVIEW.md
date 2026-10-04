@@ -51,7 +51,7 @@ Last update: 2026-10-04.
 
 | Default | Value | Where |
 |---|---|---|
-| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 4 min, run 2 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, saved side 1280 px, video 1080p at 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
+| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 4 min, run 2 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 1080p at 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
 | Video frame rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps), every n-th frame kept: Camera2 by a repeating group of requests, Camera1 by time-lapse mode, then `slowDown` restores real time stamps; bit rate asked = preset bits per frame | `FrameRates`, `Camera2Session.startClip`, `Camera1Session` |
 | Wake lead / autofocus lead / keep camera on if off for less than / shortest clip | 5 s / 3 s / 30 s / 3 s | `SessionRunner` constants |
 | Stop after camera errors in a row | 3 | `SessionRunner.MAX_ERRORS_IN_A_ROW` |

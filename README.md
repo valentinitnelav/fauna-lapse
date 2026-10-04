@@ -29,8 +29,9 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - Photos keep only a square region of interest that you drag over the subject and pinch to size,
   saved at 640, 1024 or 1280 pixels (1280 by default, the input size of many insect detectors),
   never enlarged.
-- Focus: automatic at the start of each burst or clip, or fixed at one distance where the camera
-  allows it (not on the oldest phones), so wind or a passing insect cannot pull the focus away.
+- Focus: fixed at one distance (20 cm to start, set while you watch the camera view), so wind, a
+  passing insect or another flower cannot pull the focus away. Phones that cannot fix the focus
+  (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
 - Screen off and camera closed between bursts, to save power and avoid heat.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
@@ -48,9 +49,9 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
    than a few hours, connect a power bank.
 3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the
-   flower and pinch it to size. When the focus line says "sharp", tap *Start session here*.
-   For a fixed focus, choose *Fixed* under *Focus* first: the lens stays where autofocus put it,
-   and the slider moves it nearer or farther.
+   flower and pinch it to size. The focus starts fixed at about 20 cm: tap *Focus again* to focus
+   once on the square and fix it there, or move the focus slider until the flower is sharp. Then tap
+   *Start session here*.
 4. Switch the screen off with the power button. The session goes on; the camera is off in the
    breaks.
 5. To stop early: open the app, tap *Stop session*, then *Stop*.

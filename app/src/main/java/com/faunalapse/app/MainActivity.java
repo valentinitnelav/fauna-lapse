@@ -256,7 +256,12 @@ public final class MainActivity extends Activity {
     /** The square as saved by the aim screen (photo mode), or what the aim screen is for (video). */
     private void showAimSummary() {
         SessionSettings s = SessionSettings.load(this);
-        String focus = getString(s.focusFixed ? R.string.summary_focus_fixed : R.string.summary_focus_auto);
+        String calibration = Camera2Session.fixedFocusCalibration(this); // null: autofocus only
+        String focus = !s.focusFixed ? getString(R.string.summary_focus_auto)
+                : calibration == null ? getString(R.string.summary_focus_cannot_fix)
+                : "calibrated".equals(calibration) || "approximate".equals(calibration)
+                        ? getString(R.string.summary_focus_fixed, SessionSettings.distanceWords(s.focusDiopters))
+                        : getString(R.string.summary_focus_fixed_position);
         if (mode.getCheckedRadioButtonId() == R.id.mode_video) {
             aimSummary.setText(getString(R.string.aim_summary_video, focus));
             return;

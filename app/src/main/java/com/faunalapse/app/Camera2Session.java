@@ -142,17 +142,9 @@ final class Camera2Session implements SessionCamera {
         String id = backCameraId(manager);
         CameraCharacteristics c = manager.getCameraCharacteristics(id);
         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-        int[] afModes = c.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
-        boolean afOff = false;
-        if (afModes != null) {
-            for (int m : afModes) {
-                canFocus |= m == CameraMetadata.CONTROL_AF_MODE_AUTO;
-                afOff |= m == CameraMetadata.CONTROL_AF_MODE_OFF;
-            }
-        }
-        Float closest = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
-        canFixFocus = afOff && closest != null && closest > 0;
-        if (canFixFocus) closestDiopters = closest;
+        canFocus = hasAfMode(c, CameraMetadata.CONTROL_AF_MODE_AUTO);
+        canFixFocus = canFixFocus(c);
+        if (canFixFocus) closestDiopters = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
         Range<Integer>[] ranges = c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
         pixelArray = c.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
         Integer afRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
@@ -167,12 +159,7 @@ final class Camera2Session implements SessionCamera {
         put("fixed_focus_possible", canFixFocus);
         if (canFixFocus) {
             put("closest_focus_diopters", closestDiopters);
-            Integer cal = c.get(CameraCharacteristics.LENS_INFO_FOCUS_DISTANCE_CALIBRATION);
-            // Uncalibrated: the lens positions are in order, but not real distances.
-            put("focus_distance_calibration", cal == null ? "unknown"
-                    : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED ? "calibrated"
-                    : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE ? "approximate"
-                    : "uncalibrated");
+            put("focus_distance_calibration", calibration(c));
         }
 
         Size shape;
@@ -489,6 +476,45 @@ final class Camera2Session implements SessionCamera {
             if (facing != null && facing == CameraMetadata.LENS_FACING_BACK) return id;
         }
         throw new IllegalStateException("no back camera");
+    }
+
+    /** How this phone's lens distances can be read ("calibrated", "approximate", "uncalibrated" or
+     *  "unknown") when a session can fix the focus; null when it can only autofocus (Camera1, or
+     *  a lens that cannot be set to a distance). */
+    static String fixedFocusCalibration(Context context) {
+        if (!SessionRunner.useCamera2(context)) return null;
+        try {
+            CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            CameraCharacteristics c = manager.getCameraCharacteristics(backCameraId(manager));
+            return canFixFocus(c) ? calibration(c) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** The lens can be set to a distance: autofocus can be switched off and the lens has a range. */
+    private static boolean canFixFocus(CameraCharacteristics c) {
+        Float closest = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+        return hasAfMode(c, CameraMetadata.CONTROL_AF_MODE_OFF) && closest != null && closest > 0;
+    }
+
+    private static boolean hasAfMode(CameraCharacteristics c, int mode) {
+        int[] modes = c.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
+        if (modes != null) {
+            for (int m : modes) {
+                if (m == mode) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Uncalibrated: the lens positions are in order, but not real distances. */
+    private static String calibration(CameraCharacteristics c) {
+        Integer cal = c.get(CameraCharacteristics.LENS_INFO_FOCUS_DISTANCE_CALIBRATION);
+        return cal == null ? "unknown"
+                : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED ? "calibrated"
+                : cal == CameraMetadata.LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE ? "approximate"
+                : "uncalibrated";
     }
 
     /** CamcorderProfile wants a number; Camera2 ids are numbers on almost all phones. */

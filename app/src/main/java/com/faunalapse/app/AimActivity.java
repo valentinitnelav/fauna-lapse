@@ -2,6 +2,7 @@ package com.faunalapse.app;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.OrientationEventListener;
@@ -254,6 +255,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         showInfo();
         canFixFocus = d.optBoolean("fixed_focus_possible");
         closestDiopters = d.optDouble("closest_focus_diopters", 0);
+        if (canFixFocus) focusDiopters = Math.max(0, Math.min(closestDiopters, focusDiopters)); // as the lens can
         String calibration = d.optString("focus_distance_calibration");
         calibrated = "calibrated".equals(calibration) || "approximate".equals(calibration);
         findViewById(R.id.focus_group).setVisibility(View.VISIBLE);
@@ -264,7 +266,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         showFocus();
         if (canFixFocus && focusFixed) {
             applyFixedFocus(); // the lens goes to the saved distance
-            focusResult.setText(getString(R.string.aim_focus_result, SessionSettings.distanceWords(focusDiopters)));
+            focusResult.setText(getString(R.string.aim_focus_result, lensWords()));
         } else {
             focus(); // a sharp view from the start
         }
@@ -317,12 +319,24 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         findViewById(R.id.fixed_group).setVisibility(fixed ? View.VISIBLE : View.GONE);
         focusHint.setText(!canFixFocus ? R.string.focus_not_possible : fixed ? R.string.focus_hint_fixed
                 : video ? R.string.focus_hint_auto_video : R.string.focus_hint_auto);
+        // Autofocus only: a warning, clear also without colour.
+        focusHint.setTextColor(canFixFocus ? focusResult.getCurrentTextColor() : getColor(R.color.warning));
+        focusHint.setTypeface(null, canFixFocus ? Typeface.NORMAL : Typeface.BOLD);
         if (!fixed || closestDiopters <= 0) return;
-        int progress = (int) Math.round((1 - focusDiopters / closestDiopters) * 1000);
-        focusSlider.setProgress(progress);
-        focusDistance.setText(calibrated
-                ? getString(R.string.focus_distance, SessionSettings.distanceWords(focusDiopters))
-                : getString(R.string.focus_position, Math.round(progress / 10f)));
+        focusSlider.setProgress(lensProgress());
+        focusDistance.setText(calibrated ? getString(R.string.focus_distance, lensWords())
+                : getString(R.string.focus_position, Math.round(lensProgress() / 10f)));
+    }
+
+    /** The fixed focus on the slider: 0 (nearest) to 1000 (far away). */
+    private int lensProgress() {
+        return (int) Math.round((1 - focusDiopters / closestDiopters) * 1000);
+    }
+
+    /** The fixed focus in words: a distance where the phone tells it, else a lens position. */
+    private String lensWords() {
+        return calibrated ? SessionSettings.distanceWords(focusDiopters)
+                : getString(R.string.focus_position_short, Math.round(lensProgress() / 10f));
     }
 
     private void saveFocus() {

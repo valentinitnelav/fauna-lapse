@@ -27,8 +27,8 @@ final class SessionSettings {
     int squarePercent = 100;     // square side as a share of the short side of the photo
     double squareX = 0.5;        // square centre as shares of the photo width and height (RoiMath
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
-    boolean focusFixed = false;  // autofocus works on every phone; fixed needs Camera2 and the aim screen
-    double focusDiopters = 0;    // fixed focus: 1 / distance in m (0 = far away)
+    boolean focusFixed = true;   // autofocus may pick another flower in a dense patch (owner, 2026-10-04)
+    double focusDiopters = 5;    // 1 / distance in m: 20 cm, a usual distance from phone to flower (owner)
     int savedSidePx = 1280;      // input size of many insect detectors (owner, 2026-10-04)
     String videoQuality = "1080p";
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
