@@ -15,8 +15,9 @@ interface SessionCamera {
      *  settle. */
     void open() throws Exception;
 
-    /** Photo mode: focus and exposure on the ROI square (as in SessionSettings) where the phone
-     *  allows it; exposure follows at once, focus at the next focus(). */
+    /** Focus and exposure on the ROI square (as in SessionSettings) where the phone allows it;
+     *  exposure follows at once, focus at the next focus(). In a video session also the square that
+     *  goes into the clips, from the next clip (describe() then has its real and saved sides). */
     void setSquare(double sideShare, double centreX, double centreY) throws Exception;
 
     /** Fixed focus at {@code diopters} (1 / distance in m; 0 = far away): the lens stays there and
@@ -38,17 +39,19 @@ interface SessionCamera {
      *  where the camera reports them. */
     void putExposure(JSONObject r);
 
-    /** Video mode: gets a clip ready to record into {@code file} and focuses once; returns the focus
-     *  result. */
-    String prepareClip(File file) throws Exception;
+    /** Video mode: gets a clip of the square ready to record into {@code file}, turned {@code turn}
+     *  degrees clockwise (upright), and focuses once; returns the focus result. */
+    String prepareClip(File file, int turn) throws Exception;
 
     /** Video mode: starts recording the prepared clip. */
     void startClip() throws Exception;
 
-    /** Video mode: stops recording and closes the clip file. */
-    void stopClip() throws Exception;
+    /** Video mode: stops recording and closes the clip file; returns facts for the clip's record
+     *  (frames in the file and more). Throws when the file is useless. */
+    JSONObject stopClip() throws Exception;
 
-    /** Facts for the session log: camera interface, sensor orientation, sizes, frame rate. */
+    /** Facts for the session log: camera interface, sensor orientation, sizes, frame rate; in a
+     *  video session also the square's real and saved sides. */
     JSONObject describe();
 
     /** Stops a running clip (so its file stays readable) and closes the camera. Never throws. */

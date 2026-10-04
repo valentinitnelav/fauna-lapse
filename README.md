@@ -2,7 +2,7 @@
 
 FaunaLapse turns old or cheap Android phones into time-lapse cameras that watch one spot, for example
 insects visiting a flower. It takes short bursts of photos or short video clips with the screen off,
-keeps only a square area of each photo that you choose, and closes the camera between bursts. This keeps the
+keeps only a square area that you choose, and closes the camera between bursts. This keeps the
 phone cool, so it can run for days on a power bank. Every photo is logged, so visit rates can be
 computed later.
 
@@ -25,8 +25,10 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 4 minute break) or
   video clips (for example 5 minutes of video, then a 10 minute break) at 5, 10 or 15 frames per
   second; fewer frames give smaller files, enough to follow insects from frame to frame on a computer.
+  Videos also keep only the square; where the phone allows it, the camera zooms onto the square in
+  hardware, so a small square keeps its real detail.
 - If a phone cannot take photos as fast as asked, the app suggests video instead.
-- Photos keep only a square region of interest that you drag over the subject and pinch to size,
+- Photos and videos keep only a square region of interest that you drag over the subject and pinch to size,
   saved at any multiple of 32 pixels from 224 to 4096 (1280 by default, the input size of many
   insect detectors), never enlarged.
 - Focus: fixed at one distance (20 cm to start, set while you watch the camera view), so wind, a

@@ -67,14 +67,6 @@
                         android:inputType="numberDecimal" tools:targetApi="o" />
                     <TextView style="@style/Hint" android:text="@string/clip_hint" />
 
-                    <TextView style="@style/Label" android:text="@string/video_size_label" />
-                    <RadioGroup android:id="@+id/video_quality" style="@style/Segments">
-                        <RadioButton android:id="@+id/video_1080p" style="@style/Segment" android:text="@string/video_1080p" />
-                        <RadioButton android:id="@+id/video_720p" style="@style/Segment.Next" android:text="@string/video_720p" />
-                        <RadioButton android:id="@+id/video_480p" style="@style/Segment.Next" android:text="@string/video_480p" />
-                    </RadioGroup>
-                    <TextView style="@style/Hint" android:layout_marginTop="4dp" android:text="@string/video_size_hint" />
-
                     <TextView style="@style/Label" android:text="@string/video_fps_label" />
                     <RadioGroup android:id="@+id/video_fps" style="@style/Segments">
                         <RadioButton android:id="@+id/video_fps_5" style="@style/Segment" android:text="@string/video_fps_5" />
@@ -114,12 +106,10 @@
                     <TextView style="@style/Hint" android:text="@string/days_hint" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/photo_size_settings" style="@style/Group">
-                    <TextView style="@style/Label" android:labelFor="@id/saved_side" android:text="@string/saved_side_label" />
-                    <EditText android:id="@+id/saved_side" style="@style/Field" android:importantForAutofill="no"
-                        android:inputType="number" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/saved_side_hint" />
-                </LinearLayout>
+                <TextView style="@style/Label" android:labelFor="@id/saved_side" android:text="@string/saved_side_label" />
+                <EditText android:id="@+id/saved_side" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="number" tools:targetApi="o" />
+                <TextView style="@style/Hint" android:text="@string/saved_side_hint" />
 
                 <TextView style="@style/Label" android:labelFor="@id/heat_limit_c" android:text="@string/heat_label" />
                 <EditText android:id="@+id/heat_limit_c" style="@style/Field" android:importantForAutofill="no"

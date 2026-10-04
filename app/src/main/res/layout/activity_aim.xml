@@ -108,7 +108,8 @@
                 android:layout_marginTop="12dp"
                 android:textSize="16sp" />
 
-            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp" />
+            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp"
+                android:text="@string/aim_hint" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

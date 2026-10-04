@@ -22,4 +22,28 @@ final class FrameRates {
         }
         return best == 0 ? null : new int[] {best, best / fps};
     }
+
+    /**
+     * Picks the frames for a video of {@code fps} frames per s from a faster camera: the first frame,
+     * then the first frame at or after each step of 1 / fps. A frame up to a quarter step early
+     * still counts, so a camera at a whole multiple of fps gives every n-th frame despite small
+     * delays. After a gap (frames lost), the steps count again from the next frame.
+     */
+    static final class Picker {
+        private final long stepNs;
+        private long nextNs;
+        private boolean started;
+
+        Picker(int fps) {
+            stepNs = 1000000000L / fps;
+        }
+
+        /** True when the frame with this time stamp (ns) goes into the video. */
+        boolean take(long ns) {
+            if (started && ns < nextNs - stepNs / 4) return false;
+            nextNs = started && ns - nextNs <= stepNs ? nextNs + stepNs : ns + stepNs;
+            started = true;
+            return true;
+        }
+    }
 }

@@ -15,10 +15,8 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.CamcorderProfile;
 import android.media.Image;
 import android.media.ImageReader;
-import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Range;
@@ -41,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Session camera through Camera2, used on phones whose Camera2 level is "limited" or
  * better. Photos: preview (invisible, or on the aim screen) plus a full-size JPEG output, made by
- * the camera hardware. Video: MediaRecorder (Android's hardware video recorder) fed straight by the
- * camera.
+ * the camera hardware. Video: the camera hardware zooms onto the ROI square (crop region), and
+ * SquareRecorder cuts the square out of the stream and records it.
  *
  * Camera2 calls back on its own thread ("camera2"); the session thread waits for the answers.
  */
@@ -56,7 +54,7 @@ final class Camera2Session implements SessionCamera {
 
     private final Context context;
     private final boolean video;
-    private final int videoQuality;
+    private final int squareSide; // the saved side asked for
     private final int fps;
     private final SurfaceTexture shown;
     private final JSONObject facts = new JSONObject();
@@ -75,14 +73,26 @@ final class Camera2Session implements SessionCamera {
     private ImageReader reader;
     private SurfaceTexture texture;
     private Surface preview;
+    // Video session: a tiny output that is never drawn. The camera cannot run slower than its
+    // slowest rate (Samsung M12: 15 per s), so only every n-th request also asks for a frame for the
+    // recorder; the others, and all requests between clips, go only here. The camera then makes
+    // its large frames only when they are kept.
+    private SurfaceTexture idleTexture;
+    private Surface idle;
+    private int keepEvery = 1;
     private CaptureRequest.Builder previewRequest;
     private CaptureRequest stillRequest;
-    private MediaRecorder recorder;
-    private Surface recorderSurface;
-    private CamcorderProfile profile;
+    private SquareRecorder recorder; // video session only (not on the aim screen)
     private Range<Integer> fpsRange;
-    private int keepEvery = 1; // video: only every n-th camera frame goes into the clip (FrameRates)
-    private Size photoSize;
+    private Size photoSize;   // the full photo: the square's frame of reference, also for video
+    private Size streamSize;  // video: the camera stream the square is cut from
+    private String zoom = "none"; // video: "anywhere", "centred" or "none" (RoiMath.videoSquare)
+    private float maxZoom = 1;
+    private Rect crop;        // video session: the part of the pixel array the camera zooms onto
+    private volatile Rect usedCrop; // the crop the camera last reported
+    private SquareRecorder.Encoder encoder;
+    private int bitRate;
+    private String cameraId;
     private Rect pixelArray;
     private boolean focusOnSquare;
     private boolean exposureOnSquare;
@@ -102,6 +112,7 @@ final class Camera2Session implements SessionCamera {
             if (focusStarted) afState = result.get(CaptureResult.CONTROL_AF_STATE);
             Float lens = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
             if (lens != null) lensDiopters = lens;
+            if (crop != null) usedCrop = result.get(CaptureResult.SCALER_CROP_REGION);
         }
     };
 
@@ -113,10 +124,10 @@ final class Camera2Session implements SessionCamera {
     };
 
     /** {@code shown}: the aim screen's view to show the preview on, or null for none. */
-    Camera2Session(Context context, boolean video, int videoQuality, int fps, SurfaceTexture shown) {
+    Camera2Session(Context context, boolean video, int squareSide, int fps, SurfaceTexture shown) {
         this.context = context;
         this.video = video;
-        this.videoQuality = videoQuality;
+        this.squareSide = squareSide;
         this.fps = fps;
         this.shown = shown;
     }
@@ -140,6 +151,7 @@ final class Camera2Session implements SessionCamera {
         handler = new Handler(thread.getLooper());
         CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         String id = backCameraId(manager);
+        cameraId = id;
         CameraCharacteristics c = manager.getCameraCharacteristics(id);
         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         canFocus = hasAfMode(c, CameraMetadata.CONTROL_AF_MODE_AUTO);
@@ -149,8 +161,8 @@ final class Camera2Session implements SessionCamera {
         pixelArray = c.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
         Integer afRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
         Integer aeRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE);
-        focusOnSquare = !video && canFocus && pixelArray != null && afRegions != null && afRegions > 0;
-        exposureOnSquare = !video && pixelArray != null && aeRegions != null && aeRegions > 0;
+        focusOnSquare = canFocus && pixelArray != null && afRegions != null && afRegions > 0;
+        exposureOnSquare = pixelArray != null && aeRegions != null && aeRegions > 0;
         put("camera_api", "camera2");
         put("camera_id", id);
         Integer orientation = c.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -162,23 +174,28 @@ final class Camera2Session implements SessionCamera {
             put("focus_distance_calibration", calibration(c));
         }
 
-        Size shape;
+        Size shape = largest(map.getOutputSizes(ImageFormat.JPEG));
+        photoSize = shape;
+        put("photo_size", shape.getWidth() + "x" + shape.getHeight());
+        put("focus_on_square", focusOnSquare);
+        put("exposure_on_square", exposureOnSquare);
         if (video) {
-            profile = Camera1Session.videoProfile(numericId(id), videoQuality);
-            shape = new Size(profile.videoFrameWidth, profile.videoFrameHeight);
             int[] fixed = ranges == null ? null : FrameRates.fixedRateFor(asArrays(ranges), fps);
-            if (fixed != null) {
-                fpsRange = new Range<>(fixed[0], fixed[0]);
-                keepEvery = fixed[1];
-            } else {
-                fpsRange = rangeFor(ranges, fps); // the clip then gets every camera frame
-            }
-            put("video_size", shape.getWidth() + "x" + shape.getHeight());
+            // A fixed camera rate that is a multiple of fps keeps the kept frames evenly spaced.
+            fpsRange = fixed != null ? new Range<>(fixed[0], fixed[0]) : rangeFor(ranges, fps);
+            keepEvery = fixed != null ? fixed[1] : 1;
+            Float z = c.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+            Integer cropping = c.get(CameraCharacteristics.SCALER_CROPPING_TYPE);
+            maxZoom = z == null ? 1 : z;
+            zoom = pixelArray == null || maxZoom <= 1 ? "none"
+                    : cropping != null && cropping == CameraMetadata.SCALER_CROPPING_TYPE_FREEFORM ? "anywhere" : "centred";
+            streamSize = videoStreamSize(map, shape, squareSide, fpsRange == null ? 30 : fpsRange.getUpper());
             put("video_fps", fps);
-            put("video_keeps_every_nth_camera_frame", keepEvery);
-            put("video_bit_rate_asked_mbit_s", Math.round(Camera1Session.bitRate(profile, fps) / 1e5) / 10.0);
+            put("video_stream_size", streamSize.getWidth() + "x" + streamSize.getHeight());
+            put("video_zoom", zoom);
+            put("max_digital_zoom", (double) maxZoom);
+            if (pixelArray != null) put("pixel_array", pixelArray.width() + "x" + pixelArray.height());
         } else {
-            shape = largest(map.getOutputSizes(ImageFormat.JPEG));
             reader = ImageReader.newInstance(shape.getWidth(), shape.getHeight(), ImageFormat.JPEG, 2);
             reader.setOnImageAvailableListener(rd -> {
                 Image image = rd.acquireNextImage();
@@ -189,23 +206,30 @@ final class Camera2Session implements SessionCamera {
                 jpegs.offer(bytes);
             }, handler);
             fpsRange = lowest(ranges); // least work while the camera waits between photos
-            photoSize = shape;
-            put("photo_size", shape.getWidth() + "x" + shape.getHeight());
-            put("focus_on_square", focusOnSquare);
-            put("exposure_on_square", exposureOnSquare);
         }
         if (fpsRange != null) put("preview_fps_range", fpsRange.getLower() + "-" + fpsRange.getUpper());
         Size[] previewSizes = map.getOutputSizes(SurfaceTexture.class);
         // On the aim screen, frames sharp enough to judge focus; otherwise the smallest (least work).
         Size previewSize = shown != null ? largestWithShape(previewSizes, shape, 1920)
-                : smallestWithShape(previewSizes, shape);
+                : video ? streamSize : smallestWithShape(previewSizes, shape);
         put("preview_size", previewSize.getWidth() + "x" + previewSize.getHeight());
-        texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
-        texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+        if (shown == null && video) {
+            recorder = new SquareRecorder(previewSize.getWidth(), previewSize.getHeight());
+            texture = recorder.texture();
+            Size small = smallestWithShape(previewSizes, shape);
+            idleTexture = new SurfaceTexture(0);
+            idleTexture.setDefaultBufferSize(small.getWidth(), small.getHeight());
+            idle = new Surface(idleTexture);
+            put("video_keeps_every_nth_camera_frame", keepEvery);
+        } else {
+            texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
+            texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+        }
         preview = new Surface(texture);
 
         openDevice(manager, id);
-        startPreview(video ? Arrays.asList(preview) : Arrays.asList(preview, reader.getSurface()));
+        startPreview(idle != null ? Arrays.asList(preview, idle)
+                : video ? Arrays.asList(preview) : Arrays.asList(preview, reader.getSurface()));
         if (!video) buildStill();
     }
 
@@ -219,15 +243,38 @@ final class Camera2Session implements SessionCamera {
 
     @Override
     public void setSquare(double sideShare, double centreX, double centreY) throws Exception {
-        if (!focusOnSquare && !exposureOnSquare) return;
-        int[] r = RoiMath.square(photoSize.getWidth(), photoSize.getHeight(), sideShare, centreX, centreY);
-        int[] a = RoiMath.inArray(pixelArray.width(), pixelArray.height(),
-                photoSize.getWidth(), photoSize.getHeight(), r);
-        square = new MeteringRectangle[] {new MeteringRectangle(pixelArray.left + a[0], pixelArray.top + a[1],
-                a[2], a[3], MeteringRectangle.METERING_WEIGHT_MAX)};
+        int pw = photoSize.getWidth();
+        int ph = photoSize.getHeight();
+        if (pixelArray != null) {
+            int[] r = RoiMath.square(pw, ph, sideShare, centreX, centreY);
+            // Areas are on the pixel array, with (0, 0) at its top left corner.
+            int[] a = RoiMath.inArray(pixelArray.width(), pixelArray.height(), pw, ph, r);
+            square = new MeteringRectangle[] {new MeteringRectangle(a[0], a[1], a[2], a[3],
+                    MeteringRectangle.METERING_WEIGHT_MAX)};
+        }
+        if (recorder != null) {
+            int aw = pixelArray != null ? pixelArray.width() : pw;
+            int ah = pixelArray != null ? pixelArray.height() : ph;
+            RoiMath.VideoSquare v = RoiMath.videoSquare(pw, ph, aw, ah, streamSize.getWidth(), streamSize.getHeight(),
+                    maxZoom, zoom, sideShare, centreX, centreY);
+            crop = v.crop == null ? null : new Rect(v.crop[0], v.crop[1], v.crop[0] + v.crop[2], v.crop[1] + v.crop[3]);
+            recorder.setSquare(v.inStream);
+            encoder = SquareRecorder.encoderFor(RoiMath.savedSide(v.realPx, squareSide), fps);
+            bitRate = SquareRecorder.bitRate(numericId(cameraId), encoder.side, fps);
+            put("video_crop", crop == null ? "none" : rectWords(crop));
+            put("square_real_px", v.realPx);
+            put("saved_side_px", encoder.side);
+            put("video_encoder", encoder.name + (encoder.hardware ? "" : " (software)"));
+            put("video_bit_rate_asked_mbit_s", Math.round(bitRate / 1e5) / 10.0);
+        }
         setCommon(previewRequest);
         session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
-        buildStill();
+        if (!video) buildStill();
+    }
+
+    /** "left,top widthxheight", as in the session record. */
+    private static String rectWords(Rect r) {
+        return r.left + "," + r.top + " " + r.width() + "x" + r.height();
     }
 
     /** New capture session with these outputs and a repeating preview-only request. */
@@ -237,7 +284,7 @@ final class Camera2Session implements SessionCamera {
         createSession(outputs);
         previewRequest = device.createCaptureRequest(video ? CameraDevice.TEMPLATE_RECORD
                 : CameraDevice.TEMPLATE_PREVIEW);
-        previewRequest.addTarget(preview);
+        previewRequest.addTarget(idle != null ? idle : preview);
         setCommon(previewRequest);
         session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
     }
@@ -251,6 +298,11 @@ final class Camera2Session implements SessionCamera {
             b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
         }
         if (fpsRange != null) b.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
+        if (crop != null) b.set(CaptureRequest.SCALER_CROP_REGION, crop);
+        if (video) {
+            // Stabilisation would move the view from frame to frame, and the square with it.
+            b.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_OFF);
+        }
         if (square != null && focusOnSquare) b.set(CaptureRequest.CONTROL_AF_REGIONS, square);
         if (square != null && exposureOnSquare) b.set(CaptureRequest.CONTROL_AE_REGIONS, square);
     }
@@ -321,19 +373,8 @@ final class Camera2Session implements SessionCamera {
     }
 
     @Override
-    public String prepareClip(File file) throws Exception {
-        recorder = new MediaRecorder();
-        recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        recorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
-        recorder.setVideoFrameRate(fps);
-        recorder.setVideoEncodingBitRate(Camera1Session.bitRate(profile, fps));
-        recorder.setOutputFile(file.getAbsolutePath());
-        recorder.prepare();
-        recorderSurface = recorder.getSurface();
-        // The session must know the recorder's input; frames go there only after startClip().
-        startPreview(Arrays.asList(preview, recorderSurface));
+    public String prepareClip(File file, int turn) throws Exception {
+        recorder.prepare(file, encoder, bitRate, fps, turn);
         return focus();
     }
 
@@ -341,30 +382,25 @@ final class Camera2Session implements SessionCamera {
     public void startClip() throws Exception {
         recorder.start();
         recording = true;
-        // A repeating group of requests: the first sends its frame to the clip too, the others only
-        // to the invisible preview. The clip so gets every n-th frame with its real time stamp.
-        previewRequest.addTarget(recorderSurface);
+        // A repeating group of requests: the first also sends its frame to the recorder.
+        previewRequest.addTarget(preview);
         List<CaptureRequest> group = new ArrayList<>();
         group.add(previewRequest.build());
-        previewRequest.removeTarget(recorderSurface);
-        CaptureRequest previewOnly = previewRequest.build();
-        for (int i = 1; i < keepEvery; i++) group.add(previewOnly);
-        session.setRepeatingBurst(group, afWatcher, handler);
+        previewRequest.removeTarget(preview);
+        CaptureRequest idleOnly = previewRequest.build();
+        for (int i = 1; i < keepEvery; i++) group.add(idleOnly);
+        session.setRepeatingBurst(group, null, null); // no reports needed during a clip: less work
     }
 
     @Override
-    public void stopClip() throws Exception {
-        try {
-            session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
-            recorder.stop(); // throws if no frame arrived; the clip file is then useless
-        } finally {
-            recording = false;
-            recorder.release();
-            recorder = null;
-            recorderSurface = null;
-        }
-        // Drop the recorder's old input from the session, so the camera can wait for the next clip.
-        startPreview(Arrays.asList(preview));
+    public JSONObject stopClip() throws Exception {
+        recording = false;
+        JSONObject r = new JSONObject();
+        session.setRepeatingRequest(previewRequest.build(), afWatcher, handler);
+        SessionLog.put(r, "frames", recorder.stop());
+        Rect used = usedCrop;
+        if (used != null) SessionLog.put(r, "camera_crop_used", rectWords(used));
+        return r;
     }
 
     @Override
@@ -381,8 +417,6 @@ final class Camera2Session implements SessionCamera {
                 // closing anyway
             }
         }
-        if (recorder != null) recorder.release();
-        recorder = null;
         if (session != null) session.close();
         session = null;
         if (device != null) {
@@ -400,6 +434,15 @@ final class Camera2Session implements SessionCamera {
         reader = null;
         if (preview != null) preview.release();
         preview = null;
+        if (recorder != null) { // after the camera: no frames arrive any more
+            recorder.release();
+            recorder = null;
+            texture = null;
+        }
+        if (idle != null) idle.release();
+        idle = null;
+        if (idleTexture != null) idleTexture.release();
+        idleTexture = null;
         if (texture != null && texture != shown) texture.release(); // the aim screen owns its view
         texture = null;
         if (thread != null) thread.quitSafely();
@@ -559,6 +602,23 @@ final class Camera2Session implements SessionCamera {
             }
         }
         return best != null ? best : lowest(ranges);
+    }
+
+    /** Video: the smallest stream of the photo's shape with at least {@code side} rows that runs at
+     *  {@code cameraFps} (the square then needs little scaling); else the largest that runs at it. */
+    private static Size videoStreamSize(StreamConfigurationMap map, Size shape, int side, int cameraFps) {
+        Size[] sizes = map.getOutputSizes(SurfaceTexture.class);
+        Size best = null;
+        Size largest = null;
+        for (Size s : sizes) {
+            long minFrameNs = map.getOutputMinFrameDuration(SurfaceTexture.class, s); // 0 = not told
+            if (!sameShape(s, shape) || minFrameNs > 1.01e9 / cameraFps) continue;
+            long area = (long) s.getWidth() * s.getHeight();
+            if (Math.min(s.getWidth(), s.getHeight()) >= side
+                    && (best == null || area < (long) best.getWidth() * best.getHeight())) best = s;
+            if (largest == null || area > (long) largest.getWidth() * largest.getHeight()) largest = s;
+        }
+        return best != null ? best : largest != null ? largest : smallestWithShape(sizes, shape);
     }
 
     private static Size largest(Size[] sizes) {

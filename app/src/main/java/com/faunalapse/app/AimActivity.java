@@ -20,9 +20,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Aim screen: the live camera view, to point the phone at the flower. In photo mode the ROI square
- * is moved with a finger and sized with two fingers or the slider; it is saved at once, and focus
- * and exposure follow it. Focus is automatic, or fixed at a distance where Camera2 allows it. The camera is open only while this screen is shown. "Start session here" starts the
+ * Aim screen: the live camera view, to point the phone at the flower. The ROI square (for photos
+ * and video) is moved with a finger and sized with two fingers or the slider; it is saved at once,
+ * and focus and exposure follow it. Focus is fixed at a distance where Camera2 allows it, or
+ * automatic. The camera is open only while this screen is shown. "Start session here" starts the
  * session with the saved settings while the phone is already in its place (its position counts).
  *
  * The screen stays upright (portrait, set in the manifest), so the view turns with the phone like
@@ -46,7 +47,6 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private OrientationEventListener orientationListener;
     private int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
     private boolean video;
-    private int videoQuality;
     private int videoFps;
     private int savedSidePx;
     private boolean resumed;
@@ -67,7 +67,6 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         setContentView(R.layout.activity_aim);
         SessionSettings s = SessionSettings.load(this); // the main screen saved its values
         video = s.video;
-        videoQuality = s.videoQualityConstant();
         videoFps = s.videoFps;
         focusFixed = s.focusFixed;
         focusDiopters = s.focusDiopters;
@@ -79,9 +78,6 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         square.sideShare = s.squarePercent / 100.0;
         square.centreX = s.squareX;
         square.centreY = s.squareY;
-        square.setVisibility(video ? View.GONE : View.VISIBLE);
-        findViewById(R.id.size_group).setVisibility(video ? View.GONE : View.VISIBLE);
-        ((TextView) findViewById(R.id.aim_hint)).setText(video ? R.string.aim_hint_video : R.string.aim_hint);
         info = findViewById(R.id.aim_info);
         info.setText(R.string.aim_opening);
         focusResult = findViewById(R.id.focus_result);
@@ -91,9 +87,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         startButton = findViewById(R.id.start_here);
         startButton.setOnClickListener(v -> startHere());
         startButton.setText(MainActivity.withIcon(startButton, R.drawable.ic_start, R.string.aim_start));
-        View middle = findViewById(R.id.middle);
-        middle.setVisibility(video ? View.GONE : View.VISIBLE);
-        middle.setOnClickListener(v -> {
+        findViewById(R.id.middle).setOnClickListener(v -> {
             square.centreX = 0.5;
             square.centreY = 0.5;
             square.keepInside();
@@ -211,11 +205,11 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         final double y = square.centreY;
         worker.execute(() -> {
             if (camera != null) return;
-            SessionCamera c = SessionRunner.newCamera(this, SessionRunner.useCamera2(this), video, videoQuality,
+            SessionCamera c = SessionRunner.newCamera(this, SessionRunner.useCamera2(this), video, savedSidePx,
                     videoFps, texture);
             try {
                 c.open();
-                if (!video) c.setSquare(share, x, y);
+                c.setSquare(share, x, y);
             } catch (Exception e) {
                 c.close();
                 runOnUiThread(() -> info.setText(getString(R.string.aim_camera_failed, e.toString())));
@@ -236,7 +230,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private void cameraReady(JSONObject d) {
         facts = d;
         int turn = d.optInt("sensor_orientation");
-        int[] photo = size(d.optString(video ? "video_size" : "photo_size"));
+        int[] photo = size(d.optString("photo_size"));
         int[] preview = size(d.optString("preview_size"));
         boolean sideways = turn % 180 != 0;
         fitView(sideways ? preview[1] : preview[0], sideways ? preview[0] : preview[1]);
@@ -436,16 +430,26 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private void showInfo() {
         if (facts == null) return;
         String api = "camera2".equals(facts.optString("camera_api")) ? "Camera2" : "Camera1";
-        if (video) {
-            info.setText(getString(R.string.aim_video_info, facts.optString("video_size"),
-                    videoFps, api));
-            return;
-        }
         int[] photo = size(facts.optString("photo_size"));
-        int[] r = RoiMath.square(photo[0], photo[1], square.sideShare, square.centreX, square.centreY);
-        int real = r[2] - r[0];
-        String text = getString(R.string.aim_photo_info, Math.round(square.sideShare * 100), real,
-                RoiMath.savedSide(real, savedSidePx), api, facts.optString("photo_size"));
+        long percent = Math.round(square.sideShare * 100);
+        int real;
+        String text;
+        if (video) {
+            int[] stream = size(facts.optString("video_stream_size"));
+            int[] array = facts.has("pixel_array") ? size(facts.optString("pixel_array")) : photo;
+            String zoom = facts.optString("video_zoom", "none");
+            real = RoiMath.videoSquare(photo[0], photo[1], array[0], array[1], stream[0], stream[1],
+                    facts.optDouble("max_digital_zoom", 1), zoom, square.sideShare, square.centreX, square.centreY).realPx;
+            text = getString(R.string.aim_video_info, percent, real, facts.optString("video_stream_size"),
+                    RoiMath.savedSide(real, savedSidePx), videoFps, getString("anywhere".equals(zoom)
+                            ? R.string.aim_zoom_anywhere : "centred".equals(zoom) ? R.string.aim_zoom_centred
+                            : R.string.aim_zoom_none));
+        } else {
+            int[] r = RoiMath.square(photo[0], photo[1], square.sideShare, square.centreX, square.centreY);
+            real = r[2] - r[0];
+            text = getString(R.string.aim_photo_info, percent, real, RoiMath.savedSide(real, savedSidePx), api,
+                    facts.optString("photo_size"));
+        }
         if (real < savedSidePx) text += " " + getString(R.string.aim_not_enlarged, savedSidePx);
         info.setText(text);
     }

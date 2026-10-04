@@ -2,7 +2,6 @@ package com.faunalapse.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.media.CamcorderProfile;
 
 import org.json.JSONObject;
 
@@ -29,8 +28,7 @@ final class SessionSettings {
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
     boolean focusFixed = true;   // autofocus may pick another flower in a dense patch (owner, 2026-10-04)
     double focusDiopters = 5;    // 1 / distance in m: 20 cm, a usual distance from phone to flower (owner)
-    int savedSidePx = 1280;      // input size of many insect detectors (owner, 2026-10-04)
-    String videoQuality = "1080p";
+    int savedSidePx = 1280;      // photos and video; input size of many insect detectors (owner, 2026-10-04)
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
     String phoneName = "";       // optional, added to the folder name: files from several phones do not mix
@@ -60,7 +58,6 @@ final class SessionSettings {
         s.focusFixed = p.getBoolean("focus_fixed", s.focusFixed);
         s.focusDiopters = p.getFloat("focus_diopters", (float) s.focusDiopters);
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
-        s.videoQuality = p.getString("video_quality", s.videoQuality);
         s.videoFps = p.getInt("video_fps", s.videoFps);
         s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
         s.phoneName = p.getString("phone_name", s.phoneName);
@@ -84,7 +81,6 @@ final class SessionSettings {
                 .putBoolean("focus_fixed", focusFixed)
                 .putFloat("focus_diopters", (float) focusDiopters)
                 .putInt("saved_side_px", savedSidePx)
-                .putString("video_quality", videoQuality)
                 .putInt("video_fps", videoFps)
                 .putFloat("heat_limit_c", (float) heatLimitC)
                 .putString("phone_name", phoneName)
@@ -159,12 +155,6 @@ final class SessionSettings {
                 : CapturePlan.run(sessionStart, Math.round(round(runH) * 3600000), burstMs(), breakMs());
     }
 
-    int videoQualityConstant() {
-        if ("480p".equals(videoQuality)) return CamcorderProfile.QUALITY_480P;
-        if ("720p".equals(videoQuality)) return CamcorderProfile.QUALITY_720P;
-        return CamcorderProfile.QUALITY_1080P;
-    }
-
     /** Saved values are floats (0.06 comes back as 0.0599999986): round them for the record. */
     private static double round(double value) {
         return Math.round(value * 10000) / 10000.0;
@@ -177,17 +167,16 @@ final class SessionSettings {
         SessionLog.put(j, "mode", video ? "video" : "photo");
         if (video) {
             SessionLog.put(j, "clip_min", round(clipMin));
-            SessionLog.put(j, "video_quality", videoQuality);
             SessionLog.put(j, "video_fps", videoFps);
         } else {
             SessionLog.put(j, "photo_step_s", round(stepS));
             SessionLog.put(j, "burst_s", round(burstS));
-            SessionLog.put(j, "square_percent_of_short_side", squarePercent);
-            SessionLog.put(j, "square_centre_x", round(squareX)); // shares of the full photo, before turning
-            SessionLog.put(j, "square_centre_y", round(squareY));
-            SessionLog.put(j, "saved_side_px", savedSidePx);
             SessionLog.put(j, "saved_jpeg_quality", PhotoSaver.JPEG_QUALITY);
         }
+        SessionLog.put(j, "square_percent_of_short_side", squarePercent);
+        SessionLog.put(j, "square_centre_x", round(squareX)); // shares of the full photo, before turning
+        SessionLog.put(j, "square_centre_y", round(squareY));
+        SessionLog.put(j, "saved_side_px", savedSidePx);
         SessionLog.put(j, "focus", focusFixed ? "fixed" : "auto, once per " + (video ? "clip" : "burst"));
         if (focusFixed) SessionLog.put(j, "focus_diopters", round(focusDiopters));
         SessionLog.put(j, "break_min", round(breakMin));

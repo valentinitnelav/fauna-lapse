@@ -24,10 +24,9 @@
     <string name="mode_photo">Photos</string>
     <string name="mode_video">Video</string>
     <string name="aim_button">Aim the camera</string>
-    <string name="aim_summary_photo">Square: %1$d %% of the short side of the photo, %2$s. Only the square is saved; focus and exposure follow it. %3$s</string>
+    <string name="aim_summary">Square: %1$d %% of the short side of the camera view, %2$s. Only the square is saved, in photos and video; focus and exposure follow it. %3$s</string>
     <string name="aim_square_middle">in the middle</string>
     <string name="aim_square_placed">where you placed it</string>
-    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view. %1$s</string>
 
     <!-- 2 Schedule -->
     <string name="card_schedule">2 · Schedule</string>
@@ -35,8 +34,8 @@
     <string name="change_close">Close settings</string>
     <string name="summary_photo">Photos: one every %1$s s for %2$s s, then %3$s min off.</string>
     <string name="summary_photo_no_break">Photos: one every %1$s s, without breaks.</string>
-    <string name="summary_video" tools:ignore="PluralsCandidate">Video %1$s, %2$d frames per s: clips of %3$s min, then %4$s min off.</string>
-    <string name="summary_video_no_break" tools:ignore="PluralsCandidate">Video %1$s, %2$d frames per s: clips of %3$s min, one after the other.</string>
+    <string name="summary_video" tools:ignore="PluralsCandidate">Video, %1$d frames per s: clips of %2$s min, then %3$s min off.</string>
+    <string name="summary_video_no_break" tools:ignore="PluralsCandidate">Video, %1$d frames per s: clips of %2$s min, one after the other.</string>
     <string name="summary_run">For %1$s h from Start.</string>
     <string name="summary_daily">Daily windows: %1$s. Days: %2$d.</string>
     <string name="summary_heat">Heat pause at %1$s °C.</string>
@@ -45,14 +44,9 @@
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
     <string name="saved_side_label">Saved square side (px)</string>
-    <string name="saved_side_hint">The square is shrunk to this size when saved: any multiple of 32 from 224 to 4096, for example 320, 640, 1024 or 1280. Detectors and video encoders work in blocks of 16 or 32 pixels, so these sizes need no padding. Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both).</string>
+    <string name="saved_side_hint">Photos and video: the square is shrunk to this size when saved. Any multiple of 32 from 224 to 4096, for example 320, 640, 1024 or 1280: detectors and video encoders work in blocks of 16 or 32 pixels, so these sizes need no padding. Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both). Old phones may save video smaller if their video encoder cannot take the size.</string>
     <string name="clip_label">Clip length (min)</string>
     <string name="clip_hint">One video file per clip. Default 5 min.</string>
-    <string name="video_size_label">Video size</string>
-    <string name="video_1080p">1080p</string>
-    <string name="video_720p">720p</string>
-    <string name="video_480p">480p</string>
-    <string name="video_size_hint">On the Samsung M12, one hour of video at 5 frames per s took about 2.2 GB at 1080p, 1.2 GB at 720p and 0.6 GB at 480p.</string>
     <string name="video_fps_label">Frames per s</string>
     <string name="video_fps_5">5</string>
     <string name="video_fps_10">10</string>
@@ -82,11 +76,14 @@
     <string name="start_hint_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
 
     <!-- Aim screen -->
-    <string name="square_label">Square side (% of the short side of the photo)</string>
+    <string name="square_label">Square side (% of the short side of the camera view)</string>
     <string name="aim_opening">Opening the camera…</string>
     <string name="aim_photo_info">Square: %1$d %% of the short side, %2$d px across in the full photo, saved at %3$d px. %4$s, photo %5$s.</string>
     <string name="aim_not_enlarged">This is fewer than the saved side of %1$d px: the square is saved smaller, never enlarged. Make the square larger for more pixels on the insect.</string>
-    <string name="aim_video_info">Video %1$s (frames per s: %2$d); the whole view is saved. %3$s.</string>
+    <string name="aim_video_info" tools:ignore="PluralsCandidate">Square: %1$d %% of the short side, %2$d px across in the camera stream (%3$s), saved at %4$d px, %5$d frames per s. %6$s</string>
+    <string name="aim_zoom_anywhere">Camera2: the camera zooms onto the square in hardware, so a small square keeps its real detail.</string>
+    <string name="aim_zoom_centred">Camera2: the camera can zoom only towards the middle, so a square near the middle keeps more detail.</string>
+    <string name="aim_zoom_none">Camera1: no hardware zoom, so the square has only its share of the stream\'s pixels.</string>
     <string name="aim_camera_failed">The camera did not open: %1$s</string>
     <string name="aim_focus">Focus again</string>
     <string name="aim_done">Done</string>
@@ -103,7 +100,7 @@
     <string name="focus_position">Lens position: %1$d of 100, from near to far (this phone does not tell the distance).</string>
     <string name="focus_position_short">lens position %1$d of 100</string>
     <string name="focus_hint_auto">Auto: the camera focuses on the square at the start of each burst, then the lens stays. In a dense flower patch it may focus on another flower; Fixed avoids this.</string>
-    <string name="focus_hint_auto_video">Auto: the camera focuses on the middle of the view at the start of each clip, then the lens stays. In a dense flower patch it may focus on another flower; Fixed avoids this.</string>
+    <string name="focus_hint_auto_video">Auto: the camera focuses on the square at the start of each clip, then the lens stays. In a dense flower patch it may focus on another flower; Fixed avoids this.</string>
     <string name="focus_hint_fixed">Fixed (default, starts at about 20 cm, a usual distance from phone to flower): the lens stays at this distance for the whole session and never focuses by itself, so bursts start faster, and wind, a passing insect or another flower cannot pull the focus away. Tap Focus again to focus once and fix the focus there, then adjust with the slider while you watch the view. Keep the phone where it is.</string>
     <string name="focus_not_possible">This phone cannot fix the focus: it focuses automatically on the square at the start of each burst or clip. In a dense flower patch, make the square cover mostly the target flower, so the camera focuses on it.</string>
     <string name="summary_focus_auto">Focus: automatic at the start of each burst or clip.</string>
@@ -111,8 +108,7 @@
     <string name="summary_focus_fixed_position">Focus: fixed at one lens position, set on the aim screen.</string>
     <string name="summary_focus_cannot_fix">Focus: automatic at the start of each burst or clip, because this phone cannot fix the focus.</string>
     <string name="aim_focus_result">Focus: %1$s</string>
-    <string name="aim_hint">Drag the square onto the flower with a finger; pinch it with two fingers (or use the slider) to make it larger or smaller. The small triangle marks the top of the saved photos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
-    <string name="aim_hint_video">Fix the phone in its place, then tap Start session here.</string>
+    <string name="aim_hint">Drag the square onto the flower with a finger; pinch it with two fingers (or use the slider) to make it larger or smaller. The small triangle marks the top of the saved photos and videos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
 
     <!-- Phone tests (phase 0) -->
     <string name="tests_show">Show the phone tests</string>

@@ -3,32 +3,24 @@ package com.faunalapse.app;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.media.CamcorderProfile;
-import android.media.MediaCodec;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
-import android.media.MediaMuxer;
-import android.media.MediaRecorder;
-import android.view.Surface;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Session camera through the old Camera1 interface, for "legacy" phones.
+ * Session camera through the old Camera1 interface, for "legacy" phones. Video: SquareRecorder cuts
+ * the ROI square out of the preview frames (Camera1 has no hardware crop) and records it.
  *
  * Must be used from a thread without a message loop (Looper): Camera1 then delivers its callbacks on
  * the main thread, while this thread waits for them.
  */
-@SuppressWarnings("deprecation") // Camera1 and CamcorderProfile.get() still work on every version
+@SuppressWarnings("deprecation") // Camera1 still works on every version
 final class Camera1Session implements SessionCamera {
 
     private static final long FOCUS_TIMEOUT_MS = 3000;
@@ -36,136 +28,118 @@ final class Camera1Session implements SessionCamera {
     private static final long FRAME_TIMEOUT_MS = 2000;
 
     private final boolean video;
-    private final int videoQuality;
+    private final int squareSide; // the saved side asked for
     private final int fps;
     private final SurfaceTexture shown;
     private final JSONObject facts = new JSONObject();
+    private int cameraId;
     private Camera camera;
-    private Camera.Size photoSize;
+    private Camera.Size photoSize;   // the full photo: the square's frame of reference, also for video
+    private Camera.Size previewSize;
     private boolean focusOnSquare;
     private boolean exposureOnSquare;
     private SurfaceTexture texture;
-    private Surface recorderPreview;
-    private MediaRecorder recorder;
-    private CamcorderProfile profile;
-    private int cameraFps;     // video: the fixed camera rate, a multiple of fps (FrameRates)
-    private int keepEvery = 1; // video: only every n-th camera frame goes into the clip
-    private File clipFile;
+    private SquareRecorder recorder; // video session only (not on the aim screen)
+    private SquareRecorder.Encoder encoder;
+    private int bitRate;
     private boolean canFocus;
-    private boolean unlocked;
     private boolean recording;
 
     /** {@code shown}: the aim screen's view to show the preview on, or null for none. */
-    Camera1Session(boolean video, int videoQuality, int fps, SurfaceTexture shown) {
+    Camera1Session(boolean video, int squareSide, int fps, SurfaceTexture shown) {
         this.video = video;
-        this.videoQuality = videoQuality;
+        this.squareSide = squareSide;
         this.fps = fps;
         this.shown = shown;
     }
 
-    /** The phone maker's video preset for {@code quality}, or the next lower one that exists. */
-    static CamcorderProfile videoProfile(int cameraId, int quality) {
-        int[] order = {CamcorderProfile.QUALITY_1080P, CamcorderProfile.QUALITY_720P,
-            CamcorderProfile.QUALITY_480P, CamcorderProfile.QUALITY_LOW};
-        boolean reached = false;
-        for (int q : order) {
-            reached |= q == quality;
-            if (reached && CamcorderProfile.hasProfile(cameraId, q)) return CamcorderProfile.get(cameraId, q);
-        }
-        return CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW);
-    }
-
-    /** Bit rate for {@code fps}: the same bits per frame as the phone maker's preset. */
-    static int bitRate(CamcorderProfile profile, int fps) {
-        return (int) ((long) profile.videoBitRate * fps / profile.videoFrameRate);
-    }
-
     @Override
     public void open() throws Exception {
-        int id = Camera1Backend.backCameraId();
-        camera = Camera.open(id);
+        cameraId = Camera1Backend.backCameraId();
+        camera = Camera.open(cameraId);
         Camera.CameraInfo info = new Camera.CameraInfo();
-        Camera.getCameraInfo(id, info);
-        texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
-        camera.setPreviewTexture(texture);
+        Camera.getCameraInfo(cameraId, info);
         // The aim screen is always upright (portrait), so the view turns by the sensor orientation.
         if (shown != null) camera.setDisplayOrientation(info.orientation);
         Camera.Parameters p = camera.getParameters();
         canFocus = p.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO);
         if (canFocus) p.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         put("camera_api", "camera1");
-        put("camera_id", id);
+        put("camera_id", cameraId);
         put("sensor_orientation", info.orientation);
+        Camera.Size picture = Camera1Backend.largest(p.getSupportedPictureSizes());
+        photoSize = picture;
+        focusOnSquare = canFocus && p.getMaxNumFocusAreas() > 0;
+        exposureOnSquare = p.getMaxNumMeteringAreas() > 0;
+        put("photo_size", picture.width + "x" + picture.height);
+        put("focus_on_square", focusOnSquare);
+        put("exposure_on_square", exposureOnSquare);
+        List<Camera.Size> previews = p.getSupportedPreviewSizes();
         if (video) {
-            profile = videoProfile(id, videoQuality);
             List<int[]> ranges = p.getSupportedPreviewFpsRange();
             int[][] perS = new int[ranges.size()][];
             for (int i = 0; i < perS.length; i++) {
                 perS[i] = new int[] {ranges.get(i)[0] / 1000, ranges.get(i)[1] / 1000};
             }
+            // A fixed camera rate that is a multiple of fps keeps the kept frames evenly spaced.
             int[] fixed = FrameRates.fixedRateFor(perS, fps);
-            if (fixed != null) {
-                cameraFps = fixed[0];
-                keepEvery = fixed[1];
-                p.setPreviewFpsRange(cameraFps * 1000, cameraFps * 1000);
-            } else {
-                cameraFps = fps; // the clip then gets every camera frame
-                int[] range = Camera1Backend.fpsRangeFor(ranges, fps);
-                p.setPreviewFpsRange(range[0], range[1]);
-            }
-            Camera.Size preview = p.getPreferredPreviewSizeForVideo();
-            if (shown != null) {
-                // The aim screen shows the video's own shape (the preview for recording may be 4:3).
-                preview = Camera1Backend.largestWithSameShape(p.getSupportedPreviewSizes(),
-                        camera.new Size(profile.videoFrameWidth, profile.videoFrameHeight), 1920);
-                p.setPreviewSize(preview.width, preview.height);
-            } else if (p.getSupportedVideoSizes() == null || preview == null) {
-                // The recorder gets the preview frames, so they must have the video size.
-                p.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
-            } else {
-                p.setPreviewSize(preview.width, preview.height);
-            }
-            p.setRecordingHint(true);
-            put("video_size", profile.videoFrameWidth + "x" + profile.videoFrameHeight);
+            int[] range = fixed != null ? new int[] {fixed[0] * 1000, fixed[0] * 1000} : Camera1Backend.fpsRangeFor(ranges, fps);
+            p.setPreviewFpsRange(range[0], range[1]);
+            // The square is cut from the preview frames: the largest of the photo's shape (up to 1920
+            // wide, as on the aim screen) gives it the most pixels.
+            Camera.Size preview = Camera1Backend.largestWithSameShape(previews, picture, 1920);
+            p.setPreviewSize(preview.width, preview.height);
             put("video_fps", fps);
-            put("video_keeps_every_nth_camera_frame", keepEvery);
-            put("video_bit_rate_asked_mbit_s", Math.round(bitRate(profile, fps) / 1e5) / 10.0);
+            put("video_zoom", "none"); // Camera1 has no hardware crop
+            put("preview_fps_range", range[0] / 1000 + "-" + range[1] / 1000);
         } else {
-            Camera.Size picture = Camera1Backend.largest(p.getSupportedPictureSizes());
             p.setPictureSize(picture.width, picture.height);
             // On the aim screen, frames sharp enough to judge focus; otherwise the smallest.
-            List<Camera.Size> previews = p.getSupportedPreviewSizes();
             Camera.Size preview = shown != null ? Camera1Backend.largestWithSameShape(previews, picture, 1920)
                     : Camera1Backend.smallestWithSameShape(previews, picture);
             p.setPreviewSize(preview.width, preview.height);
             int[] range = Camera1Backend.lowestFpsRange(p.getSupportedPreviewFpsRange());
             if (range != null) p.setPreviewFpsRange(range[0], range[1]);
-            photoSize = picture;
-            focusOnSquare = canFocus && p.getMaxNumFocusAreas() > 0;
-            exposureOnSquare = p.getMaxNumMeteringAreas() > 0;
-            put("photo_size", picture.width + "x" + picture.height);
-            put("focus_on_square", focusOnSquare);
-            put("exposure_on_square", exposureOnSquare);
         }
         camera.setParameters(p);
-        Camera.Size preview = camera.getParameters().getPreviewSize();
-        put("preview_size", preview.width + "x" + preview.height);
-        put("focus", canFocus ? "auto, once per burst" : "fixed");
+        previewSize = camera.getParameters().getPreviewSize();
+        put("preview_size", previewSize.width + "x" + previewSize.height);
+        if (video) put("video_stream_size", previewSize.width + "x" + previewSize.height);
+        if (shown == null && video) {
+            recorder = new SquareRecorder(previewSize.width, previewSize.height);
+            texture = recorder.texture();
+        } else {
+            texture = shown != null ? shown : new SurfaceTexture(0); // invisible: frames are never drawn
+        }
+        camera.setPreviewTexture(texture);
+        put("focus", canFocus ? "auto, once per " + (video ? "clip" : "burst") : "fixed");
         put("fixed_focus_possible", false); // Camera1 cannot set a lens distance
         if (info.canDisableShutterSound) put("shutter_sound_off", camera.enableShutterSound(false));
         camera.startPreview();
     }
 
     @Override
-    public void setSquare(double sideShare, double centreX, double centreY) {
-        if (!focusOnSquare && !exposureOnSquare) return;
+    public void setSquare(double sideShare, double centreX, double centreY) throws Exception {
         int[] r = RoiMath.square(photoSize.width, photoSize.height, sideShare, centreX, centreY);
-        int[] a = RoiMath.camera1Area(photoSize.width, photoSize.height, r);
-        List<Camera.Area> areas = Collections.singletonList(new Camera.Area(new Rect(a[0], a[1], a[2], a[3]), 1000));
-        Camera.Parameters p = camera.getParameters();
-        if (focusOnSquare) p.setFocusAreas(areas);
-        if (exposureOnSquare) p.setMeteringAreas(areas);
-        camera.setParameters(p);
+        if (focusOnSquare || exposureOnSquare) {
+            int[] a = RoiMath.camera1Area(photoSize.width, photoSize.height, r);
+            List<Camera.Area> areas = Collections.singletonList(new Camera.Area(new Rect(a[0], a[1], a[2], a[3]), 1000));
+            Camera.Parameters p = camera.getParameters();
+            if (focusOnSquare) p.setFocusAreas(areas);
+            if (exposureOnSquare) p.setMeteringAreas(areas);
+            camera.setParameters(p);
+        }
+        if (recorder != null) {
+            RoiMath.VideoSquare v = RoiMath.videoSquare(photoSize.width, photoSize.height, photoSize.width,
+                    photoSize.height, previewSize.width, previewSize.height, 1, "none", sideShare, centreX, centreY);
+            recorder.setSquare(v.inStream);
+            encoder = SquareRecorder.encoderFor(RoiMath.savedSide(v.realPx, squareSide), fps);
+            bitRate = SquareRecorder.bitRate(cameraId, encoder.side, fps);
+            put("square_real_px", v.realPx);
+            put("saved_side_px", encoder.side);
+            put("video_encoder", encoder.name + (encoder.hardware ? "" : " (software)"));
+            put("video_bit_rate_asked_mbit_s", Math.round(bitRate / 1e5) / 10.0);
+        }
     }
 
     @Override
@@ -222,95 +196,23 @@ final class Camera1Session implements SessionCamera {
     }
 
     @Override
-    public String prepareClip(File file) throws Exception {
-        String focusResult = focus(); // before unlock: the app cannot use the camera after it
-        camera.unlock();
-        unlocked = true;
-        recorder = new MediaRecorder();
-        recorder.setCamera(camera);
-        recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        recorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
-        // Below the camera's rate: time-lapse mode keeps every n-th frame (asked halfway between the
-        // (n-1)-th and the n-th, so small delays do not matter), but the file then plays n times
-        // too fast; stopClip() fixes the timing.
-        recorder.setVideoFrameRate(cameraFps);
-        recorder.setVideoEncodingBitRate(bitRate(profile, cameraFps));
-        if (keepEvery > 1) recorder.setCaptureRate(cameraFps / (keepEvery - 0.5));
-        recorder.setOutputFile(file.getAbsolutePath());
-        clipFile = file;
-        recorderPreview = new Surface(texture);
-        recorder.setPreviewDisplay(recorderPreview);
-        recorder.prepare();
-        return focusResult;
+    public String prepareClip(File file, int turn) throws Exception {
+        recorder.prepare(file, encoder, bitRate, fps, turn);
+        return focus();
     }
 
     @Override
-    public void startClip() {
+    public void startClip() throws Exception {
         recorder.start();
         recording = true;
     }
 
     @Override
-    public void stopClip() throws IOException {
-        try {
-            recorder.stop(); // throws if no frame arrived; the clip file is then useless
-        } finally {
-            recording = false;
-            releaseRecorder();
-        }
-        if (keepEvery > 1) slowDown(clipFile, keepEvery);
-    }
-
-    /** Copies the clip with each frame's time stamp times {@code factor} (no new encoding), so a
-     *  time-lapse clip plays in real time. Keeps the fast clip when this fails. */
-    static void slowDown(File file, int factor) throws IOException {
-        File copy = new File(file.getPath() + ".part");
-        MediaExtractor in = new MediaExtractor();
-        MediaMuxer out = null;
-        try {
-            in.setDataSource(file.getPath());
-            MediaFormat format = in.getTrackFormat(0); // the only track: no sound is recorded
-            in.selectTrack(0);
-            out = new MediaMuxer(copy.getPath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-            int track = out.addTrack(format);
-            out.start();
-            ByteBuffer buffer = ByteBuffer.allocate(format.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)
-                    ? format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE) : 4 << 20);
-            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-            int size;
-            while ((size = in.readSampleData(buffer, 0)) >= 0) {
-                boolean key = (in.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
-                info.set(0, size, in.getSampleTime() * factor, key ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0);
-                out.writeSampleData(track, buffer, info);
-                in.advance();
-            }
-            out.stop();
-        } catch (RuntimeException e) {
-            copy.delete();
-            throw new IOException("the clip plays " + factor + " times too fast: " + e, e);
-        } finally {
-            in.release();
-            if (out != null) out.release();
-        }
-        if (!copy.renameTo(file)) throw new IOException("the clip plays " + factor + " times too fast");
-    }
-
-    private void releaseRecorder() {
-        if (recorder != null) recorder.release();
-        recorder = null;
-        if (recorderPreview != null) recorderPreview.release();
-        recorderPreview = null;
-        if (unlocked) {
-            try {
-                camera.lock();
-                camera.startPreview(); // keep exposure running in a short break
-            } catch (RuntimeException ignored) {
-                // the next clip or the close reports camera problems
-            }
-            unlocked = false;
-        }
+    public JSONObject stopClip() throws Exception {
+        recording = false;
+        JSONObject r = new JSONObject();
+        SessionLog.put(r, "frames", recorder.stop());
+        return r;
     }
 
     @Override
@@ -323,11 +225,10 @@ final class Camera1Session implements SessionCamera {
         if (recording) {
             try {
                 stopClip();
-            } catch (IOException | RuntimeException ignored) {
+            } catch (Exception ignored) {
                 // closing anyway
             }
         }
-        releaseRecorder();
         if (camera != null) {
             try {
                 camera.stopPreview();
@@ -336,6 +237,11 @@ final class Camera1Session implements SessionCamera {
                 // the camera is gone anyway
             }
             camera = null;
+        }
+        if (recorder != null) { // after the camera: no frames arrive any more
+            recorder.release();
+            recorder = null;
+            texture = null;
         }
         if (texture != null && texture != shown) texture.release(); // the aim screen owns its view
         texture = null;

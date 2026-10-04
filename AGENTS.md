@@ -30,9 +30,9 @@ plain language at first use, and write plain English with short sentences and no
 - Focus: fixed at one distance where Camera2 allows (default 20 cm, set on the aim screen), else
   autofocus once per burst or clip. Exposure and white balance: automatic, metered on the ROI square.
 - Energy and heat first: screen off, no visible preview, camera closed in long breaks, lowest frame
-  rate while waiting, hardware JPEG and video encoders; only the ROI crop runs on the processor.
-- Photos: save only the ROI square, side any multiple of 32 from 224 to 4096 px (default 1280, a
-  detector input size), never enlarged beyond the real pixels in the ROI. Videos: full frame.
+  rate while waiting, hardware JPEG and video encoders; the app only crops the square (GPU for video).
+- Photos and videos: save only the ROI square, side any multiple of 32 from 224 to 4096 px (default
+  1280, a detector input size), never enlarged beyond the real pixels in the ROI.
 - Schedule: daily windows for some days, or a run of some hours; inside them photo bursts or video
   clips with breaks, on a fixed grid from each window start (no drift, same clock times every day).
 - If the phone cannot reach the asked photo step, the app says so and suggests video or a longer step.

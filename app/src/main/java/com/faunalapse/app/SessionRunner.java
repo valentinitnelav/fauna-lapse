@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,8 +36,7 @@ final class SessionRunner implements Runnable {
     static final long FOCUS_LEAD_MS = 3000;
     /** Keep the camera on if it would be off for less than this: a wake costs more (FaunaPulse). */
     static final long KEEP_ON_MS = 30000;
-    /** Shorter clips (cut by a window or run end) are skipped: the recorder needs about 1 s for its
-     *  first frame, so they would have no frames. */
+    /** Shorter clips (cut by a window or run end) are skipped: they would hold almost nothing. */
     static final long MIN_CLIP_MS = 3000;
     /** Stop the session after this many camera errors in a row. */
     static final int MAX_ERRORS_IN_A_ROW = 3;
@@ -90,8 +90,9 @@ final class SessionRunner implements Runnable {
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
         this.useCamera2 = useCamera2(context);
-        this.videoBitRate = settings.video ? Camera1Session.bitRate(Camera1Session.videoProfile(
-                Camera1Backend.backCameraId(), settings.videoQualityConstant()), settings.videoFps) : 0;
+        // Twice the asked rate: some encoders keep a quality floor (Samsung M12: 3.9 Mbit/s for 2.2 asked).
+        this.videoBitRate = settings.video ? 2L * SquareRecorder.bitRate(Camera1Backend.backCameraId(),
+                settings.savedSidePx, settings.videoFps) : 0;
     }
 
     /** Camera2 where the phone's level is "limited" or better, else Camera1 (AGENTS.md). */
@@ -100,11 +101,11 @@ final class SessionRunner implements Runnable {
     }
 
     /** A session camera; {@code shown} is the aim screen's view, or null for an invisible preview. */
-    static SessionCamera newCamera(Context context, boolean camera2, boolean video, int videoQuality,
+    static SessionCamera newCamera(Context context, boolean camera2, boolean video, int squareSide,
                                    int videoFps, SurfaceTexture shown) {
         return camera2
-                ? new Camera2Session(context, video, videoQuality, videoFps, shown)
-                : new Camera1Session(video, videoQuality, videoFps, shown);
+                ? new Camera2Session(context, video, squareSide, videoFps, shown)
+                : new Camera1Session(video, squareSide, videoFps, shown);
     }
 
     @Override
@@ -250,11 +251,11 @@ final class SessionRunner implements Runnable {
 
     private void openCamera() throws Exception {
         long t = SpeedTest.now();
-        SessionCamera c = newCamera(context, useCamera2, settings.video, settings.videoQualityConstant(),
+        SessionCamera c = newCamera(context, useCamera2, settings.video, settings.savedSidePx,
                 settings.videoFps, null);
         try {
             c.open();
-            if (!settings.video) c.setSquare(settings.squarePercent / 100.0, settings.squareX, settings.squareY);
+            c.setSquare(settings.squarePercent / 100.0, settings.squareX, settings.squareY);
             if (settings.focusFixed) c.setFixedFocus((float) settings.focusDiopters);
         } catch (Exception e) {
             c.close();
@@ -265,7 +266,7 @@ final class SessionRunner implements Runnable {
         JSONObject r = SessionLog.record("camera_open");
         SessionLog.put(r, "open_ms", SpeedTest.now() - t);
         SessionLog.put(r, "camera", c.describe());
-        if (!settings.video) SessionLog.put(r, "saved_photo_turn_deg", photoTurn);
+        SessionLog.put(r, "saved_turn_deg", photoTurn);
         log.write(r);
         if (settings.focusFixed && !c.describe().optBoolean("fixed_focus_possible") && warning.isEmpty()) {
             warning = "This phone cannot fix the focus, so it focuses automatically at each "
@@ -436,7 +437,7 @@ final class SessionRunner implements Runnable {
     private boolean clip(CapturePlan.Burst b) throws Exception {
         clips++;
         File file = new File(dir, SessionLog.fileStem(Math.max(b.start, System.currentTimeMillis())) + ".mp4");
-        String focus = camera.prepareClip(file);
+        String focus = camera.prepareClip(file, photoTurn);
         sleepUntil(b.start);
         long started = System.currentTimeMillis();
         camera.startClip();
@@ -452,7 +453,7 @@ final class SessionRunner implements Runnable {
             stoppedEarly = true; // Stop on the screen: finish the file and record it, then end
         }
         long stopped = System.currentTimeMillis();
-        camera.stopClip();
+        JSONObject facts = camera.stopClip();
         long stopMs = System.currentTimeMillis() - stopped;
         JSONObject r = SessionLog.record("clip");
         SessionLog.put(r, "time", SessionLog.isoTime(started));
@@ -461,7 +462,12 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "focus", focus);
         SessionLog.put(r, "start_late_ms", started - b.start);
         SessionLog.put(r, "recorded_s", (stopped - started) / 1000.0);
-        SessionLog.put(r, "stop_ms", stopMs); // with Camera1 below its slowest rate: includes the timing fix
+        SessionLog.put(r, "stop_ms", stopMs);
+        for (Iterator<String> k = facts.keys(); k.hasNext(); ) {
+            String key = k.next();
+            SessionLog.put(r, key, facts.opt(key));
+        }
+        SessionLog.put(r, "saved_side_px", camera.describe().optInt("saved_side_px"));
         SessionLog.put(r, "kb", file.length() / 1024);
         if (stoppedEarly) SessionLog.put(r, "stopped_early", true);
         if (hot) SessionLog.put(r, "stopped_for_heat", true);

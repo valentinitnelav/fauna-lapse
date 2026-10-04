@@ -96,7 +96,6 @@ public final class MainActivity extends Activity {
     private volatile int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
     private RadioGroup mode;
     private RadioGroup schedule;
-    private RadioGroup videoQuality;
     private RadioGroup videoFps;
     private EditText stepS;
     private EditText burstS;
@@ -168,7 +167,6 @@ public final class MainActivity extends Activity {
         };
         mode = findViewById(R.id.mode);
         schedule = findViewById(R.id.schedule);
-        videoQuality = findViewById(R.id.video_quality);
         videoFps = findViewById(R.id.video_fps);
         stepS = findViewById(R.id.step_s);
         burstS = findViewById(R.id.burst_s);
@@ -221,8 +219,6 @@ public final class MainActivity extends Activity {
             phoneName.setText(s.phoneName);
         }
         schedule.check(s.daily ? R.id.schedule_daily : R.id.schedule_run);
-        videoQuality.check("480p".equals(s.videoQuality) ? R.id.video_480p
-                : "720p".equals(s.videoQuality) ? R.id.video_720p : R.id.video_1080p);
         videoFps.check(s.videoFps == 15 ? R.id.video_fps_15 : s.videoFps == 10 ? R.id.video_fps_10 : R.id.video_fps_5);
         stepS.setText(number(s.stepS));
         burstS.setText(number(s.burstS));
@@ -240,7 +236,6 @@ public final class MainActivity extends Activity {
         boolean video = mode.getCheckedRadioButtonId() == R.id.mode_video;
         boolean daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
         findViewById(R.id.photo_settings).setVisibility(video ? View.GONE : View.VISIBLE);
-        findViewById(R.id.photo_size_settings).setVisibility(video ? View.GONE : View.VISIBLE);
         findViewById(R.id.video_settings).setVisibility(video ? View.VISIBLE : View.GONE);
         findViewById(R.id.run_settings).setVisibility(daily ? View.GONE : View.VISIBLE);
         findViewById(R.id.daily_settings).setVisibility(daily ? View.VISIBLE : View.GONE);
@@ -253,7 +248,7 @@ public final class MainActivity extends Activity {
         changeButton.setText(show ? R.string.change_close : R.string.change_open);
     }
 
-    /** The square as saved by the aim screen (photo mode), or what the aim screen is for (video). */
+    /** The square as saved by the aim screen, and the focus. */
     private void showAimSummary() {
         SessionSettings s = SessionSettings.load(this);
         String calibration = Camera2Session.fixedFocusCalibration(this); // null: autofocus only
@@ -262,12 +257,8 @@ public final class MainActivity extends Activity {
                 : "calibrated".equals(calibration) || "approximate".equals(calibration)
                         ? getString(R.string.summary_focus_fixed, SessionSettings.distanceWords(s.focusDiopters))
                         : getString(R.string.summary_focus_fixed_position);
-        if (mode.getCheckedRadioButtonId() == R.id.mode_video) {
-            aimSummary.setText(getString(R.string.aim_summary_video, focus));
-            return;
-        }
         boolean middle = Math.abs(s.squareX - 0.5) < 0.005 && Math.abs(s.squareY - 0.5) < 0.005;
-        aimSummary.setText(getString(R.string.aim_summary_photo, s.squarePercent,
+        aimSummary.setText(getString(R.string.aim_summary, s.squarePercent,
                 getString(middle ? R.string.aim_square_middle : R.string.aim_square_placed), focus));
     }
 
@@ -278,9 +269,8 @@ public final class MainActivity extends Activity {
         try {
             SessionSettings s = settingsOnScreen();
             String what = s.video
-                    ? s.breakMin > 0 ? getString(R.string.summary_video, s.videoQuality, s.videoFps, number(s.clipMin),
-                            number(s.breakMin))
-                            : getString(R.string.summary_video_no_break, s.videoQuality, s.videoFps, number(s.clipMin))
+                    ? s.breakMin > 0 ? getString(R.string.summary_video, s.videoFps, number(s.clipMin), number(s.breakMin))
+                            : getString(R.string.summary_video_no_break, s.videoFps, number(s.clipMin))
                     : s.breakMin > 0 ? getString(R.string.summary_photo, number(s.stepS), number(s.burstS), number(s.breakMin))
                             : getString(R.string.summary_photo_no_break, number(s.stepS));
             String when = s.daily ? getString(R.string.summary_daily, s.windows, s.days)
@@ -307,7 +297,6 @@ public final class MainActivity extends Activity {
         SessionSettings s = SessionSettings.load(this);
         s.video = mode.getCheckedRadioButtonId() == R.id.mode_video;
         s.daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
-        s.videoQuality = chosenVideoQuality();
         int fps = videoFps.getCheckedRadioButtonId();
         s.videoFps = fps == R.id.video_fps_15 ? 15 : fps == R.id.video_fps_10 ? 10 : 5;
         s.stepS = decimal(stepS, R.string.step_label);
@@ -339,11 +328,6 @@ public final class MainActivity extends Activity {
         } finally {
             refresh();
         }
-    }
-
-    private String chosenVideoQuality() {
-        int id = videoQuality.getCheckedRadioButtonId();
-        return id == R.id.video_480p ? "480p" : id == R.id.video_720p ? "720p" : "1080p";
     }
 
     private double decimal(EditText field, int labelId) {
@@ -402,11 +386,6 @@ public final class MainActivity extends Activity {
             if (m != null) mode.check("video".equals(m) ? R.id.mode_video : R.id.mode_photo);
             String sc = intent.getStringExtra("schedule");
             if (sc != null) schedule.check("daily".equals(sc) ? R.id.schedule_daily : R.id.schedule_run);
-            String vq = intent.getStringExtra("video_quality");
-            if (vq != null) {
-                videoQuality.check("480p".equals(vq) ? R.id.video_480p
-                        : "720p".equals(vq) ? R.id.video_720p : R.id.video_1080p);
-            }
             String fps = intent.getStringExtra("video_fps");
             if (fps != null) {
                 videoFps.check("15".equals(fps) ? R.id.video_fps_15 : "10".equals(fps) ? R.id.video_fps_10 : R.id.video_fps_5);
