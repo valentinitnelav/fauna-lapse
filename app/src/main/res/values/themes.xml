@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Light by default (easier to read in the sun); values-night has the dark theme, used when the
+     phone is in dark mode (Android 10+). Only Android's own Material theme, no libraries. -->
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light.DarkActionBar">
+        <item name="android:colorPrimary">@color/action_bar</item>
+        <item name="android:colorPrimaryDark">@color/status_bar</item>
+        <item name="android:colorAccent">@color/heading</item>
+        <item name="android:windowBackground">@color/window</item>
+    </style>
+</resources>

@@ -20,15 +20,14 @@ import java.util.concurrent.Executors;
 /**
  * Aim screen: the live camera view, to point the phone at the flower. In photo mode the ROI square
  * is moved with a finger and sized with the slider; it is saved at once, and focus and exposure
- * follow it. The camera is open only while this screen is shown.
+ * follow it. The camera is open only while this screen is shown. "Start session here" starts the
+ * session with the saved settings while the phone is already in its place (its position counts).
  *
  * The screen stays upright (portrait, set in the manifest), so the view turns with the phone like
  * a window, and the photo is shown turned by the sensor orientation.
  */
 public final class AimActivity extends Activity implements TextureView.SurfaceTextureListener {
 
-    static final String EXTRA_VIDEO = "video";
-    static final String EXTRA_VIDEO_QUALITY = "video_quality";
     /** Share of the screen height the camera view may take; the controls get the rest. */
     private static final double VIEW_SHARE = 0.6;
 
@@ -40,7 +39,9 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private TextView info;
     private TextView focusResult;
     private Button focusButton;
+    private Button startButton;
     private OrientationEventListener orientationListener;
+    private int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
     private boolean video;
     private int videoQuality;
     private int savedSidePx;
@@ -51,11 +52,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_aim);
-        SessionSettings s = SessionSettings.load(this);
-        // Mode and video size as chosen on the main screen, even if not saved yet.
-        s.video = getIntent().getBooleanExtra(EXTRA_VIDEO, s.video);
-        String quality = getIntent().getStringExtra(EXTRA_VIDEO_QUALITY);
-        if (quality != null) s.videoQuality = quality;
+        SessionSettings s = SessionSettings.load(this); // the main screen saved its values
         video = s.video;
         videoQuality = s.videoQualityConstant();
         savedSidePx = s.savedSidePx;
@@ -68,13 +65,15 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         square.centreY = s.squareY;
         square.setVisibility(video ? View.GONE : View.VISIBLE);
         findViewById(R.id.size_group).setVisibility(video ? View.GONE : View.VISIBLE);
-        findViewById(R.id.aim_hint).setVisibility(video ? View.GONE : View.VISIBLE);
+        ((TextView) findViewById(R.id.aim_hint)).setText(video ? R.string.aim_hint_video : R.string.aim_hint);
         info = findViewById(R.id.aim_info);
         info.setText(R.string.aim_opening);
         focusResult = findViewById(R.id.focus_result);
         focusButton = findViewById(R.id.focus);
         focusButton.setOnClickListener(v -> focus());
         findViewById(R.id.done).setOnClickListener(v -> finish());
+        startButton = findViewById(R.id.start_here);
+        startButton.setOnClickListener(v -> startHere());
         View middle = findViewById(R.id.middle);
         middle.setVisibility(video ? View.GONE : View.VISIBLE);
         middle.setOnClickListener(v -> {
@@ -108,7 +107,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         orientationListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int degrees) {
-                square.setPhoneTurn(RoiMath.quarterTurn(degrees));
+                phoneTurn = RoiMath.quarterTurn(degrees);
+                square.setPhoneTurn(phoneTurn);
             }
         };
         fitView(3, 4); // a first guess; corrected when the camera is open
@@ -218,6 +218,20 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             runOnUiThread(() -> {
                 focusButton.setEnabled(true);
                 focusResult.setText(getString(R.string.aim_focus_result, text));
+            });
+        });
+    }
+
+    /** Closes the camera, then starts the session (it opens the camera at once) and goes back to
+     *  the main screen, which shows the session. */
+    private void startHere() {
+        startButton.setEnabled(false);
+        final int turn = phoneTurn;
+        worker.execute(() -> {
+            closeCamera();
+            runOnUiThread(() -> {
+                if (!CaptureService.running) CaptureService.startSession(this, turn);
+                finish();
             });
         });
     }

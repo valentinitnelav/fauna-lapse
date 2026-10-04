@@ -47,9 +47,12 @@ final class SessionRunner implements Runnable {
      *  hook; lasts until the app is closed). */
     static volatile boolean forceCamera1;
 
-    /** What the session does now, and a warning if any; read by the screen. */
+    /** What the session does now, the counts so far, a warning if any, and whether it waits for
+     *  the phone to cool down; read by the screen. */
     static volatile String status = "";
+    static volatile String progress = "";
     static volatile String warning = "";
+    static volatile boolean heatPaused;
 
     private final Context context;
     private final SessionSettings settings;
@@ -104,6 +107,8 @@ final class SessionRunner implements Runnable {
     public void run() {
         status = "Session starting.";
         warning = "";
+        heatPaused = false;
+        updateProgress();
         writeStart();
         // Photos are cut and saved on a second thread; when two are waiting, the session thread
         // saves the next one itself, which slows the photos instead of filling the memory.
@@ -176,10 +181,12 @@ final class SessionRunner implements Runnable {
             SessionLog.put(end, "heat_pauses", heatPauses);
             SessionLog.put(end, "heat_pause_min", Math.round(heatPauseMs / 6000.0) / 10.0);
             log.write(end);
-            String counts = settings.video ? count(clips, "clip")
-                    : count(photos, "photo") + " in " + count(bursts, "burst");
-            status = "Session ended (" + reason + "): " + counts + ", " + count(errors, "error")
-                    + (heatPauses > 0 ? ", " + count(heatPauses, "heat pause") : "") + ".";
+            String counts = (settings.video ? count(clips, "clip")
+                    : count(photos, "photo") + " in " + count(bursts, "burst")) + ", " + count(errors, "error")
+                    + (heatPauses > 0 ? ", " + count(heatPauses, "heat pause") : "");
+            status = "Session ended (" + reason + "): " + counts + ".";
+            progress = "";
+            heatPaused = false;
 
             JSONObject summary = new JSONObject();
             SessionLog.put(summary, "test", "session");
@@ -190,6 +197,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(summary, "reason", reason);
             SessionLog.put(summary, "counts", counts);
             SessionLog.put(summary, "errors", errors);
+            if (!warning.isEmpty()) SessionLog.put(summary, "warning", warning);
             onDone.onDone(summary);
         }
     }
@@ -278,6 +286,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "battery_temp_c", CaptureService.batteryTempC(context));
         SessionLog.put(r, "resume_below_c", resumeC);
         log.write(r);
+        heatPaused = true;
         do {
             status = String.format(Locale.US, "Paused since %s: the phone is too warm (%.1f °C). The camera"
                     + " stays off until the battery is below %.0f °C.", clock(start),
@@ -286,6 +295,7 @@ final class SessionRunner implements Runnable {
             if (left <= 0) break;
             sleepUntil(System.currentTimeMillis() + Math.min(PAUSE_CHECK_MS, left));
         } while (tooHot(true));
+        heatPaused = false;
         long end = System.currentTimeMillis();
         heatPauseMs += end - start;
         JSONObject e = SessionLog.record("heat_pause_end");
@@ -333,6 +343,7 @@ final class SessionRunner implements Runnable {
             save(jpeg, t, takenAt, captureMs);
             taken++;
             photos++;
+            updateProgress();
             captureMsSum += captureMs;
             long next = CapturePlan.nextPhotoTime(b, step, System.currentTimeMillis());
             // Grid times after t that passed while this photo was taken were missed.
@@ -341,6 +352,7 @@ final class SessionRunner implements Runnable {
             t = next;
         }
         skipped += missed;
+        updateProgress();
         JSONObject e = SessionLog.record("burst_end");
         SessionLog.put(e, "photos", taken);
         SessionLog.put(e, "skipped_photo_times", missed);
@@ -418,8 +430,17 @@ final class SessionRunner implements Runnable {
         if (stoppedEarly) SessionLog.put(r, "stopped_early", true);
         if (hot) SessionLog.put(r, "stopped_for_heat", true);
         log.write(r);
+        updateProgress();
         if (stoppedEarly) throw new InterruptedException();
         return hot;
+    }
+
+    /** The counts so far and the session end, for the screen. */
+    private void updateProgress() {
+        String counts = settings.video ? count(clips, "clip")
+                : count(photos, "photo") + " in " + count(bursts, "burst")
+                        + (skipped > 0 ? " (" + count(skipped, "photo time") + " skipped)" : "");
+        progress = "So far: " + counts + ". The session ends at " + clock(plan.end()) + ".";
     }
 
     private void putBurstFacts(JSONObject r, CapturePlan.Burst b) {
@@ -450,7 +471,10 @@ final class SessionRunner implements Runnable {
         return n + " " + word + (n == 1 ? "" : "s");
     }
 
+    /** "05:00:00" today, "Sun 5 Oct 05:00:00" on another day. */
     private static String clock(long ms) {
-        return new SimpleDateFormat("HH:mm:ss", Locale.US).format(new Date(ms));
+        String day = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date(ms));
+        boolean today = day.equals(new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date()));
+        return new SimpleDateFormat(today ? "HH:mm:ss" : "EEE d MMM HH:mm:ss", Locale.US).format(new Date(ms));
     }
 }

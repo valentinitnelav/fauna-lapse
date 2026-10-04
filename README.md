@@ -12,15 +12,16 @@ FaunaLapse has no artificial intelligence (AI). Its sister app,
 ## Status
 
 Early development, not ready for field use. Scheduled photo and video sessions with the screen off
-work on the first test phone; you aim the phone and place the square on a live camera view. Phase 0 tests on
-more phones (speed, power, heat) are running. See [docs/PHONES.md](docs/PHONES.md) for the phones
-tested so far.
+work on the first test phone. Setting up a phone takes a few taps: aim the camera and place the
+square on a live camera view, check the schedule (saved on the phone), start. Phase 0 tests on more
+phones (speed, power, heat) are running. See [docs/PHONES.md](docs/PHONES.md) for the phones tested
+so far.
 
 ## Planned features
 
 - Android 7.0 or newer; old phones are welcome.
-- Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00) for several
-  days, or a run of some hours.
+- Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00, also across
+  midnight or all day under the midnight sun) for several days, or a run of some hours.
 - Inside a window: photo bursts (for example one photo every 2 s for 60 s, then a 4 minute break) or
   video clips (for example 5 minutes of video, then a 10 minute break).
 - If a phone cannot take photos as fast as asked, the app suggests video instead.

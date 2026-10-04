@@ -3,6 +3,7 @@ package com.faunalapse.app;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -81,6 +82,16 @@ public final class CaptureService extends Service {
         File base = context.getExternalFilesDir(null);
         if (base == null) base = context.getFilesDir();
         return new File(base, "sessions");
+    }
+
+    /** Starts a session with the saved settings; {@code phoneTurn}: how the phone is held at Start
+     *  (RoiMath.quarterTurn), for upright squares. Called from the main and the aim screen. */
+    static void startSession(Context context, int phoneTurn) {
+        Intent intent = new Intent(context, CaptureService.class)
+                .putExtra(EXTRA_SESSION, true)
+                .putExtra(EXTRA_PHONE_TURN, phoneTurn);
+        if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent);
+        else context.startService(intent);
     }
 
     /** One JSON record per line, one line per test or session (the screen shows the last one). */
@@ -199,8 +210,12 @@ public final class CaptureService extends Service {
         } else {
             builder = new Notification.Builder(this);
         }
+        // A tap on the notification opens the main screen (status and Stop).
+        PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class),
+                PendingIntent.FLAG_IMMUTABLE);
         Notification notification = builder
                 .setSmallIcon(android.R.drawable.ic_menu_camera)
+                .setContentIntent(open)
                 .setContentTitle(getString(session ? R.string.notification_session_title : R.string.notification_title))
                 .setContentText(getString(session ? R.string.notification_session_text : R.string.notification_text))
                 .setOngoing(true)

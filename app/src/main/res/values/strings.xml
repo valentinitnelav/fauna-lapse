@@ -2,20 +2,48 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">FaunaLapse</string>
 
-    <!-- Session -->
-    <string name="session_heading">Session</string>
+    <!-- Status card -->
+    <string name="status_ready">Ready</string>
+    <string name="status_session">Session running</string>
+    <string name="status_paused">Session paused: the phone is too warm</string>
+    <string name="status_test">Phone test running</string>
+    <string name="last_session">Last session (%1$s): %2$s. Ended: %3$s.</string>
+    <string name="no_session">No session yet. Aim the camera, check the schedule, then tap Start.</string>
+    <string name="battery_line">Battery %1$s, %2$s, %3$s °C.</string>
+    <string name="charging">charging</string>
+    <string name="not_charging">not charging</string>
     <string name="phone_time">Phone time: %1$s. Check it before a field session: the session record uses it.</string>
+    <string name="stop_session">Stop session</string>
+    <string name="stop_question">Stop the session?</string>
+    <string name="stop_question_text">The camera closes; the photos and videos so far are kept.</string>
+    <string name="stop_yes">Stop</string>
+    <string name="stop_no">Go on</string>
+
+    <!-- 1 Aim -->
+    <string name="card_aim">1 · Aim</string>
     <string name="mode_photo">Photos</string>
     <string name="mode_video">Video</string>
+    <string name="aim_button">Aim the camera</string>
+    <string name="aim_summary_photo">Square: %1$d %% of the short side of the photo, %2$s. Only the square is saved; focus and exposure follow it.</string>
+    <string name="aim_square_middle">in the middle</string>
+    <string name="aim_square_placed">where you placed it</string>
+    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view.</string>
+
+    <!-- 2 Schedule -->
+    <string name="card_schedule">2 · Schedule</string>
+    <string name="change_open">Change settings</string>
+    <string name="change_close">Close settings</string>
+    <string name="summary_photo">Photos: one every %1$s s for %2$s s, then %3$s min off.</string>
+    <string name="summary_photo_no_break">Photos: one every %1$s s, without breaks.</string>
+    <string name="summary_video">Video %1$s: clips of %2$s min, then %3$s min off.</string>
+    <string name="summary_video_no_break">Video %1$s: clips of %2$s min, one after the other.</string>
+    <string name="summary_run">For %1$s h from Start.</string>
+    <string name="summary_daily">Daily windows: %1$s. Days: %2$d.</string>
+    <string name="summary_heat">Heat pause at %1$s °C.</string>
     <string name="step_label">Photo step (s)</string>
     <string name="step_hint">Time between photos in a burst. Default 2 s: a 3 s step caught about 90 % of insect visits (Edwards et al. 2015).</string>
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
-    <string name="aim_button">Aim the camera</string>
-    <string name="aim_summary_photo">Only a square of each photo is saved: side %1$d %% of the short side of the photo, %2$s. Focus and exposure follow the square. Default: the whole short side, in the middle.</string>
-    <string name="aim_square_middle">in the middle</string>
-    <string name="aim_square_placed">where you placed it</string>
-    <string name="aim_summary_video">Shows the camera view, to point the phone at the flower. Video saves the whole view.</string>
     <string name="saved_side_label">Saved square side (px)</string>
     <string name="saved_side_hint">Default 1024 px: enough pixels on a small insect. Never more than the real pixels inside the square.</string>
     <string name="clip_label">Clip length (min)</string>
@@ -27,20 +55,23 @@
     <string name="video_size_hint">On the Samsung M12, 10 s of video took about 9 MB at 1080p, 7 MB at 720p and 2 MB at 480p.</string>
     <string name="break_label">Break between bursts or clips (min)</string>
     <string name="break_hint">Default 4 min: the camera rests about 80 % of the time. It is switched off when the break is longer than 30 s. 0 = no break.</string>
-    <string name="schedule_run">Run for some hours from the start</string>
-    <string name="schedule_daily">Record in daily windows</string>
+    <string name="schedule_label">Record</string>
+    <string name="schedule_run">Hours from Start</string>
+    <string name="schedule_daily">Daily windows</string>
     <string name="run_label">Run length (h)</string>
-    <string name="run_hint">Default 2 h.</string>
+    <string name="run_hint">Default 2 h. Up to 720 h (30 days) without a break at night, for example under the midnight sun.</string>
     <string name="windows_label">Daily windows</string>
-    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. A window cannot cross midnight: write 20:00-24:00, 00:00-06:00. Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
+    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. A window may cross midnight (22:00-04:00), and 00:00-24:00 records all day (for example under the midnight sun). Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
     <string name="days_label">Days</string>
-    <string name="days_hint">Default 1 (today). For more days, keep the phone on a power supply.</string>
+    <string name="days_hint">Default 1. Counted from the first window that is not over yet: a phone started in the evening records from the next morning. For more days, keep the phone on a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
-    <string name="start_session">Start session</string>
-    <string name="stop_session">Stop session</string>
-    <string name="session_idle">Set the values, tap Start session, then switch the screen off with the power button. Files are saved in:\n%1$s</string>
+    <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
+
+    <!-- 3 Start -->
+    <string name="start_session">Start session</string>
+    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on. Files are saved in %1$s</string>
 
     <!-- Aim screen -->
     <string name="square_label">Square side (% of the short side of the photo)</string>
@@ -52,12 +83,16 @@
     <string name="aim_focus">Focus again</string>
     <string name="aim_done">Done</string>
     <string name="aim_middle">Middle</string>
+    <string name="aim_start">Start session here</string>
+    <string name="aim_top">top</string>
     <string name="aim_focusing">Focusing…</string>
     <string name="aim_focus_result">Focus: %1$s</string>
-    <string name="aim_hint">Drag the square onto the flower with a finger. The triangle marks the top of the saved photos; it follows how the phone is held, and the position at Start counts. The square is saved at once; the session focuses on it at the start of each burst.</string>
+    <string name="aim_hint">Drag the square onto the flower with a finger. The small triangle marks the top of the saved photos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
+    <string name="aim_hint_video">Fix the phone in its place, then tap Start session here.</string>
 
-    <!-- Phase 0 tests -->
-    <string name="tests_heading">Phase 0 tests</string>
+    <!-- Phone tests (phase 0) -->
+    <string name="tests_show">Show the phone tests</string>
+    <string name="tests_hide">Hide the phone tests</string>
     <string name="intro">Tests with the back camera, without a preview.\n\nOne test photo: the camera opens, waits 5 s for the exposure, focuses once, takes one photo and closes.\n\nSpeed test (about 3 minutes): photos one after the other, photos from preview frames, short videos, and Camera2 photos.\n\nThe camera starts %1$d s after the tap, so you can switch the screen off first. Results are saved in:\n%2$s</string>
     <string name="take_photo">Take one test photo</string>
     <string name="speed_test">Run the speed test</string>
@@ -72,5 +107,5 @@
     <string name="notification_title">FaunaLapse is running a camera test</string>
     <string name="notification_text">The camera closes again when the test ends.</string>
     <string name="notification_session_title">FaunaLapse session running</string>
-    <string name="notification_session_text">Photos or video on the schedule. Open the app to stop it.</string>
+    <string name="notification_session_text">Photos or video on the schedule. Tap to open the app.</string>
 </resources>

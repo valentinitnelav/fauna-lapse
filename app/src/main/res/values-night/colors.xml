@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark theme colours (the phone's dark mode, Android 10+). -->
+<resources>
+    <color name="window">#FF0F120F</color>
+    <color name="card">#FF1C211C</color>
+    <color name="card_edge">#FF2C342C</color>
+    <color name="heading">#FF8BCB8E</color>
+    <color name="action_bar">#FF1C211C</color>
+    <color name="status_bar">#FF0F120F</color>
+    <color name="secondary_button">#FF2B3A2B</color>
+    <color name="warning">#FFFF8A80</color>
+</resources>

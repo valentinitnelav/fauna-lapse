@@ -33,6 +33,8 @@ public final class SquareView extends View {
     private final Paint line = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint shade = new Paint();
     private final Paint mark = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint label = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final String topWord;
     private final Path triangle = new Path();
     private float downX;
     private float downY;
@@ -46,6 +48,11 @@ public final class SquareView extends View {
         line.setStrokeWidth(2 * dp);
         shade.setColor(0x80000000); // half-transparent black outside the square
         mark.setColor(Color.WHITE);
+        label.setColor(Color.WHITE);
+        label.setTextSize(12 * dp);
+        label.setTextAlign(Paint.Align.CENTER);
+        label.setShadowLayer(2 * dp, 0, 0, Color.BLACK); // readable on a bright flower
+        topWord = context.getString(R.string.aim_top);
     }
 
     /** Called once the camera is open and the photo size is known. */
@@ -92,8 +99,8 @@ public final class SquareView extends View {
         canvas.drawRect(right, top, w, bottom, shade);
         canvas.drawRect(left, top, right, bottom, line);
 
-        // Triangle inside the top edge, pointing up; turned with the phone (90 = left side up,
-        // so the top of the saved photo is the left edge on the screen).
+        // Triangle inside the top edge, pointing up, with the word "top" below it; turned with the
+        // phone (90 = left side up, so the top of the saved photo is the left edge on the screen).
         float cx = (left + right) / 2;
         float cy = (top + bottom) / 2;
         float size = Math.min(14 * dp, (right - left) / 4);
@@ -105,6 +112,7 @@ public final class SquareView extends View {
         triangle.lineTo(cx - size, top + 2 * dp + size);
         triangle.close();
         canvas.drawPath(triangle, mark);
+        if (right - left > 8 * size) canvas.drawText(topWord, cx, top + 4 * dp + size - label.ascent(), label);
         canvas.restore();
     }
 

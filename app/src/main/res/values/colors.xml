@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Light theme colours; values-night has the dark ones. Green for nature; buttons keep white text
+     on the same green in both themes, for contrast in the sun. -->
+<resources>
+    <color name="window">#FFEEF1EA</color>
+    <color name="card">#FFFFFFFF</color>
+    <color name="card_edge">#FFD5DBCF</color>
+    <color name="heading">#FF2E7D32</color>
+    <color name="action_bar">#FF2E7D32</color>
+    <color name="status_bar">#FF1B5E20</color>
+    <color name="start">#FF2E7D32</color>
+    <color name="stop">#FFC62828</color>
+    <color name="secondary_button">#FFDCEDDC</color>
+    <color name="warning">#FFB71C1C</color>
+</resources>

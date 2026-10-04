@@ -1,17 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Heading">
+    <style name="Card">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:background">@drawable/card</item>
+    </style>
+
+    <style name="CardTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/heading</item>
+    </style>
+
+    <style name="Body">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="Label">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginTop">16dp</item>
         <item name="android:textSize">16sp</item>
     </style>
 
@@ -32,5 +48,49 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Segmented control: radio buttons side by side that look like large buttons. -->
+    <style name="Segments">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Segment">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:button">@null</item>
+        <item name="android:background">@drawable/segment</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/segment_text</item>
+    </style>
+
+    <style name="Segment.Next">
+        <item name="android:layout_marginStart">8dp</item>
+    </style>
+
+    <!-- Start and Stop: large, filled, white text. -->
+    <style name="BigButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">64dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:backgroundTint">@color/start</item>
+    </style>
+
+    <style name="SecondaryButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/heading</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:backgroundTint">@color/secondary_button</item>
     </style>
 </resources>

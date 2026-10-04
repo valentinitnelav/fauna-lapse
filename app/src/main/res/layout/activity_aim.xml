@@ -39,37 +39,29 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
 
-            <!-- Normal buttons with a frame: easier to see outdoors than borderless ones. -->
+            <!-- Buttons with a filled background: easier to see outdoors than borderless ones. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:orientation="horizontal"
                 tools:ignore="ButtonStyle">
 
-                <Button
-                    android:id="@+id/focus"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/aim_focus" />
+                <Button android:id="@+id/focus" style="@style/SecondaryButton" android:layout_width="0dp"
+                    android:layout_weight="1" android:textSize="15sp" android:text="@string/aim_focus" />
 
-                <Button
-                    android:id="@+id/middle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                <Button android:id="@+id/middle" style="@style/SecondaryButton" android:layout_width="0dp"
+                    android:layout_weight="1" android:layout_marginStart="8dp" android:textSize="15sp"
                     android:text="@string/aim_middle" />
 
-                <Button
-                    android:id="@+id/done"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                <Button android:id="@+id/done" style="@style/SecondaryButton" android:layout_width="0dp"
+                    android:layout_weight="1" android:layout_marginStart="8dp" android:textSize="15sp"
                     android:text="@string/aim_done" />
             </LinearLayout>
 
             <TextView android:id="@+id/focus_result" style="@style/Hint" android:layout_marginTop="4dp" />
+
+            <Button android:id="@+id/start_here" style="@style/BigButton" android:text="@string/aim_start" />
 
             <LinearLayout android:id="@+id/size_group" style="@style/Group">
                 <TextView style="@style/Label" android:labelFor="@id/square_size" android:text="@string/square_label" />
@@ -88,8 +80,7 @@
                 android:layout_marginTop="12dp"
                 android:textSize="16sp" />
 
-            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp"
-                android:text="@string/aim_hint" />
+            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -12,7 +12,7 @@ import java.util.TimeZone;
  * (`./gradlew test`).
  *
  * A session records inside periods: either one run of a fixed length from the session start, or
- * daily windows (clock times such as 06:00 to 08:00) on a number of calendar days. Inside each period
+ * daily windows (clock times such as 06:00 to 08:00, also across midnight) on a number of days. Inside each period
  * bursts (photo bursts or video clips) follow a fixed grid counted from the period start: burst,
  * break, burst, break, and so on. A burst is cut at the period end. Every answer is computed from the
  * clock time passed in, never from counters, so a late wake-up or a clock change heals itself.
@@ -68,22 +68,25 @@ final class CapturePlan {
     }
 
     /**
-     * Daily windows (from {@link #parseWindows}) on {@code days} calendar days, counted from the
-     * date of {@code sessionStart} in {@code zone}. Windows already over at the session start are
-     * left out; a window that is running keeps its grid (bursts stay at the same clock times).
+     * Daily windows (from {@link #parseWindows}) on {@code days} days, counted from the first window
+     * that is not over at {@code sessionStart}: a phone started in the evening records from the next
+     * morning, and one started inside a window that began yesterday (across midnight) records at
+     * once. A window that is running keeps its grid (bursts stay at the same clock times).
      */
     static CapturePlan daily(long sessionStart, int[][] windows, int days, TimeZone zone,
                              long burstMs, long breakMs) {
         if (days < 1) throw new IllegalArgumentException("days must be at least 1");
         List<long[]> periods = new ArrayList<>();
-        for (int day = 0; day < days; day++) {
+        Integer firstDay = null;
+        // From yesterday (its window may cross midnight); the first day is -1, 0 or 1.
+        for (int day = -1; day <= days && (firstDay == null || day < firstDay + days); day++) {
             for (int[] w : windows) {
-                long start = clockTime(sessionStart, day, w[0], zone);
                 long end = clockTime(sessionStart, day, w[1], zone);
-                if (end > sessionStart) periods.add(new long[] {start, end});
+                if (end <= sessionStart) continue; // already over
+                if (firstDay == null) firstDay = day;
+                periods.add(new long[] {clockTime(sessionStart, day, w[0], zone), end});
             }
         }
-        if (periods.isEmpty()) throw new IllegalArgumentException("no window left after the start");
         return new CapturePlan(periods, burstMs, breakMs);
     }
 
@@ -131,8 +134,9 @@ final class CapturePlan {
 
     /**
      * Reads daily windows such as "06:00-08:00, 17:00-20:00" as {start, end} minutes since midnight,
-     * sorted by start. "24:00" ends a window at midnight. A window may not cross midnight (write
-     * "20:00-24:00, 00:00-06:00" instead) and windows may not overlap.
+     * sorted by start. "24:00" ends a window at midnight and "00:00-24:00" records all day (midnight
+     * sun). A window may cross midnight ("22:00-04:00": its end is then above 1440 minutes, on the
+     * next day); windows may not overlap, also not with those of the next day.
      */
     static int[][] parseWindows(String text) {
         List<int[]> list = new ArrayList<>();
@@ -143,10 +147,12 @@ final class CapturePlan {
             if (ends.length != 2) throw new IllegalArgumentException("write windows like 06:00-08:00");
             int start = minutes(ends[0]);
             int end = minutes(ends[1]);
-            if (start >= end) {
-                throw new IllegalArgumentException(part + ": the end must be later than the start"
-                        + " (split windows at midnight)");
+            if (start == 24 * 60) throw new IllegalArgumentException(part + ": start at 00:00, not 24:00");
+            if (start == end) {
+                throw new IllegalArgumentException(part + ": the end must differ from the start"
+                        + " (00:00-24:00 records all day)");
             }
+            if (end < start) end += 24 * 60; // ends the next day
             list.add(new int[] {start, end});
         }
         if (list.isEmpty()) throw new IllegalArgumentException("give at least one window, like 06:00-08:00");
@@ -154,6 +160,9 @@ final class CapturePlan {
         Arrays.sort(windows, (a, b) -> Integer.compare(a[0], b[0]));
         for (int i = 1; i < windows.length; i++) {
             if (windows[i][0] < windows[i - 1][1]) throw new IllegalArgumentException("windows overlap");
+        }
+        if (windows[windows.length - 1][1] > windows[0][0] + 24 * 60) {
+            throw new IllegalArgumentException("windows overlap across midnight");
         }
         return windows;
     }
@@ -170,8 +179,9 @@ final class CapturePlan {
         }
     }
 
-    /** Clock time {@code minute} (0 to 1440) on day {@code day} after the date of {@code ref}.
-     *  Built from calendar fields, so "06:00" stays 06:00 across a daylight saving change. */
+    /** Clock time {@code minute} (0 to 2880, above 1440 on the next day) on day {@code day} after
+     *  the date of {@code ref}. Built from calendar fields, so "06:00" stays 06:00 across a daylight
+     *  saving change. */
     private static long clockTime(long ref, int day, int minute, TimeZone zone) {
         Calendar c = Calendar.getInstance(zone);
         c.setTimeInMillis(ref);
@@ -180,7 +190,7 @@ final class CapturePlan {
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
         c.add(Calendar.DAY_OF_MONTH, day);
-        c.set(Calendar.HOUR_OF_DAY, minute / 60); // 24 rolls over to 00:00 of the next day
+        c.set(Calendar.HOUR_OF_DAY, minute / 60); // 24 and more roll over to the next day
         c.set(Calendar.MINUTE, minute % 60);
         return c.getTimeInMillis();
     }

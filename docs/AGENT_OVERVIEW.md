@@ -5,28 +5,30 @@ invariants and next steps. Read at the start of every session; at most 100 lines
 what is true now and where it lives: replace or remove text when it changes, never add history. Rules
 and their reasons are in `AGENTS.md`; history is in git.
 
-Last update: 2026-10-03.
+Last update: 2026-10-04.
 
 ## What works now
 
 - **Sessions** on a schedule, with the screen off: daily windows for N days or a run of Z hours;
   photo bursts (step, burst length, break; the ROI square is saved upright) or video clips (clip
   length, break; full frame, 15 fps); camera off in long breaks; Camera2 or Camera1 chosen per phone;
-  every event in `session.jsonl`. Settings screen with Start and Stop. Tested on the Samsung M12.
+  every event in `session.jsonl`. Tested on the Samsung M12.
+- **Main screen**: status card (live counts, battery, phone time; Stop asks first), then 1 Aim
+  (photos or video, aim screen), 2 Schedule (one summary in words; the settings open on Change), 3
+  Start. Light theme, dark in the phone's dark mode; phase 0 tests (one photo, speed test) folded away.
 - **Aim screen**: live camera view in the session's own camera setup; drag the square, slider for
-  its size; focus and exposure follow the square; a triangle marks the top of the saved photos.
+  its size; focus and exposure follow the square; a triangle ("top") marks the top of the saved
+  photos; "Start session here" starts with the phone already in its place.
 - **Guards**: heat pause (camera off); clean stop on low battery without charging or too little storage.
-- **Phase 0 tests** (screen off): one test photo, and the speed test (`PHONES.md`).
-- Not yet: DCIM output, alarms instead of a wake lock in long breaks, exposure lock, time-lapse video
-  below 15 fps.
 
 ## Key invariants
 
 - Product rules (Java 8, minSdk 24, no AndroidX or other libraries in the app, screen off, ROI
   square for photos, time-named files, back camera only, camera interface per phone, schedule grid
   from each window start): `AGENTS.md`, "Hard constraints".
-- Schedule maths lives in `CapturePlan` and square maths in `RoiMath`: no Android classes there, unit
-  tests in `app/src/test/`. Every answer comes from the clock time passed in, never from counters.
+- Schedule maths (windows may cross midnight; days count from the first window not over) lives in
+  `CapturePlan`, square maths in `RoiMath`: no Android classes, unit tests in `app/src/test/`. Every
+  answer comes from the clock time passed in, never from counters.
 - `SessionRunner` asks the plan for the burst at or after `max(now, end of the last burst handled)`,
   so a burst is never run twice. Grid times that pass while a photo is taken are counted as
   `skipped_photo_times`; those already over when a burst could start as `photo_times_missed_at_start`.
@@ -63,7 +65,7 @@ Last update: 2026-10-03.
 
 | File | Job |
 |---|---|
-| `MainActivity.java` | Settings screen (session values, Start, Stop, phone time, status) and phase 0 test buttons; permissions; phone turn at Start; adb hooks in debug builds |
+| `MainActivity.java` | Main screen (status card, aim and schedule cards, Start, Stop) and phase 0 test buttons; permissions; phone turn at Start; adb hooks in debug builds |
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square and its size, focus check |
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Session values: defaults, saving, checks, `CapturePlan` and the record line |
@@ -89,12 +91,10 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 6. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
    (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against
    `jpeg_largest` shows photos enlarged in software).
-7. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), one text
-   concatenation on the screen, newer Gradle available (update with the Android build plugin).
+7. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
+   available (update with the Android build plugin).
 
 ## Pointers
 
-- Rules, commands, git and writing style: `AGENTS.md`.
-- Phone facts and measured speeds: `docs/PHONES.md`.
-- Human introduction: `README.md`.
-- History of a file: `git log --oneline -- <file>`.
+Rules, commands, git and writing style: `AGENTS.md`. Phone facts and measured speeds:
+`docs/PHONES.md`. Human introduction: `README.md`. History of a file: `git log --oneline -- <file>`.

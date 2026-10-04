@@ -2,18 +2,22 @@ package com.faunalapse.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.OrientationEventListener;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -32,7 +36,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-/** Main screen: session settings with Start and Stop, and the phase 0 test buttons below. */
+/**
+ * Main screen: a status card (ready, or what the running session does), then the steps of a setup:
+ * 1 aim (photos or video, the aim screen), 2 schedule (a one-line summary; the settings open on
+ * "Change"), 3 Start. The phase 0 test buttons are folded away at the bottom.
+ */
 public final class MainActivity extends Activity {
 
     /** Test hooks for adb, only in debug builds (see AGENTS.md, "Build and test"). */
@@ -55,17 +63,31 @@ public final class MainActivity extends Activity {
             handler.postDelayed(this, 1000);
         }
     };
-    private Button photoButton;
-    private Button speedButton;
-    private Button startButton;
+    private ScrollView scroll;
+    private TextView statusTitle;
+    private TextView sessionStatus;
+    private TextView sessionProgress;
+    private TextView sessionWarning;
+    private TextView battery;
+    private TextView phoneTime;
     private Button stopButton;
+    private View aimCard;
+    private View scheduleCard;
     private Button aimButton;
     private TextView aimSummary;
+    private TextView scheduleSummary;
+    private ColorStateList bodyColor;
+    private Button changeButton;
+    private View settingsGroup;
+    private TextView startMessage;
+    private Button startButton;
+    private Button testsToggle;
+    private View testsGroup;
+    private Button photoButton;
+    private Button speedButton;
+    private TextView status;
     private OrientationEventListener orientationListener;
     private volatile int phoneTurn; // how the phone is held now (RoiMath.quarterTurn)
-    private TextView status;
-    private TextView sessionStatus;
-    private TextView phoneTime;
     private RadioGroup mode;
     private RadioGroup schedule;
     private RadioGroup videoQuality;
@@ -80,12 +102,47 @@ public final class MainActivity extends Activity {
     private EditText heatLimitC;
     private int requested;
     private boolean cameraDenied;
-    private String sessionMessage; // a problem with the values, shown until the next tap
+    private String problem; // why Start or Aim did not go on, shown above Start until the next tap
+    private Boolean controlsEnabled; // null until first set
+    private String lastSession; // from the log; null = read it again
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        scroll = findViewById(R.id.scroll);
+        statusTitle = findViewById(R.id.status_title);
+        sessionStatus = findViewById(R.id.session_status);
+        sessionProgress = findViewById(R.id.session_progress);
+        sessionWarning = findViewById(R.id.session_warning);
+        battery = findViewById(R.id.battery);
+        phoneTime = findViewById(R.id.phone_time);
+        stopButton = findViewById(R.id.stop_session);
+        stopButton.setOnClickListener(v -> askToStop());
+        aimCard = findViewById(R.id.aim_card);
+        scheduleCard = findViewById(R.id.schedule_card);
+        aimButton = findViewById(R.id.aim);
+        aimButton.setOnClickListener(v -> start(AIM));
+        aimSummary = findViewById(R.id.aim_summary);
+        scheduleSummary = findViewById(R.id.schedule_summary);
+        bodyColor = scheduleSummary.getTextColors();
+        changeButton = findViewById(R.id.change);
+        settingsGroup = findViewById(R.id.settings);
+        changeButton.setOnClickListener(v -> showSettingsGroup(settingsGroup.getVisibility() != View.VISIBLE));
+        findViewById(R.id.defaults).setOnClickListener(v -> showSettings(new SessionSettings(), false));
+        startMessage = findViewById(R.id.start_message);
+        startButton = findViewById(R.id.start_session);
+        startButton.setOnClickListener(v -> startSession());
+        ((TextView) findViewById(R.id.start_hint)).setText(getString(R.string.start_hint,
+                CaptureService.sessionsDir(this).getAbsolutePath()));
+        testsToggle = findViewById(R.id.tests_toggle);
+        testsGroup = findViewById(R.id.tests);
+        testsToggle.setOnClickListener(v -> {
+            boolean show = testsGroup.getVisibility() != View.VISIBLE;
+            testsGroup.setVisibility(show ? View.VISIBLE : View.GONE);
+            testsToggle.setText(show ? R.string.tests_hide : R.string.tests_show);
+            refresh();
+        });
         TextView intro = findViewById(R.id.intro);
         intro.setText(getString(R.string.intro, CaptureService.START_DELAY_MS / 1000,
                 CaptureService.outputDir(this).getAbsolutePath()));
@@ -93,22 +150,13 @@ public final class MainActivity extends Activity {
         photoButton.setOnClickListener(v -> start(TEST_PHOTO));
         speedButton = findViewById(R.id.speed_test);
         speedButton.setOnClickListener(v -> start(SPEED_TEST));
-        startButton = findViewById(R.id.start_session);
-        startButton.setOnClickListener(v -> startSession());
-        stopButton = findViewById(R.id.stop_session);
-        stopButton.setOnClickListener(v -> stopSession());
-        aimButton = findViewById(R.id.aim);
-        aimButton.setOnClickListener(v -> start(AIM));
-        aimSummary = findViewById(R.id.aim_summary);
+        status = findViewById(R.id.status);
         orientationListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int degrees) {
                 phoneTurn = RoiMath.quarterTurn(degrees);
             }
         };
-        status = findViewById(R.id.status);
-        sessionStatus = findViewById(R.id.session_status);
-        phoneTime = findViewById(R.id.phone_time);
         mode = findViewById(R.id.mode);
         schedule = findViewById(R.id.schedule);
         videoQuality = findViewById(R.id.video_quality);
@@ -121,7 +169,7 @@ public final class MainActivity extends Activity {
         windows = findViewById(R.id.windows);
         days = findViewById(R.id.days);
         heatLimitC = findViewById(R.id.heat_limit_c);
-        showSettings(SessionSettings.load(this));
+        showSettings(SessionSettings.load(this), true);
         mode.setOnCheckedChangeListener((group, id) -> showGroups());
         schedule.setOnCheckedChangeListener((group, id) -> showGroups());
         showGroups();
@@ -139,6 +187,8 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
         showAimSummary(); // the aim screen may have moved the square
+        lastSession = null;
+        if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
         handler.post(refresher);
     }
 
@@ -151,8 +201,9 @@ public final class MainActivity extends Activity {
 
     // ---- Session settings -------------------------------------------------------------------
 
-    private void showSettings(SessionSettings s) {
-        mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
+    /** Puts the values on the screen; {@code withMode}: also photos or video (card 1). */
+    private void showSettings(SessionSettings s, boolean withMode) {
+        if (withMode) mode.check(s.video ? R.id.mode_video : R.id.mode_photo);
         schedule.check(s.daily ? R.id.schedule_daily : R.id.schedule_run);
         videoQuality.check("480p".equals(s.videoQuality) ? R.id.video_480p
                 : "720p".equals(s.videoQuality) ? R.id.video_720p : R.id.video_1080p);
@@ -172,10 +223,17 @@ public final class MainActivity extends Activity {
         boolean video = mode.getCheckedRadioButtonId() == R.id.mode_video;
         boolean daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
         findViewById(R.id.photo_settings).setVisibility(video ? View.GONE : View.VISIBLE);
+        findViewById(R.id.photo_size_settings).setVisibility(video ? View.GONE : View.VISIBLE);
         findViewById(R.id.video_settings).setVisibility(video ? View.VISIBLE : View.GONE);
         findViewById(R.id.run_settings).setVisibility(daily ? View.GONE : View.VISIBLE);
         findViewById(R.id.daily_settings).setVisibility(daily ? View.VISIBLE : View.GONE);
         showAimSummary();
+        showScheduleSummary();
+    }
+
+    private void showSettingsGroup(boolean show) {
+        settingsGroup.setVisibility(show ? View.VISIBLE : View.GONE);
+        changeButton.setText(show ? R.string.change_close : R.string.change_open);
     }
 
     /** The square as saved by the aim screen (photo mode), or what the aim screen is for (video). */
@@ -190,29 +248,68 @@ public final class MainActivity extends Activity {
                 getString(middle ? R.string.aim_square_middle : R.string.aim_square_placed)));
     }
 
-    /** The settings on the screen (the square from the aim screen), or null when a value is not
-     *  usable (the reason is shown). */
-    private SessionSettings readSettings() {
-        SessionSettings s = SessionSettings.load(this);
+    /** The schedule in words, from the values on the screen; or what is wrong with them. */
+    private void showScheduleSummary() {
+        String text;
+        boolean ok = true;
         try {
-            s.video = mode.getCheckedRadioButtonId() == R.id.mode_video;
-            s.daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
-            s.videoQuality = chosenVideoQuality();
-            s.stepS = decimal(stepS, R.string.step_label);
-            s.burstS = decimal(burstS, R.string.burst_label);
-            s.savedSidePx = (int) Math.round(decimal(savedSidePx, R.string.saved_side_label));
-            s.clipMin = decimal(clipMin, R.string.clip_label);
-            s.breakMin = decimal(breakMin, R.string.break_label);
-            s.runH = decimal(runH, R.string.run_label);
-            s.windows = windows.getText().toString().trim();
-            s.days = (int) Math.round(decimal(days, R.string.days_label));
-            s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
-        } catch (NumberFormatException e) {
-            sessionMessage = e.getMessage();
-            return null;
+            SessionSettings s = settingsOnScreen();
+            String what = s.video
+                    ? s.breakMin > 0 ? getString(R.string.summary_video, s.videoQuality, number(s.clipMin), number(s.breakMin))
+                            : getString(R.string.summary_video_no_break, s.videoQuality, number(s.clipMin))
+                    : s.breakMin > 0 ? getString(R.string.summary_photo, number(s.stepS), number(s.burstS), number(s.breakMin))
+                            : getString(R.string.summary_photo_no_break, number(s.stepS));
+            String when = s.daily ? getString(R.string.summary_daily, s.windows, s.days)
+                    : getString(R.string.summary_run, number(s.runH));
+            text = what + "\n" + when + "\n" + getString(R.string.summary_heat, number(s.heatLimitC));
+        } catch (IllegalArgumentException e) {
+            text = e.getMessage();
+            ok = false;
         }
-        sessionMessage = s.problem();
-        return sessionMessage == null ? s : null;
+        if (!text.contentEquals(scheduleSummary.getText())) scheduleSummary.setText(text);
+        if (ok) {
+            scheduleSummary.setTextColor(bodyColor);
+            problem = null; // fixed since the last tap
+        } else {
+            scheduleSummary.setTextColor(getColor(R.color.warning));
+        }
+    }
+
+    /** The settings on the screen (the square from the aim screen). Throws with a plain-language
+     *  message when a value is not usable. */
+    private SessionSettings settingsOnScreen() {
+        SessionSettings s = SessionSettings.load(this);
+        s.video = mode.getCheckedRadioButtonId() == R.id.mode_video;
+        s.daily = schedule.getCheckedRadioButtonId() == R.id.schedule_daily;
+        s.videoQuality = chosenVideoQuality();
+        s.stepS = decimal(stepS, R.string.step_label);
+        s.burstS = decimal(burstS, R.string.burst_label);
+        s.savedSidePx = (int) Math.round(decimal(savedSidePx, R.string.saved_side_label));
+        s.clipMin = decimal(clipMin, R.string.clip_label);
+        s.breakMin = decimal(breakMin, R.string.break_label);
+        s.runH = decimal(runH, R.string.run_label);
+        s.windows = windows.getText().toString().trim();
+        s.days = (int) Math.round(decimal(days, R.string.days_label));
+        s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
+        String p = s.problem();
+        if (p != null) throw new IllegalArgumentException(p);
+        return s;
+    }
+
+    /** Saves the values on the screen; false (and the reason shown, the settings open) when a value
+     *  is not usable. */
+    private boolean saveSettings() {
+        try {
+            settingsOnScreen().save(this);
+            problem = null;
+            return true;
+        } catch (IllegalArgumentException e) {
+            problem = e.getMessage();
+            showSettingsGroup(true);
+            return false;
+        } finally {
+            refresh();
+        }
     }
 
     private String chosenVideoQuality() {
@@ -224,7 +321,7 @@ public final class MainActivity extends Activity {
         try {
             return Double.parseDouble(field.getText().toString().trim().replace(',', '.'));
         } catch (NumberFormatException e) {
-            throw new NumberFormatException(getString(R.string.number_needed, getString(labelId)));
+            throw new IllegalArgumentException(getString(R.string.number_needed, getString(labelId)));
         }
     }
 
@@ -233,19 +330,24 @@ public final class MainActivity extends Activity {
     }
 
     private void startSession() {
-        SessionSettings s = readSettings();
-        if (s == null) {
-            refresh();
-            return;
-        }
-        s.save(this);
+        if (!saveSettings()) return;
+        showSettingsGroup(false);
         start(SESSION);
+        scroll.post(() -> scroll.smoothScrollTo(0, 0)); // the status card shows the session
+    }
+
+    private void askToStop() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.stop_question)
+                .setMessage(R.string.stop_question_text)
+                .setPositiveButton(R.string.stop_yes, (dialog, which) -> stopSession())
+                .setNegativeButton(R.string.stop_no, null)
+                .show();
     }
 
     private void stopSession() {
         startService(new Intent(this, CaptureService.class).putExtra(CaptureService.EXTRA_STOP, true));
     }
-
     // ---- Starting the service ---------------------------------------------------------------
 
     private void handleTestIntent(Intent intent) {
@@ -276,7 +378,7 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
             setFromExtra(intent, "heat_limit_c", heatLimitC);
-            // The square has no field on this screen: save it, readSettings then loads it.
+            // The square has no field on this screen: save it, settingsOnScreen then loads it.
             SessionSettings saved = SessionSettings.load(this);
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
             saved.squareX = fromExtra(intent, "square_x", saved.squareX);
@@ -299,6 +401,7 @@ public final class MainActivity extends Activity {
     private void start(int what) {
         requested = what;
         cameraDenied = false;
+        if (what == AIM && !saveSettings()) return; // the aim screen and its Start use the saved values
         List<String> missing = missingPermissions();
         if (!missing.isEmpty()) {
             requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
@@ -306,17 +409,17 @@ public final class MainActivity extends Activity {
         }
         if (CaptureService.running) return;
         if (what == AIM) {
-            startActivity(new Intent(this, AimActivity.class)
-                    .putExtra(AimActivity.EXTRA_VIDEO, mode.getCheckedRadioButtonId() == R.id.mode_video)
-                    .putExtra(AimActivity.EXTRA_VIDEO_QUALITY, chosenVideoQuality()));
+            startActivity(new Intent(this, AimActivity.class));
             return;
         }
-        Intent intent = new Intent(this, CaptureService.class)
-                .putExtra(CaptureService.EXTRA_SPEED_TEST, what == SPEED_TEST)
-                .putExtra(CaptureService.EXTRA_SESSION, what == SESSION)
-                .putExtra(CaptureService.EXTRA_PHONE_TURN, phoneTurn);
-        if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
-        else startService(intent);
+        if (what == SESSION) {
+            CaptureService.startSession(this, phoneTurn);
+        } else {
+            Intent intent = new Intent(this, CaptureService.class)
+                    .putExtra(CaptureService.EXTRA_SPEED_TEST, what == SPEED_TEST);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
+            else startService(intent);
+        }
         refresh();
     }
 
@@ -348,37 +451,101 @@ public final class MainActivity extends Activity {
     // ---- What the screen shows --------------------------------------------------------------
 
     private void refresh() {
-        phoneTime.setText(getString(R.string.phone_time,
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())));
         boolean running = CaptureService.running;
         boolean session = CaptureService.sessionRunning;
-        photoButton.setEnabled(!running);
-        speedButton.setEnabled(!running);
-        startButton.setEnabled(!running);
-        aimButton.setEnabled(!running); // the camera is busy
-        stopButton.setEnabled(session);
-
-        String warning = SessionRunner.warning;
-        if (session || !SessionRunner.status.isEmpty()) {
-            sessionStatus.setText(SessionRunner.status + (warning.isEmpty() ? "" : "\n\n" + warning));
+        if (session) {
+            statusTitle.setText(SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session);
+            show(sessionStatus, SessionRunner.status);
+            show(sessionProgress, SessionRunner.progress);
+            show(sessionWarning, SessionRunner.warning);
+        } else if (running) {
+            statusTitle.setText(R.string.status_test);
+            show(sessionStatus, getString(R.string.status_running, CaptureService.START_DELAY_MS / 1000));
+            show(sessionProgress, "");
+            show(sessionWarning, "");
         } else {
-            sessionStatus.setText(getString(R.string.session_idle, CaptureService.sessionsDir(this).getAbsolutePath()));
+            if (lastSession == null) lastSession = lastSession();
+            statusTitle.setText(R.string.status_ready);
+            show(sessionStatus, lastSession);
+            show(sessionProgress, "");
+            show(sessionWarning, "");
         }
-        if (sessionMessage != null && !running) sessionStatus.setText(sessionMessage);
+        if (running) lastSession = null; // read again when it has ended
+        CaptureService.Battery b = CaptureService.Battery.read(this);
+        battery.setText(getString(R.string.battery_line, b.percent >= 0 ? b.percent + " %" : "?",
+                getString(b.charging ? R.string.charging : R.string.not_charging),
+                b.tempC == null ? "?" : String.format(Locale.US, "%.1f", b.tempC)));
+        phoneTime.setText(getString(R.string.phone_time,
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())));
+        stopButton.setVisibility(session ? View.VISIBLE : View.GONE);
+        setControlsEnabled(!running);
+        if (!running) showScheduleSummary();
+        String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
+        show(startMessage, message == null ? "" : message);
+        if (testsGroup.getVisibility() == View.VISIBLE) showTestStatus(running && !session);
+    }
 
+    /** Settings and buttons can be changed only while nothing runs (the camera is busy). */
+    private void setControlsEnabled(boolean enabled) {
+        if (controlsEnabled != null && controlsEnabled == enabled) return;
+        controlsEnabled = enabled;
+        setEnabled(aimCard, enabled);
+        setEnabled(scheduleCard, enabled);
+        aimCard.setAlpha(enabled ? 1 : 0.5f);
+        scheduleCard.setAlpha(enabled ? 1 : 0.5f);
+        startButton.setEnabled(enabled);
+        photoButton.setEnabled(enabled);
+        speedButton.setEnabled(enabled);
+    }
+
+    private static void setEnabled(View v, boolean enabled) {
+        v.setEnabled(enabled);
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) setEnabled(g.getChildAt(i), enabled);
+        }
+    }
+
+    /** Sets the text, and hides the view while there is none. */
+    private static void show(TextView view, String text) {
+        if (!text.contentEquals(view.getText())) view.setText(text);
+        view.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    /** The last session from the log (it also survives a restart of the app), in words. */
+    private String lastSession() {
+        JSONObject last = null;
+        for (String line : lines(CaptureService.logFile(this))) {
+            try {
+                JSONObject record = new JSONObject(line);
+                if ("session".equals(record.optString("test"))) last = record;
+            } catch (JSONException ignored) {
+                // not a record
+            }
+        }
+        if (last == null) return getString(R.string.no_session);
+        String text = getString(R.string.last_session, last.optString("file"), last.optString("counts"),
+                last.optString("reason"));
+        String warning = last.optString("warning");
+        return warning.isEmpty() ? text : text + "\n" + warning;
+    }
+
+    /** Phase 0 tests: the last test record, key by key. */
+    private void showTestStatus(boolean testRunning) {
         if (cameraDenied) {
             status.setText(R.string.camera_permission_needed);
             return;
         }
-        if (running && !session) {
+        if (testRunning) {
             status.setText(getString(R.string.status_running, CaptureService.START_DELAY_MS / 1000));
             return;
         }
-        String line = lastLine(CaptureService.logFile(this));
-        if (line == null) {
+        List<String> all = lines(CaptureService.logFile(this));
+        if (all.isEmpty()) {
             status.setText(R.string.status_none);
             return;
         }
+        String line = all.get(all.size() - 1);
         try {
             JSONObject record = new JSONObject(line);
             String headline = "ok".equals(record.optString("result"))
@@ -395,17 +562,17 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private static String lastLine(File file) {
-        if (!file.exists()) return null;
-        String last = null;
+    private static List<String> lines(File file) {
+        List<String> lines = new ArrayList<>();
+        if (!file.exists()) return lines;
         try (BufferedReader r = new BufferedReader(
                 new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
             for (String line; (line = r.readLine()) != null; ) {
-                if (!line.trim().isEmpty()) last = line;
+                if (!line.trim().isEmpty()) lines.add(line);
             }
         } catch (IOException e) {
-            return null;
+            return lines;
         }
-        return last;
+        return lines;
     }
 }

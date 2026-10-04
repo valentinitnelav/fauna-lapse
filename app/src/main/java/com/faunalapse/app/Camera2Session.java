@@ -48,6 +48,7 @@ final class Camera2Session implements SessionCamera {
 
     private static final long TIMEOUT_MS = 5000;
     private static final long FOCUS_TIMEOUT_MS = 3000;
+    private static final long CLOSE_TIMEOUT_MS = 2000;
     private static final byte JPEG_QUALITY = 90;
 
     private final Context context;
@@ -64,6 +65,7 @@ final class Camera2Session implements SessionCamera {
     private HandlerThread thread;
     private Handler handler;
     private CameraDevice device;
+    private final CountDownLatch closed = new CountDownLatch(1); // Android has freed the camera
     private CameraCaptureSession session;
     private ImageReader reader;
     private SurfaceTexture texture;
@@ -308,7 +310,16 @@ final class Camera2Session implements SessionCamera {
         recorder = null;
         if (session != null) session.close();
         session = null;
-        if (device != null) device.close();
+        if (device != null) {
+            device.close();
+            try {
+                // Closing goes on after close() returns: wait, so the camera can be opened again
+                // at once (by the session after the aim screen).
+                closed.await(CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // a Stop: keep the request for the session
+            }
+        }
         device = null;
         if (reader != null) reader.close();
         reader = null;
@@ -329,6 +340,11 @@ final class Camera2Session implements SessionCamera {
             public void onOpened(CameraDevice d) {
                 device = d;
                 done.countDown();
+            }
+
+            @Override
+            public void onClosed(CameraDevice d) {
+                closed.countDown();
             }
 
             @Override
