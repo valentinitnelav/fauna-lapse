@@ -90,7 +90,7 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
    Camera1 video has no hardware zoom (a centred zoom could help small squares).
 4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
    (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against
-   `jpeg_largest` shows photos enlarged in software).
+   `jpeg_largest` shows photos enlarged in software; `all_camera1_parameters` may hold a maker's focus).
 5. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
    available (update with the Android build plugin).
 

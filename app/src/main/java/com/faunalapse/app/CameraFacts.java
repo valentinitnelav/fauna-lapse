@@ -54,6 +54,8 @@ final class CameraFacts {
         f.put("focal_length_mm", p.getFocalLength());
         f.put("view_angle_deg", p.getHorizontalViewAngle() + " x " + p.getVerticalViewAngle());
         f.put("video_profiles", videoProfiles(cameraId));
+        // Every Camera1 setting, also the phone maker's own: some old phones hide a manual focus there.
+        f.put("all_camera1_parameters", p.flatten());
         f.put("camera2", Camera2Facts.collect(context));
         return f;
     }
