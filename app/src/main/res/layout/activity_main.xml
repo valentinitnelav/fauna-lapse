@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Main screen: a status card, then the three steps of a setup (aim, schedule, start), so a phone
-     is ready in a few taps. The detailed settings open only on "Change"; saved values stay on the
-     phone. fitsSystemWindows keeps the content clear of the status and navigation bars.
+<!-- Main screen: a status card, then the steps of a setup (aim, schedule, phone check, start), so a
+     phone is ready in a few taps. The detailed settings open only on "Change"; saved values stay on
+     the phone. Explanations open with the (i) of their label (HelpToggles). fitsSystemWindows keeps the content clear of the status and navigation bars.
      importantForAutofill="no": these are settings, not personal data (Android 8+). TooManyViews:
      the screen is built once, and each setting needs its views. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -50,36 +50,36 @@
 
             <LinearLayout android:id="@+id/settings" style="@style/Group" android:visibility="gone">
                 <LinearLayout android:id="@+id/photo_settings" style="@style/Group">
-                    <TextView style="@style/Label" android:labelFor="@id/step_s" android:text="@string/step_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/step_s" android:text="@string/step_label" />
                     <EditText android:id="@+id/step_s" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="numberDecimal" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/step_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/step_hint" />
 
-                    <TextView style="@style/Label" android:labelFor="@id/burst_s" android:text="@string/burst_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/burst_s" android:text="@string/burst_label" />
                     <EditText android:id="@+id/burst_s" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="numberDecimal" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/burst_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/burst_hint" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/video_settings" style="@style/Group">
-                    <TextView style="@style/Label" android:labelFor="@id/clip_min" android:text="@string/clip_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/clip_min" android:text="@string/clip_label" />
                     <EditText android:id="@+id/clip_min" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="numberDecimal" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/clip_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/clip_hint" />
 
-                    <TextView style="@style/Label" android:text="@string/video_fps_label" />
+                    <TextView style="@style/Label.Help" android:text="@string/video_fps_label" />
                     <RadioGroup android:id="@+id/video_fps" style="@style/Segments">
                         <RadioButton android:id="@+id/video_fps_5" style="@style/Segment" android:text="@string/video_fps_5" />
                         <RadioButton android:id="@+id/video_fps_10" style="@style/Segment.Next" android:text="@string/video_fps_10" />
                         <RadioButton android:id="@+id/video_fps_15" style="@style/Segment.Next" android:text="@string/video_fps_15" />
                     </RadioGroup>
-                    <TextView style="@style/Hint" android:layout_marginTop="4dp" android:text="@string/video_fps_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/video_fps_hint" />
                 </LinearLayout>
 
-                <TextView style="@style/Label" android:labelFor="@id/break_min" android:text="@string/break_label" />
+                <TextView style="@style/Label.Help" android:labelFor="@id/break_min" android:text="@string/break_label" />
                 <EditText android:id="@+id/break_min" style="@style/Field" android:importantForAutofill="no"
                     android:inputType="numberDecimal" tools:targetApi="o" />
-                <TextView style="@style/Hint" android:text="@string/break_hint" />
+                <TextView style="@style/Hint.Help" android:text="@string/break_hint" />
 
                 <TextView style="@style/Label" android:text="@string/schedule_label" />
                 <RadioGroup android:id="@+id/schedule" style="@style/Segments">
@@ -88,45 +88,53 @@
                 </RadioGroup>
 
                 <LinearLayout android:id="@+id/run_settings" style="@style/Group">
-                    <TextView style="@style/Label" android:labelFor="@id/run_h" android:text="@string/run_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/run_h" android:text="@string/run_label" />
                     <EditText android:id="@+id/run_h" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="numberDecimal" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/run_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/run_hint" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/daily_settings" style="@style/Group">
-                    <TextView style="@style/Label" android:labelFor="@id/windows" android:text="@string/windows_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/windows" android:text="@string/windows_label" />
                     <EditText android:id="@+id/windows" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="text" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/windows_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/windows_hint" />
 
-                    <TextView style="@style/Label" android:labelFor="@id/days" android:text="@string/days_label" />
+                    <TextView style="@style/Label.Help" android:labelFor="@id/days" android:text="@string/days_label" />
                     <EditText android:id="@+id/days" style="@style/Field" android:importantForAutofill="no"
                         android:inputType="number" tools:targetApi="o" />
-                    <TextView style="@style/Hint" android:text="@string/days_hint" />
+                    <TextView style="@style/Hint.Help" android:text="@string/days_hint" />
                 </LinearLayout>
 
-                <TextView style="@style/Label" android:labelFor="@id/saved_side" android:text="@string/saved_side_label" />
+                <TextView style="@style/Label.Help" android:labelFor="@id/saved_side" android:text="@string/saved_side_label" />
                 <EditText android:id="@+id/saved_side" style="@style/Field" android:importantForAutofill="no"
                     android:inputType="number" tools:targetApi="o" />
-                <TextView style="@style/Hint" android:text="@string/saved_side_hint" />
+                <TextView style="@style/Hint.Help" android:text="@string/saved_side_hint" />
 
-                <TextView style="@style/Label" android:labelFor="@id/heat_limit_c" android:text="@string/heat_label" />
+                <TextView style="@style/Label.Help" android:labelFor="@id/heat_limit_c" android:text="@string/heat_label" />
                 <EditText android:id="@+id/heat_limit_c" style="@style/Field" android:importantForAutofill="no"
                     android:inputType="numberDecimal" tools:targetApi="o" />
-                <TextView style="@style/Hint" android:text="@string/heat_hint" />
+                <TextView style="@style/Hint.Help" android:text="@string/heat_hint" />
 
-                <TextView style="@style/Label" android:labelFor="@id/device_name" android:text="@string/phone_name_label" />
+                <TextView style="@style/Label.Help" android:labelFor="@id/device_name" android:text="@string/phone_name_label" />
                 <EditText android:id="@+id/device_name" style="@style/Field" android:importantForAutofill="no"
                     android:inputType="text" android:maxLength="20" tools:targetApi="o" />
-                <TextView style="@style/Hint" android:text="@string/phone_name_hint" />
+                <TextView style="@style/Hint.Help" android:text="@string/phone_name_hint" />
 
                 <Button android:id="@+id/defaults" style="@style/SecondaryButton" android:layout_marginTop="16dp"
                     android:text="@string/defaults" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 3: start -->
+        <!-- 3: the phone for the field (PhoneCheck); only what should change is listed -->
+        <LinearLayout android:id="@+id/phone_card" style="@style/Card">
+            <TextView style="@style/CardTitle" android:text="@string/card_phone" />
+            <LinearLayout android:id="@+id/phone_checks" style="@style/Group" />
+            <TextView style="@style/Label.Help" android:text="@string/checklist_label" />
+            <TextView style="@style/Hint.Help" android:text="@string/checklist_text" />
+        </LinearLayout>
+
+        <!-- Start -->
         <TextView android:id="@+id/start_message" style="@style/Body" android:layout_marginTop="12dp"
             android:textColor="@color/warning" android:textStyle="bold" android:visibility="gone" />
         <Button android:id="@+id/start_session" style="@style/BigButton" android:text="@string/start_session" />

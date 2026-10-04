@@ -31,6 +31,20 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <!-- A label that opens its explanation (HelpToggles): padding makes a larger finger target. -->
+    <style name="Label.Help">
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:tag">help</item>
+    </style>
+
+    <!-- The explanation under a control, behind the (i) of its label (HelpToggles). -->
+    <style name="Hint.Help">
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:tag">help_text</item>
+    </style>
+
     <style name="Hint">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>

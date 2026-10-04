@@ -1,26 +1,32 @@
 package com.faunalapse.app;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -44,7 +50,8 @@ import java.util.Locale;
 /**
  * Main screen: a status card (ready, or what the running session does), then the steps of a setup:
  * 1 aim (photos or video, the aim screen), 2 schedule (a one-line summary; the settings open on
- * "Change"), 3 Start. The phase 0 test buttons are folded away at the bottom.
+ * "Change"), 3 the phone for the field (PhoneCheck), then Start. The phase 0 test buttons are folded
+ * away at the bottom.
  */
 public final class MainActivity extends Activity {
 
@@ -84,6 +91,8 @@ public final class MainActivity extends Activity {
     private ColorStateList bodyColor;
     private Button changeButton;
     private View settingsGroup;
+    private LinearLayout phoneChecks;
+    private String phoneState; // the PhoneCheck shown, as JSON text: rebuilt only when it changes
     private TextView startMessage;
     private Button startButton;
     private TextView startHint;
@@ -138,6 +147,7 @@ public final class MainActivity extends Activity {
         settingsGroup = findViewById(R.id.settings);
         changeButton.setOnClickListener(v -> showSettingsGroup(settingsGroup.getVisibility() != View.VISIBLE));
         findViewById(R.id.defaults).setOnClickListener(v -> showSettings(new SessionSettings(), false));
+        phoneChecks = findViewById(R.id.phone_checks);
         startMessage = findViewById(R.id.start_message);
         startButton = findViewById(R.id.start_session);
         startButton.setOnClickListener(v -> startSession());
@@ -178,6 +188,7 @@ public final class MainActivity extends Activity {
         days = findViewById(R.id.days);
         heatLimitC = findViewById(R.id.heat_limit_c);
         phoneName = findViewById(R.id.device_name);
+        HelpToggles.wire(scroll);
         showSettings(SessionSettings.load(this), true);
         mode.setOnCheckedChangeListener((group, id) -> showGroups());
         schedule.setOnCheckedChangeListener((group, id) -> showGroups());
@@ -521,6 +532,7 @@ public final class MainActivity extends Activity {
         startHint.setVisibility(running ? View.GONE : View.VISIBLE);
         setControlsEnabled(!running);
         if (!running) showScheduleSummary();
+        showPhoneCheck();
         String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
         show(startMessage, message == null ? "" : message);
         if (testsGroup.getVisibility() == View.VISIBLE) showTestStatus(running && !session);
@@ -547,7 +559,6 @@ public final class MainActivity extends Activity {
         }
     }
 
-    /** Sets the text, and hides the view while there is none. */
     /** The text with a shape before it (play, stop), so the big buttons differ also for people who
      *  do not see red and green apart. Sized to the height of a capital letter. */
     static CharSequence withIcon(TextView view, int icon, int text) {
@@ -559,9 +570,68 @@ public final class MainActivity extends Activity {
         return s;
     }
 
+    /** Sets the text, and hides the view while there is none. */
     private static void show(TextView view, String text) {
         if (!text.contentEquals(view.getText())) view.setText(text);
         view.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    /** What to change on the phone before a field session (PhoneCheck), each with the button that
+     *  opens its settings page; apps cannot change these settings themselves. BatteryLife: Google
+     *  Play allows the battery dialog only for some kinds of apps; FaunaLapse is not on Google Play,
+     *  and its core work (long sessions with the screen off) is what the battery limits stop. */
+    @SuppressLint("BatteryLife")
+    private void showPhoneCheck() {
+        PhoneCheck c = PhoneCheck.read(this);
+        String state = c.toJson().toString();
+        if (state.equals(phoneState)) return;
+        phoneState = state;
+        phoneChecks.removeAllViews();
+        if (c.ready()) {
+            addCheck(getString(R.string.check_ok), 0, null);
+            return;
+        }
+        List<String> radios = new ArrayList<>();
+        if (!c.airplaneMode) radios.add(getString(R.string.radio_mobile));
+        if (c.wifiOn) radios.add(getString(R.string.radio_wifi));
+        if (c.bluetoothOn) radios.add(getString(R.string.radio_bluetooth));
+        if (!radios.isEmpty()) {
+            addCheck(getString(R.string.check_radios, TextUtils.join(", ", radios)), R.string.check_radios_button,
+                    new Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS));
+        }
+        if (c.locationOn) {
+            addCheck(getString(R.string.check_location), R.string.check_location_button,
+                    new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        }
+        Uri app = Uri.parse("package:" + getPackageName());
+        if (c.batteryLimited) {
+            addCheck(getString(R.string.check_battery), R.string.check_battery_button,
+                    new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, app));
+        }
+        if (c.backgroundRestricted) {
+            addCheck(getString(R.string.check_background), R.string.check_background_button,
+                    new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app));
+        }
+    }
+
+    /** One line of the phone check; {@code button} 0: text only. */
+    private void addCheck(String text, int button, final Intent page) {
+        View line = getLayoutInflater().inflate(R.layout.phone_check, phoneChecks, false);
+        ((TextView) line.findViewById(R.id.check_text)).setText(text);
+        Button b = line.findViewById(R.id.check_button);
+        if (button == 0) {
+            b.setVisibility(View.GONE);
+        } else {
+            b.setText(button);
+            b.setOnClickListener(v -> {
+                try {
+                    startActivity(page);
+                } catch (ActivityNotFoundException e) {
+                    startActivity(new Intent(Settings.ACTION_SETTINGS)); // a phone without that page
+                }
+            });
+        }
+        phoneChecks.addView(line);
     }
 
     /** The last session from the log (it also survives a restart of the app), in words. */

@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <!-- Android 13+: needed to show that notification. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Lets the phone check ask once to run FaunaLapse without battery limits, so long sessions
+         are not stopped (the user answers in Android's own dialog). -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Android 10 and older: needed to save sessions in Documents/FaunaLapse (newer Android allows
          it without a permission). -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"

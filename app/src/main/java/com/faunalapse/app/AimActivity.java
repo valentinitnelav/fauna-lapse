@@ -2,7 +2,6 @@ package com.faunalapse.app;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.OrientationEventListener;
@@ -12,7 +11,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -21,8 +22,9 @@ import java.util.concurrent.Executors;
 
 /**
  * Aim screen: the live camera view, to point the phone at the flower. The ROI square (for photos
- * and video) is moved with a finger and sized with two fingers or the slider; it is saved at once,
- * and focus and exposure follow it. Focus is fixed at a distance where Camera2 allows it, or
+ * and video) is moved with a finger placed on it and sized with two fingers or the slider; it is
+ * saved at once, and focus and exposure follow it. The controls scroll under the camera view, with
+ * "More below" while some are hidden; Done and Start stay at the bottom. Focus is fixed at a distance where Camera2 allows it, or
  * automatic. The camera is open only while this screen is shown. "Start session here" starts the
  * session with the saved settings while the phone is already in its place (its position counts).
  *
@@ -34,12 +36,21 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     /** Share of the screen height the camera view may take; the controls get the rest. */
     private static final double VIEW_SHARE = 0.6;
 
+    /** Height the scrolling controls keep at least on small screens (the square's size slider and
+     *  its pixels stay in sight); the camera view gets smaller instead. */
+    private static final int MIN_CONTROLS_DP = 150;
+
     /** Camera calls wait for answers, so they run here: a plain thread, as Camera1Session needs. */
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private SessionCamera camera; // used only on the worker thread
     private TextureView view;
     private SquareView square;
     private TextView info;
+    private TextView squareHelp;
+    private ScrollView controls;
+    private TextView moreBelow;
+    private int frameW = 3; // shape of the camera view as shown
+    private int frameH = 4;
     private TextView focusResult;
     private SeekBar size;
     private Button focusButton;
@@ -53,7 +64,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private RadioGroup focusMode;
     private SeekBar focusSlider;
     private TextView focusDistance;
-    private TextView focusHint;
+    private TextView focusWarning;
+    private TextView focusHelp;
     private boolean canFixFocus;     // from the open camera
     private double closestDiopters;  // the nearest lens distance
     private boolean calibrated;      // the camera's lens distances are real distances
@@ -80,6 +92,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         square.centreY = s.squareY;
         info = findViewById(R.id.aim_info);
         info.setText(R.string.aim_opening);
+        squareHelp = findViewById(R.id.square_help);
+        squareHelp.setText(R.string.aim_hint);
         focusResult = findViewById(R.id.focus_result);
         focusButton = findViewById(R.id.focus);
         focusButton.setOnClickListener(v -> focus());
@@ -118,7 +132,8 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         focusMode = findViewById(R.id.focus_mode);
         focusSlider = findViewById(R.id.focus_slider);
         focusDistance = findViewById(R.id.focus_distance);
-        focusHint = findViewById(R.id.focus_hint);
+        focusWarning = findViewById(R.id.focus_warning);
+        focusHelp = findViewById(R.id.focus_help);
         focusSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
@@ -145,7 +160,19 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
                 square.setPhoneTurn(phoneTurn);
             }
         };
-        fitView(3, 4); // a first guess; corrected when the camera is open
+        HelpToggles.wire(findViewById(R.id.controls_content));
+        controls = findViewById(R.id.controls);
+        fitView(3, 4); // a first guess; corrected after the layout and when the camera is open
+        moreBelow = findViewById(R.id.more_below);
+        moreBelow.setText(MainActivity.withIcon(moreBelow, R.drawable.ic_more, R.string.aim_more_below));
+        moreBelow.setOnClickListener(v -> controls.smoothScrollBy(0, controls.getHeight() * 2 / 3));
+        controls.setOnScrollChangeListener((v, x, y, oldX, oldY) -> showMoreBelow());
+        findViewById(R.id.controls_content).addOnLayoutChangeListener(
+                (v, l, t, r, b, oldL, oldT, oldR, oldB) -> controls.post(this::showMoreBelow));
+        // The camera view's size depends on the screen space left for it, known after the layout.
+        findViewById(R.id.aim_root).addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {
+            if (b - t != oldB - oldT) v.post(() -> fitView(frameW, frameH));
+        });
     }
 
     @Override
@@ -245,6 +272,11 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             public void onChanged() {
                 squareChanged();
             }
+
+            @Override
+            public void onTouchedOutside() {
+                Toast.makeText(AimActivity.this, R.string.aim_touch_inside, Toast.LENGTH_SHORT).show();
+            }
         });
         showInfo();
         canFixFocus = d.optBoolean("fixed_focus_possible");
@@ -311,11 +343,9 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     private void showFocus() {
         boolean fixed = canFixFocus && focusFixed;
         findViewById(R.id.fixed_group).setVisibility(fixed ? View.VISIBLE : View.GONE);
-        focusHint.setText(!canFixFocus ? R.string.focus_not_possible : fixed ? R.string.focus_hint_fixed
+        focusWarning.setVisibility(canFixFocus ? View.GONE : View.VISIBLE); // bold: clear also without colour
+        focusHelp.setText(fixed ? R.string.focus_hint_fixed
                 : video ? R.string.focus_hint_auto_video : R.string.focus_hint_auto);
-        // Autofocus only: a warning, clear also without colour.
-        focusHint.setTextColor(canFixFocus ? focusResult.getCurrentTextColor() : getColor(R.color.warning));
-        focusHint.setTypeface(null, canFixFocus ? Typeface.NORMAL : Typeface.BOLD);
         if (!fixed || closestDiopters <= 0) return;
         focusSlider.setProgress(lensProgress());
         focusDistance.setText(calibrated ? getString(R.string.focus_distance, lensWords())
@@ -416,20 +446,37 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
 
     // ---- What the screen shows --------------------------------------------------------------
 
-    /** Sizes the camera view to the frame's shape (width x height as shown), as large as fits. */
+    /** Sizes the camera view to the frame's shape (width x height as shown): as large as fits, at
+     *  most VIEW_SHARE of the screen height, and leaving MIN_CONTROLS_DP for the controls. */
     private void fitView(int width, int height) {
+        frameW = width;
+        frameH = height;
         DisplayMetrics m = getResources().getDisplayMetrics();
-        double scale = Math.min((double) m.widthPixels / width, m.heightPixels * VIEW_SHARE / height);
+        double maxHeight = m.heightPixels * VIEW_SHARE;
+        View root = findViewById(R.id.aim_root);
         View frame = findViewById(R.id.camera_frame);
+        if (root.getHeight() > 0) { // after the first layout: the space left by the bars and buttons
+            double left = frame.getHeight() + controls.getHeight() - MIN_CONTROLS_DP * m.density;
+            maxHeight = Math.min(maxHeight, left);
+        }
+        double scale = Math.min((double) m.widthPixels / width, maxHeight / height);
         ViewGroup.LayoutParams lp = frame.getLayoutParams();
-        lp.width = (int) Math.round(width * scale);
-        lp.height = (int) Math.round(height * scale);
+        int w = (int) Math.round(width * scale);
+        int h = (int) Math.round(height * scale);
+        if (lp.width == w && lp.height == h) return;
+        lp.width = w;
+        lp.height = h;
         frame.setLayoutParams(lp);
     }
 
+    /** "More below" while some controls are hidden under the bottom edge. */
+    private void showMoreBelow() {
+        moreBelow.setVisibility(controls.canScrollVertically(1) ? View.VISIBLE : View.GONE);
+    }
+
+    /** The square's pixels, live under its slider; the camera's zoom for video in its explanation. */
     private void showInfo() {
         if (facts == null) return;
-        String api = "camera2".equals(facts.optString("camera_api")) ? "Camera2" : "Camera1";
         int[] photo = size(facts.optString("photo_size"));
         long percent = Math.round(square.sideShare * 100);
         int real;
@@ -441,14 +488,15 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
             real = RoiMath.videoSquare(photo[0], photo[1], array[0], array[1], stream[0], stream[1],
                     facts.optDouble("max_digital_zoom", 1), zoom, square.sideShare, square.centreX, square.centreY).realPx;
             text = getString(R.string.aim_video_info, percent, real, facts.optString("video_stream_size"),
-                    RoiMath.savedSide(real, savedSidePx), videoFps, getString("anywhere".equals(zoom)
-                            ? R.string.aim_zoom_anywhere : "centred".equals(zoom) ? R.string.aim_zoom_centred
-                            : R.string.aim_zoom_none));
+                    RoiMath.savedSide(real, savedSidePx), videoFps);
+            squareHelp.setText(getString(R.string.two_paragraphs, getString(R.string.aim_hint),
+                    getString("anywhere".equals(zoom) ? R.string.aim_zoom_anywhere
+                            : "centred".equals(zoom) ? R.string.aim_zoom_centred : R.string.aim_zoom_none)));
         } else {
             int[] r = RoiMath.square(photo[0], photo[1], square.sideShare, square.centreX, square.centreY);
             real = r[2] - r[0];
-            text = getString(R.string.aim_photo_info, percent, real, RoiMath.savedSide(real, savedSidePx), api,
-                    facts.optString("photo_size"));
+            text = getString(R.string.aim_photo_info, percent, real, facts.optString("photo_size"),
+                    RoiMath.savedSide(real, savedSidePx));
         }
         if (real < savedSidePx) text += " " + getString(R.string.aim_not_enlarged, savedSidePx);
         info.setText(text);

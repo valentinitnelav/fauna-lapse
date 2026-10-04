@@ -17,7 +17,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
   exposure and white balance lock; shutter sound can be switched off.
 - Camera2: hardware level "limited" (more than a Camera1 wrapper); freeform crop (the camera chip can
   zoom onto the square anywhere, up to 8 times); manual focus possible, closest 10 cm; stream frames up
-  to 2576x1932 (4:3) at 30 per s, also 1088x1088; photos also 2992x2992. H.264 encoder
+  to 2576x1932 (4:3) at 30 per s, also 1088x1088; square photos only 2992x2992 and 1088x1088. H.264 encoder
   (OMX.Exynos.AVC.Encoder) takes any size up to 8192x8192. Sensor
   4000x3000, the same as the largest photo (not enlarged in software). A second back camera (id 2,
   2576x1932) exists; the app uses id 0.
@@ -45,6 +45,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Automatic exposure in a 2 h photo session (8 bursts of 30 photos, indoor light) | brightness of the saved squares changed by at most 1.7 % from one photo to the next (2.7 % within a burst); Camera2 reports each photo's exposure: 30 ms, ISO 238, the same through a burst; no slower photos |
 | Fixed focus (Camera2, autofocus off) | lens distances calibrated, closest 10 cm (10 diopters); autofocus on the monitor about 50 cm away reported 2.0 diopters (50 cm); the view follows the slider at once; bursts and clips with a fixed focus skip the autofocus (1.3 to 2.2 s) |
 | Saved square 1280 vs 1024 px (cut from 3000 px, Camera2) | cut and save 0.39 vs 0.32 s on the saver thread, 296 vs 203 KB per photo; photo time unchanged (0.65 s) |
+| Photo burst, processor use (step 2 s, 73 % square: 2190 real pixels saved at 1280; screen off; the phone's Power saving mode was on) | of one core: FaunaLapse 28 %, of which the square cut 20 % (0.43 to 0.46 s per photo on the saver thread); camera service 24 %, camera server 8 %; whole phone 111 %; photo 0.62 to 0.64 s. By the phone's power profile (one core at full speed 96 mA, camera 164 mA) the cut is about 5 % of a burst's energy |
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 

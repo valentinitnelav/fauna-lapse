@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A circled "i" and an arrow down after a label: tap to open its explanation. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="24dp"
+    android:viewportWidth="40"
+    android:viewportHeight="24">
+    <path android:strokeColor="@color/heading" android:strokeWidth="1.8"
+        android:pathData="M2.5,12 a8.5,8.5 0 1,0 17,0 a8.5,8.5 0 1,0 -17,0" />
+    <path android:fillColor="@color/heading"
+        android:pathData="M9.8,7.6 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 M10.1,10 h1.8 v7 h-1.8 Z" />
+    <path android:strokeColor="@color/heading" android:strokeWidth="2.2" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M27,9.5 L31.5,14 L36,9.5" />
+</vector>

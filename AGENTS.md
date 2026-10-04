@@ -52,8 +52,7 @@ plain language at first use, and write plain English with short sentences and no
 ## Repository layout
 
 - `app/`: the Android app (Gradle project, package `com.faunalapse.app`); unit tests in `app/src/test/`.
-- `tools/`: PC scripts in Python (`phase0_speed_report.py`).
-- `docs/`: `AGENT_OVERVIEW.md` and `PHONES.md` (see "Where knowledge lives").
+- `tools/`: PC scripts in Python (`phase0_speed_report.py`); `docs/`: see "Where knowledge lives".
 
 ## Build and test
 
@@ -108,7 +107,8 @@ Keep schedule and maths code in classes without Android code, and test it. On th
 - Answers concise, clear and easy to understand. Less is more: the simplest code that keeps the core
   function and stays readable for humans.
 - Avoid the em dash as punctuation; use parentheses (round brackets) instead.
-- Text in the app: plain language, no jargon; the same unit and scale for a number everywhere.
+- Text in the app: plain language, no jargon; the same unit and scale for a number everywhere. Live
+  values and warnings stay visible; explanations open with the (i) of their label (`HelpToggles`).
 
 ## Working with test phones
 

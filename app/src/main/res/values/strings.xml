@@ -70,17 +70,34 @@
     <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
 
-    <!-- 3 Start -->
+    <!-- 3 Phone for the field -->
+    <string name="card_phone">3 · Phone for the field</string>
+    <string name="check_radios">On: %1$s. For the field, turn on airplane mode (flight mode) and keep Wi-Fi and Bluetooth off: radios use energy.</string>
+    <string name="radio_mobile">mobile network</string>
+    <string name="radio_wifi">Wi-Fi</string>
+    <string name="radio_bluetooth">Bluetooth</string>
+    <string name="check_radios_button">Open settings</string>
+    <string name="check_location">Location is on: other apps may use GPS. Turn it off for the field.</string>
+    <string name="check_location_button">Open settings</string>
+    <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions.</string>
+    <string name="check_battery_button">Allow</string>
+    <string name="check_background">FaunaLapse is restricted in the background: the phone may stop a session.</string>
+    <string name="check_background_button">Open settings</string>
+    <string name="check_ok">Airplane mode (flight mode) on; Wi-Fi, Bluetooth and location off; no battery limits for FaunaLapse: ready for the field.</string>
+    <string name="checklist_label">A phone used only as a camera</string>
+    <string name="checklist_text">A phone that does nothing else saves energy and is less likely to stop the app in the field:\n• Reset it to factory settings; add no Google account and no SIM card.\n• Turn off automatic app and system updates.\n• Uninstall the apps you do not need, or disable them (in the phone\'s settings, under Apps).\n• Set the clock, then turn on airplane mode (flight mode): without network the clock is not corrected, and the session record uses it.\n• Some phones stop apps in the background with their own battery manager. Huawei: allow FaunaLapse to start and run in the background by hand (Battery, App launch). Xiaomi: set its battery saver to No restrictions. Samsung: add it to Never sleeping apps.\n• Run a test session with the screen off before the field day.</string>
+
+    <!-- Start -->
     <string name="start_session">Start session</string>
     <string name="start_hint">After Start, switch the screen off with the power button: the session goes on. Files are saved in %1$s.</string>
     <string name="start_hint_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
 
     <!-- Aim screen -->
-    <string name="square_label">Square side (% of the short side of the camera view)</string>
+    <string name="square_label">Square side</string>
     <string name="aim_opening">Opening the camera…</string>
-    <string name="aim_photo_info">Square: %1$d %% of the short side, %2$d px across in the full photo, saved at %3$d px. %4$s, photo %5$s.</string>
-    <string name="aim_not_enlarged">This is fewer than the saved side of %1$d px: the square is saved smaller, never enlarged. Make the square larger for more pixels on the insect.</string>
-    <string name="aim_video_info" tools:ignore="PluralsCandidate">Square: %1$d %% of the short side, %2$d px across in the camera stream (%3$s), saved at %4$d px, %5$d frames per s. %6$s</string>
+    <string name="aim_photo_info">%1$d %% of the short side of the view: %2$d px across in the photo (%3$s), saved at %4$d px.</string>
+    <string name="aim_not_enlarged">This is fewer than the saved side of %1$d px: saved smaller, never enlarged. A larger square gives more pixels on the insect.</string>
+    <string name="aim_video_info" tools:ignore="PluralsCandidate">%1$d %% of the short side of the view: %2$d px across in the camera stream (%3$s), saved at %4$d px, %5$d frames per s.</string>
     <string name="aim_zoom_anywhere">Camera2: the camera zooms onto the square in hardware, so a small square keeps its real detail.</string>
     <string name="aim_zoom_centred">Camera2: the camera can zoom only towards the middle, so a square near the middle keeps more detail.</string>
     <string name="aim_zoom_none">Camera1: no hardware zoom, so the square has only its share of the stream\'s pixels.</string>
@@ -108,7 +125,12 @@
     <string name="summary_focus_fixed_position">Focus: fixed at one lens position, set on the aim screen.</string>
     <string name="summary_focus_cannot_fix">Focus: automatic at the start of each burst or clip, because this phone cannot fix the focus.</string>
     <string name="aim_focus_result">Focus: %1$s</string>
-    <string name="aim_hint">Drag the square onto the flower with a finger; pinch it with two fingers (or use the slider) to make it larger or smaller. The small triangle marks the top of the saved photos and videos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
+    <string name="two_paragraphs" translatable="false">%1$s\n\n%2$s</string>
+    <string name="aim_touch_inside">Touch inside the square to move it.</string>
+    <string name="aim_more_below">More below</string>
+    <string name="help_show">Show the explanation</string>
+    <string name="help_hide">Hide the explanation</string>
+    <string name="aim_hint">Move the square onto the flower: put a finger inside it (or on its edge) and drag. A touch elsewhere does not move it. To make it larger or smaller, pinch with two fingers anywhere on the camera view, or use the slider; Middle puts it back in the middle. The small triangle marks the top of the saved photos and videos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
 
     <!-- Phone tests (phase 0) -->
     <string name="tests_show">Show the phone tests</string>

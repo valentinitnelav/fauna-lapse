@@ -35,6 +35,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   passing insect or another flower cannot pull the focus away. Phones that cannot fix the focus
   (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
 - Screen off and camera closed between bursts, to save power and avoid heat.
+- A phone check before Start: airplane mode, Wi-Fi, Bluetooth, location and battery limits, each
+  with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
 - A session log of every photo and event, ready for analysis in R or Python.
@@ -47,11 +49,13 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    older also the storage). Under *2 · Schedule* tap *Change settings* and set the schedule; it stays
    saved on the phone. Check that the phone time is right. With several phones, set them all up
    this way before you go out, and give each a short phone name (for example P1, P2): it is added
-   to the session folder names, so the files do not mix on the computer.
+   to the session folder names, so the files do not mix on the computer. For a phone used only as
+   a camera, follow *3 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane
+   mode, and open its (i) for the full checklist (factory reset, no account, unneeded apps off).
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
    than a few hours, connect a power bank.
 3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the
-   flower and pinch it to size. The focus starts fixed at about 20 cm: tap *Focus again* to focus
+   flower (put your finger inside the square) and pinch it to size. The focus starts fixed at about 20 cm: tap *Focus again* to focus
    once on the square and fix it there, or move the focus slider until the flower is sharp. Then tap
    *Start session here*.
 4. Switch the screen off with the power button. The session goes on; the camera is off in the
@@ -64,8 +68,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 Tips: a daily window may cross midnight (22:00-04:00), and 00:00-24:00 records all day, for example
 under the midnight sun. The session pauses while the battery is too warm (45 °C by default) and stops
 cleanly when the battery falls to 15 % without charging. Some phones stop apps in the background to
-save power: if a session ends too early, allow FaunaLapse to run in the background in the phone's
-battery settings.
+save power with their own battery manager (Huawei, Xiaomi, Samsung): the checklist under the (i) of
+*3 · Phone for the field* says where to allow FaunaLapse.
 
 ## Build from source
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Under "More below": the controls fade into the background, a common sign of more content. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="90" android:startColor="@color/window" android:centerColor="@color/window"
+        android:endColor="@color/window_clear" />
+</shape>

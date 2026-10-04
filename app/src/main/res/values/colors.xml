@@ -5,6 +5,7 @@
      stop) and never show together, chosen segments are filled, warnings are bold. -->
 <resources>
     <color name="window">#FFEEF1EA</color>
+    <color name="window_clear">#00EEF1EA</color>
     <color name="card">#FFFFFFFF</color>
     <color name="card_edge">#FFD5DBCF</color>
     <color name="heading">#FF2E7D32</color>

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Aim screen. keepScreenOn: the screen does not switch off while aiming. The camera view's size
-     is set in AimActivity.fitView, to the shape of the camera frames. -->
+<!-- Aim screen: the camera view on top, the controls below it (they scroll; "More below" shows
+     while some are hidden), and Done and Start always at the bottom. keepScreenOn: the screen does
+     not switch off while aiming. The camera view's size is set in AimActivity.fitView. Each control
+     has its live values right under it; explanations open with the (i) of its label. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/aim_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
@@ -26,90 +29,128 @@
             android:layout_height="match_parent" />
     </FrameLayout>
 
-    <ScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <LinearLayout
+        <!-- fadeScrollbars false: the scroll bar stays visible, a second sign of more controls. -->
+        <ScrollView
+            android:id="@+id/controls"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp">
+            android:layout_height="match_parent"
+            android:fadeScrollbars="false">
 
-            <!-- Buttons with a filled background: easier to see outdoors than borderless ones. -->
             <LinearLayout
+                android:id="@+id/controls_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal"
-                tools:ignore="ButtonStyle">
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="40dp">
 
-                <Button android:id="@+id/focus" style="@style/SecondaryButton" android:layout_width="0dp"
-                    android:layout_weight="1" android:textSize="15sp" android:text="@string/aim_focus" />
+                <!-- Square: size, then its pixels (live), then the explanation behind the (i). -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <Button android:id="@+id/middle" style="@style/SecondaryButton" android:layout_width="0dp"
-                    android:layout_weight="1" android:layout_marginStart="8dp" android:textSize="15sp"
-                    android:text="@string/aim_middle" />
+                    <TextView style="@style/Label.Help" android:layout_width="0dp" android:layout_weight="1"
+                        android:labelFor="@id/square_size" android:text="@string/square_label" />
 
-                <Button android:id="@+id/done" style="@style/SecondaryButton" android:layout_width="0dp"
-                    android:layout_weight="1" android:layout_marginStart="8dp" android:textSize="15sp"
-                    android:text="@string/aim_done" />
-            </LinearLayout>
+                    <Button android:id="@+id/middle" style="@style/SecondaryButton"
+                        android:layout_width="wrap_content" android:layout_height="48dp"
+                        android:layout_marginTop="4dp" android:minWidth="96dp" android:textSize="15sp"
+                        android:text="@string/aim_middle" />
+                </LinearLayout>
 
-            <TextView android:id="@+id/focus_result" style="@style/Hint" android:layout_marginTop="4dp" />
-
-            <Button android:id="@+id/start_here" style="@style/BigButton" android:text="@string/aim_start" />
-
-            <LinearLayout android:id="@+id/size_group" style="@style/Group">
-                <TextView style="@style/Label" android:labelFor="@id/square_size" android:text="@string/square_label" />
                 <SeekBar
                     android:id="@+id/square_size"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:max="90" />
-            </LinearLayout>
 
-            <!-- Focus: auto at each burst or clip, or fixed at one distance (Camera2 phones only). -->
-            <LinearLayout android:id="@+id/focus_group" style="@style/Group" android:visibility="gone">
-                <TextView style="@style/Label" android:text="@string/focus_label" />
-                <RadioGroup android:id="@+id/focus_mode" style="@style/Segments">
-                    <RadioButton android:id="@+id/focus_auto" style="@style/Segment" android:text="@string/focus_auto" />
-                    <RadioButton android:id="@+id/focus_fixed" style="@style/Segment.Next" android:text="@string/focus_fixed" />
-                </RadioGroup>
-                <LinearLayout android:id="@+id/fixed_group" style="@style/Group">
-                    <TextView android:id="@+id/focus_distance" style="@style/Body" android:layout_marginTop="8dp" />
-                    <SeekBar
-                        android:id="@+id/focus_slider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:max="1000" />
+                <TextView android:id="@+id/aim_info" style="@style/Body" android:textSize="15sp" />
+
+                <TextView android:id="@+id/square_help" style="@style/Hint.Help" />
+
+                <!-- Focus: auto at each burst or clip, or fixed at one distance (Camera2 phones only). -->
+                <LinearLayout android:id="@+id/focus_group" style="@style/Group" android:visibility="gone">
+                    <TextView style="@style/Label.Help" android:layout_marginTop="12dp"
+                        android:text="@string/focus_label" />
+                    <RadioGroup android:id="@+id/focus_mode" style="@style/Segments" android:layout_marginTop="0dp">
+                        <RadioButton android:id="@+id/focus_auto" style="@style/Segment" android:text="@string/focus_auto" />
+                        <RadioButton android:id="@+id/focus_fixed" style="@style/Segment.Next" android:text="@string/focus_fixed" />
+                    </RadioGroup>
+                    <TextView android:id="@+id/focus_warning" style="@style/Body" android:textColor="@color/warning"
+                        android:textStyle="bold" android:text="@string/focus_not_possible" android:visibility="gone" />
+                    <LinearLayout android:id="@+id/fixed_group" style="@style/Group">
+                        <TextView android:id="@+id/focus_distance" style="@style/Body" android:layout_marginTop="8dp"
+                            android:textSize="15sp" />
+                        <SeekBar
+                            android:id="@+id/focus_slider"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:max="1000" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+                            <TextView style="@style/Hint" android:layout_width="0dp" android:layout_weight="1"
+                                android:text="@string/focus_near" />
+                            <TextView style="@style/Hint" android:layout_width="0dp" android:layout_weight="1"
+                                android:gravity="end" android:text="@string/focus_far" />
+                        </LinearLayout>
+                    </LinearLayout>
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
-                        <TextView style="@style/Hint" android:layout_width="0dp" android:layout_weight="1"
-                            android:text="@string/focus_near" />
-                        <TextView style="@style/Hint" android:layout_width="0dp" android:layout_weight="1"
-                            android:gravity="end" android:text="@string/focus_far" />
+                        <Button android:id="@+id/focus" style="@style/SecondaryButton"
+                            android:layout_width="wrap_content" android:layout_height="48dp"
+                            android:textSize="15sp" android:text="@string/aim_focus" />
+                        <TextView android:id="@+id/focus_result" style="@style/Body" android:layout_width="0dp"
+                            android:layout_weight="1" android:layout_marginStart="12dp" android:textSize="15sp" />
                     </LinearLayout>
+                    <TextView android:id="@+id/focus_help" style="@style/Hint.Help" />
                 </LinearLayout>
-                <TextView android:id="@+id/focus_hint" style="@style/Hint" android:layout_marginTop="4dp" />
             </LinearLayout>
+        </ScrollView>
 
-            <TextView
-                android:id="@+id/aim_info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textSize="16sp" />
+        <!-- Shown while controls are hidden below; a tap scrolls down. -->
+        <TextView
+            android:id="@+id/more_below"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/more_below"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:textColor="@color/heading"
+            android:textSize="15sp"
+            android:visibility="gone" />
+    </FrameLayout>
 
-            <TextView android:id="@+id/aim_hint" style="@style/Hint" android:layout_marginTop="8dp"
-                android:text="@string/aim_hint" />
-        </LinearLayout>
-    </ScrollView>
+    <!-- Always visible. Buttons with a filled background: easier to see outdoors. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        tools:ignore="ButtonStyle">
+
+        <Button android:id="@+id/done" style="@style/SecondaryButton" android:layout_width="0dp"
+            android:layout_weight="1" android:text="@string/aim_done" />
+
+        <Button android:id="@+id/start_here" style="@style/BigButton" android:layout_width="0dp"
+            android:layout_height="56dp" android:layout_weight="2" android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp" android:textSize="17sp" android:text="@string/aim_start" />
+    </LinearLayout>
 </LinearLayout>

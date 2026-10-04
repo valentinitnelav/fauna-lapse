@@ -234,6 +234,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "phone", Build.MANUFACTURER + " " + Build.MODEL);
         SessionLog.put(r, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         SessionLog.put(r, "app_version", appVersion());
+        SessionLog.put(r, "phone_state", PhoneCheck.read(context).toJson()); // radios, battery limits
         SessionLog.put(r, "folder", dir.getName());
         SessionLog.put(r, "folder_path", dir.getAbsolutePath());
         SessionLog.put(r, "wake_lead_s", WAKE_LEAD_MS / 1000.0);

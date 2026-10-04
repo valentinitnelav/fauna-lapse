@@ -11,8 +11,10 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 
 /**
- * The ROI square over the camera view on the aim screen; a finger moves it, two fingers pinch it
- * larger or smaller (around its centre). The square is kept as
+ * The ROI square over the camera view on the aim screen. A finger that comes down inside the square
+ * (or near its edge) moves it; elsewhere a finger does not, so a touch next to the square cannot
+ * move it by mistake. Two fingers pinch it larger or smaller (around its centre) anywhere on the
+ * view, as a small square is too small for two fingers. The square is kept as
  * in SessionSettings (shares of the photo, see RoiMath), and the view shows the photo turned
  * clockwise by {@code viewTurn}. A triangle marks the edge that becomes the top of the saved photos.
  */
@@ -24,10 +26,17 @@ public final class SquareView extends View {
 
         /** When the fingers leave the screen after moving or pinching the square. */
         void onChanged();
+
+        /** One finger touched outside the square and left again: nothing moved. */
+        void onTouchedOutside();
     }
 
     /** Smallest square side, as a share of the short side of the photo (the slider's minimum). */
     static final double MIN_SHARE = 0.1;
+
+    /** A finger this far outside the edge still grabs the square: half of Android's smallest
+     *  finger target (48 dp, about 8 mm), so the edge is easy to grab. */
+    private static final float GRAB_DP = 24;
 
     double sideShare = 1;
     double centreX = 0.5;
@@ -47,6 +56,8 @@ public final class SquareView extends View {
     private float downX;
     private float downY;
     private double[] downCentre; // square centre on the screen (shares) when the finger came down
+    private double[] downSquare; // side and centre when the finger came down
+    private boolean grabbed;     // the finger came down on the square
     private boolean pinched;     // two fingers touched: no moving until all fingers are up
     private final ScaleGestureDetector scaler;
 
@@ -99,19 +110,27 @@ public final class SquareView extends View {
         invalidate();
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        if (photoW == 0) return;
-        // The same pixels that PhotoSaver cuts, shown on the screen.
+    /** The square on the screen in pixels: left, top, right, bottom (the pixels PhotoSaver cuts). */
+    private float[] onScreen() {
         int[] r = RoiMath.square(photoW, photoH, sideShare, centreX, centreY);
         double[] a = RoiMath.photoToScreen((double) r[0] / photoW, (double) r[1] / photoH, viewTurn);
         double[] b = RoiMath.photoToScreen((double) r[2] / photoW, (double) r[3] / photoH, viewTurn);
         int w = getWidth();
         int h = getHeight();
-        float left = (float) (Math.min(a[0], b[0]) * w);
-        float top = (float) (Math.min(a[1], b[1]) * h);
-        float right = (float) (Math.max(a[0], b[0]) * w);
-        float bottom = (float) (Math.max(a[1], b[1]) * h);
+        return new float[] {(float) (Math.min(a[0], b[0]) * w), (float) (Math.min(a[1], b[1]) * h),
+                (float) (Math.max(a[0], b[0]) * w), (float) (Math.max(a[1], b[1]) * h)};
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (photoW == 0) return;
+        float[] q = onScreen();
+        float left = q[0];
+        float top = q[1];
+        float right = q[2];
+        float bottom = q[3];
+        int w = getWidth();
+        int h = getHeight();
         canvas.drawRect(0, 0, w, top, shade);
         canvas.drawRect(0, bottom, w, h, shade);
         canvas.drawRect(0, top, left, bottom, shade);
@@ -145,23 +164,37 @@ public final class SquareView extends View {
                 downX = e.getX();
                 downY = e.getY();
                 downCentre = RoiMath.photoToScreen(centreX, centreY, viewTurn);
-                return true;
+                downSquare = new double[] {sideShare, centreX, centreY};
+                float[] q = onScreen();
+                float grab = GRAB_DP * dp;
+                grabbed = downX >= q[0] - grab && downX <= q[2] + grab && downY >= q[1] - grab && downY <= q[3] + grab;
+                return true; // also outside: a second finger may come for a pinch
             case MotionEvent.ACTION_POINTER_DOWN:
                 pinched = true;
                 return true;
             case MotionEvent.ACTION_MOVE:
-                if (!pinched) moveTo(e);
+                if (grabbed && !pinched) moveTo(e);
                 return true;
             case MotionEvent.ACTION_UP:
-                if (!pinched) moveTo(e);
+                if (grabbed && !pinched) moveTo(e);
                 performClick();
-                if (listener != null) listener.onChanged();
+                ended();
                 return true;
             case MotionEvent.ACTION_CANCEL:
-                if (listener != null) listener.onChanged();
+                ended();
                 return true;
             default:
                 return super.onTouchEvent(e);
+        }
+    }
+
+    /** Tells the listener what the touch did: a move or resize (saved, focus follows) or nothing. */
+    private void ended() {
+        if (listener == null) return;
+        if (sideShare != downSquare[0] || centreX != downSquare[1] || centreY != downSquare[2]) {
+            listener.onChanged();
+        } else if (!grabbed && !pinched) {
+            listener.onTouchedOutside();
         }
     }
 
