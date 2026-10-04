@@ -78,7 +78,7 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
 ```
 
 Keep schedule and maths code in classes without Android code, and test it. On the phone: sessions in
-`/sdcard/Android/data/com.faunalapse.app/files/sessions/<start time>/`, tests in `.../files/phase0/`.
+`/sdcard/Documents/FaunaLapse/<start time>/`, tests in `/sdcard/Android/data/com.faunalapse.app/files/phase0/`.
 
 ## Where knowledge lives (keep these files short)
 

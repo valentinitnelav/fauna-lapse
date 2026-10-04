@@ -81,6 +81,7 @@ public final class MainActivity extends Activity {
     private View settingsGroup;
     private TextView startMessage;
     private Button startButton;
+    private TextView startHint;
     private Button testsToggle;
     private View testsGroup;
     private Button photoButton;
@@ -133,8 +134,7 @@ public final class MainActivity extends Activity {
         startMessage = findViewById(R.id.start_message);
         startButton = findViewById(R.id.start_session);
         startButton.setOnClickListener(v -> startSession());
-        ((TextView) findViewById(R.id.start_hint)).setText(getString(R.string.start_hint,
-                CaptureService.sessionsDir(this).getAbsolutePath()));
+        startHint = findViewById(R.id.start_hint);
         testsToggle = findViewById(R.id.tests_toggle);
         testsGroup = findViewById(R.id.tests);
         testsToggle.setOnClickListener(v -> {
@@ -187,6 +187,7 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
         showAimSummary(); // the aim screen may have moved the square
+        showStartHint(); // the storage permission may have changed
         lastSession = null;
         if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
         handler.post(refresher);
@@ -329,6 +330,15 @@ public final class MainActivity extends Activity {
         return d == Math.rint(d) ? String.valueOf((long) d) : String.valueOf(d);
     }
 
+    /** Where the files go; in the app's own folder (Android 10 and older without the storage
+     *  permission) also that they are removed with the app. */
+    private void showStartHint() {
+        File dir = CaptureService.sessionsDir(this);
+        String hint = getString(R.string.start_hint, CaptureService.shownPath(dir));
+        if (dir.equals(CaptureService.appSessionsDir(this))) hint += " " + getString(R.string.start_hint_app_folder);
+        startHint.setText(hint);
+    }
+
     private void startSession() {
         if (!saveSettings()) return;
         showSettingsGroup(false);
@@ -425,7 +435,7 @@ public final class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-        // The notification permission is optional: without it the camera still works.
+        // The notification and storage permissions are optional: without them the camera works.
         if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             start(requested);
         } else {
@@ -434,11 +444,17 @@ public final class MainActivity extends Activity {
         }
     }
 
-    /** Permissions still to ask for: the camera and, on Android 13+, notifications. */
+    /** Permissions still to ask for: the camera; with it, on Android 13+ notifications and on
+     *  Android 10 and older the storage (for Documents/FaunaLapse). */
     private List<String> missingPermissions() {
         List<String> missing = new ArrayList<>();
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             missing.add(Manifest.permission.CAMERA);
+        }
+        if (Build.VERSION.SDK_INT <= 29 && !missing.isEmpty()
+                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            missing.add(Manifest.permission.WRITE_EXTERNAL_STORAGE); // optional, like notifications
         }
         if (Build.VERSION.SDK_INT >= 33 && !missing.isEmpty()
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)

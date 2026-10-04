@@ -3,6 +3,7 @@ package com.faunalapse.app;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.media.MediaScannerConnection;
 import android.os.Build;
 
 import org.json.JSONArray;
@@ -181,6 +182,16 @@ final class SessionRunner implements Runnable {
             SessionLog.put(end, "heat_pauses", heatPauses);
             SessionLog.put(end, "heat_pause_min", Math.round(heatPauseMs / 6000.0) / 10.0);
             log.write(end);
+            if (Build.VERSION.SDK_INT <= 29) {
+                // Android 10 and older add new files to their file index (which a PC sees over USB)
+                // only when asked; newer Android does it by itself.
+                String[] names = dir.list();
+                if (names != null) {
+                    String[] paths = new String[names.length];
+                    for (int i = 0; i < names.length; i++) paths[i] = new File(dir, names[i]).getAbsolutePath();
+                    MediaScannerConnection.scanFile(context, paths, null, null);
+                }
+            }
             String counts = (settings.video ? count(clips, "clip")
                     : count(photos, "photo") + " in " + count(bursts, "burst")) + ", " + count(errors, "error")
                     + (heatPauses > 0 ? ", " + count(heatPauses, "heat pause") : "");
@@ -211,6 +222,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         SessionLog.put(r, "app_version", appVersion());
         SessionLog.put(r, "folder", dir.getName());
+        SessionLog.put(r, "folder_path", dir.getAbsolutePath());
         SessionLog.put(r, "wake_lead_s", WAKE_LEAD_MS / 1000.0);
         SessionLog.put(r, "focus_lead_s", FOCUS_LEAD_MS / 1000.0);
         SessionLog.put(r, "keep_camera_on_if_break_below_s", KEEP_ON_MS / 1000.0);

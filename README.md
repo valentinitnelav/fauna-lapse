@@ -31,6 +31,8 @@ so far.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
 - A session log of every photo and event, ready for analysis in R or Python.
+- Files in `Documents/FaunaLapse` on the phone, one folder per session: easy to copy to a computer
+  over USB, and kept when the app is removed.
 
 ## Build from source
 

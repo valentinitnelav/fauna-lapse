@@ -71,7 +71,8 @@
 
     <!-- 3 Start -->
     <string name="start_session">Start session</string>
-    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on. Files are saved in %1$s</string>
+    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on. Files are saved in %1$s.</string>
+    <string name="start_hint_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
 
     <!-- Aim screen -->
     <string name="square_label">Square side (% of the short side of the photo)</string>

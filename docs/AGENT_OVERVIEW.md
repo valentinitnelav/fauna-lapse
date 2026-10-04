@@ -57,7 +57,7 @@ Last update: 2026-10-04.
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
-| Output | `Android/data/com.faunalapse.app/files/sessions/<start time>/`; tests in `.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
+| Output | `Documents/FaunaLapse/<start time>/` (survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
 | Wake lock | held for the whole session (plan end + 10 min) | `CaptureService.startSession` |
 | Phase 0 test defaults (start delay 10 s, wake lead 5 s, speed test sizes) | | `CaptureService`, `Camera1Backend`, `SpeedTest` |
 
@@ -82,16 +82,15 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 
 ## Open problems and next steps
 
-1. Save sessions to `DCIM/FaunaLapse/` (MediaStore on Android 10+) so they survive an uninstall.
-2. Long breaks: alarms instead of holding the wake lock (measure first with the USB power meter).
-3. Lock exposure and white balance for each burst (no jumps; exposure already meters on the square);
+1. Long breaks: alarms instead of holding the wake lock (measure first with the USB power meter).
+2. Lock exposure and white balance for each burst (no jumps; exposure already meters on the square);
    Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
-4. Time-lapse video below 15 fps (5 asked gave 3.7 on the Samsung M12: ask a little more).
-5. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
-6. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
+3. Time-lapse video below 15 fps (5 asked gave 3.7 on the Samsung M12: ask a little more).
+4. Back-to-back bursts or clips (break 0) refocus at each start, which costs about 2 s.
+5. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi) and a USB power meter
    (phase 0 gate). Check the battery first, then the speed test (`sensor_pixels` against
    `jpeg_largest` shows photos enlarged in software).
-7. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
+6. Lint warnings left on purpose: `allowBackup` (backup rules file not needed), newer Gradle
    available (update with the Android build plugin).
 
 ## Pointers

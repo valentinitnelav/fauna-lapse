@@ -13,9 +13,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <!-- Android 13+: needed to show that notification. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 10 and older: needed to save sessions in Documents/FaunaLapse (newer Android allows
+         it without a permission). -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
+    <!-- requestLegacyExternalStorage: Android 10 then allows plain file paths in the shared storage,
+         as older and newer Android do. -->
     <application
         android:allowBackup="false"
+        android:requestLegacyExternalStorage="true"
         android:icon="@android:drawable/ic_menu_camera"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
