@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App icon in one colour, for themed icons (Android 13+): only the shape counts, Android
+     colours it. The lens is a ring here, so the flower stays visible. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M55.6,23.44 A30.6,30.6 0 0,1 67.89,26.74"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M70.67,28.34 A30.6,30.6 0 0,1 79.66,37.33"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M81.26,40.11 A30.6,30.6 0 0,1 84.56,52.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M84.56,55.6 A30.6,30.6 0 0,1 81.26,67.89"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M79.66,70.67 A30.6,30.6 0 0,1 70.67,79.66"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M67.89,81.26 A30.6,30.6 0 0,1 55.6,84.56"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M52.4,84.56 A30.6,30.6 0 0,1 40.11,81.26"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M37.33,79.66 A30.6,30.6 0 0,1 28.34,70.67"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M26.74,67.89 A30.6,30.6 0 0,1 23.44,55.6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6" />
+    <path
+        android:pathData="M23.44,52.4 A30.6,30.6 0 0,1 26.74,40.11"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6"
+        android:strokeAlpha="0.35" />
+    <path
+        android:pathData="M28.34,37.33 A30.6,30.6 0 0,1 37.33,28.34"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6"
+        android:strokeAlpha="0.35" />
+    <path
+        android:pathData="M40.11,26.74 A30.6,30.6 0 0,1 52.4,23.44"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6"
+        android:strokeAlpha="0.35" />
+    <path
+        android:pathData="M30.8,54 a23.2,23.2 0 1,0 46.4,0 a23.2,23.2 0 1,0 -46.4,0 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.4" />
+    <group android:rotation="0" android:pivotX="54" android:pivotY="54">
+        <path
+            android:pathData="M49.7,47.07 a4.3,6.93 0 1,0 8.61,0 a4.3,6.93 0 1,0 -8.61,0 Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+    <group android:rotation="72" android:pivotX="54" android:pivotY="54">
+        <path
+            android:pathData="M49.7,47.07 a4.3,6.93 0 1,0 8.61,0 a4.3,6.93 0 1,0 -8.61,0 Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+    <group android:rotation="144" android:pivotX="54" android:pivotY="54">
+        <path
+            android:pathData="M49.7,47.07 a4.3,6.93 0 1,0 8.61,0 a4.3,6.93 0 1,0 -8.61,0 Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+    <group android:rotation="216" android:pivotX="54" android:pivotY="54">
+        <path
+            android:pathData="M49.7,47.07 a4.3,6.93 0 1,0 8.61,0 a4.3,6.93 0 1,0 -8.61,0 Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+    <group android:rotation="288" android:pivotX="54" android:pivotY="54">
+        <path
+            android:pathData="M49.7,47.07 a4.3,6.93 0 1,0 8.61,0 a4.3,6.93 0 1,0 -8.61,0 Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+    <path
+        android:pathData="M49.8,54 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z"
+        android:fillColor="#FFFFFFFF" />
+</vector>
