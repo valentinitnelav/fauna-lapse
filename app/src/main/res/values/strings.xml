@@ -207,6 +207,8 @@
     <string name="summary_run">For %1$s from Start.</string>
     <string name="summary_daily">Daily windows: %1$s. Days: %2$d.</string>
     <string name="summary_heat">Heat pause at %1$s °C.</string>
+    <string name="summary_screen_off">Screen off by itself %1$d min after the last touch.</string>
+    <string name="summary_screen_off_never">Screen off by itself: never.</string>
     <string name="step_label">Photo step (s)</string>
     <string name="step_hint">Time between photos in a burst. Default 2 s: a 3 s step caught about 90 % of insect visits (Edwards et al. 2015).</string>
     <string name="burst_label">Burst length (s)</string>
@@ -237,6 +239,11 @@
     <string name="days_hint">Default 1. Counted from the first window that is not over yet: a phone started in the evening records from the next morning. For more days, keep the phone on a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
+    <string name="screen_off_label">Screen off by itself after (min)</string>
+    <string name="screen_off_hint">In case Screen off is forgotten: during a session, FaunaLapse switches the screen off by itself this many minutes after the last touch on its main screen, as Screen off does (a screen left on uses much energy and warms the phone). 1 to 10 min; 0: never. Default 3 min: time to watch the first photos arrive. Until then the screen stays on, also on phones whose own screen timeout is shorter. Not during a pause. It needs the Screen off right (the first tap on Screen off asks for it).\n\nThe power button wakes the screen again. A double tap on the screen wakes it only on phones that offer this and have it turned on (it did not work on a Redmi Note 9S).</string>
+    <string name="screen_off_note_right">Screen off is not allowed yet (the first tap on Screen off during a session asks): until then the phone\'s own screen timeout switches the screen off (now %1$s).</string>
+    <string name="screen_off_note_never">Never: the screen goes off with Screen off, the power button or the phone\'s own screen timeout (now %1$s).</string>
+    <string name="timeout_never">never</string>
     <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
     <string name="problem_title">Correct this first</string>

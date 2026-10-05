@@ -319,6 +319,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         SessionLog.put(r, "app_version", appVersion());
         SessionLog.put(r, "phone_state", PhoneCheck.read(context).toJson()); // radios, battery limits
+        SessionLog.put(r, "screen_off_allowed", ScreenOff.allowed(context)); // needed by screen_off_after_min
         SessionLog.put(r, "folder", dir.getName());
         SessionLog.put(r, "folder_path", dir.getAbsolutePath());
         SessionLog.put(r, "storage_free_mb", dir.getUsableSpace() / (1024 * 1024));

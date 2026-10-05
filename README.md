@@ -44,7 +44,8 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
 - Focus: fixed at one distance (20 cm to start, set while you watch the camera view), so wind, a
   passing insect or another flower cannot pull the focus away. Phones that cannot fix the focus
   (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
-- Screen off and camera closed between bursts, to save power and avoid heat.
+- Screen off (a button, or by itself a few minutes after the last touch) and camera closed between
+  bursts, to save power and avoid heat.
 - A phone check before Start: airplane mode, Wi-Fi, Bluetooth, location and battery limits, each
   with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
@@ -90,7 +91,10 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
    without pressing the phone where it stands. The first time, Android asks you to allow it
    (FaunaLapse becomes a "device admin app" with the single right to lock the screen; remove it
    under *Last session, battery and clock* before you uninstall FaunaLapse). Or press the power
-   button gently. The session goes on; the camera is off in the breaks.
+   button gently. The session goes on; the camera is off in the breaks. If you forget, FaunaLapse
+   switches the screen off by itself 3 minutes after the last touch (*Screen off by itself* under
+   *3 · Schedule*; it needs the right above). The power button wakes the screen again; a double tap
+   works only on phones that offer it and have it turned on.
 5. To adjust the phone during a session: tap *Pause to adjust the phone*, then *Aim the camera
    again*; move the phone, the square or the focus, and tap *Continue session*. Nothing is recorded
    during the pause, and the session goes on by itself after 10 minutes. To stop early: tap *Stop

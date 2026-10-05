@@ -23,7 +23,7 @@ plain language at first use, and write plain English with short sentences and no
   compile and target SDK 36.
 - In the app only Android's own classes: no AndroidX or other libraries (they add size and updates,
   not speed; CameraX would hide the Camera1 path that legacy phones need). JUnit for the PC tests is
-  fine (never in the APK). Keep the APK small (ideally under 1 Mb); it may grow when a feature needs it.
+  fine (never in the APK). Keep the APK small (ideally under 1 MB); it may grow when a feature needs it.
 - Back camera only. Camera interface per phone: Camera2 where its hardware level is "limited",
   "full" or "level 3" (Samsung M12: a 12 MP photo in 0.43 s, against 0.9 to 1.7 s with Camera1);
   Camera1 on "legacy" phones, where Camera2 only wraps Camera1.

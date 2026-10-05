@@ -90,7 +90,8 @@ speed-test runs and sessions, on the charger.
 - Video presets: 2160p, 1080p, 720p and 480p at 30 fps (42, 20, 14 and 2 Mbit/s).
 - MIUI: installs over USB need *Install via USB* in Developer options and a tap on the phone each
   time. Allowing the Screen off button shows MIUI's own red "Danger" page with rights FaunaLapse
-  does not ask for (Android's page before it lists only "Lock the screen").
+  does not ask for (Android's page before it lists only "Lock the screen"). A double tap did not
+  wake the screen (owner), although Android's own double-tap setting reads "on".
 
 ### Results
 

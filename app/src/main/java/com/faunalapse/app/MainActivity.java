@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -120,6 +121,8 @@ public final class MainActivity extends Activity {
     private long[][] storageUse; // per place: bytes and sessions in its FaunaLapse folder; null until counted
     private boolean wasRunning;
     private boolean wasSession;
+    private long lastTouchMs;        // elapsedRealtime of the last touch on this screen
+    private int sessionScreenOffMin; // screen off by itself in the running session (0: never)
     private Button stopButton;
     private Button pauseButton;
     private Button adjustButton;
@@ -165,6 +168,8 @@ public final class MainActivity extends Activity {
     private EditText windows;
     private EditText days;
     private EditText heatLimitC;
+    private EditText screenOffMin;
+    private TextView screenOffNote;
     private TextView fieldSummary;
     private Button fieldChange;
     private View fieldGroup;
@@ -317,6 +322,8 @@ public final class MainActivity extends Activity {
         windows = findViewById(R.id.windows);
         days = findViewById(R.id.days);
         heatLimitC = findViewById(R.id.heat_limit_c);
+        screenOffMin = findViewById(R.id.screen_off_min);
+        screenOffNote = findViewById(R.id.screen_off_note);
         site = findViewById(R.id.site);
         transect = findViewById(R.id.transect);
         plant = findViewById(R.id.plant);
@@ -421,6 +428,7 @@ public final class MainActivity extends Activity {
         showPlaces();
         countStorage();
         if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
+        lastTouchMs = SystemClock.elapsedRealtime(); // coming back counts as a touch
         handler.post(refresher);
     }
 
@@ -468,6 +476,7 @@ public final class MainActivity extends Activity {
         windows.setText(s.windows);
         days.setText(String.valueOf(s.days));
         heatLimitC.setText(number(s.heatLimitC));
+        screenOffMin.setText(String.valueOf(s.screenOffMin));
     }
 
     /** Shows only the settings that apply to the chosen mode and schedule. */
@@ -518,7 +527,10 @@ public final class MainActivity extends Activity {
                             : getString(R.string.summary_photo_no_break, number(s.stepS));
             String when = s.daily ? getString(R.string.summary_daily, s.windows, s.days)
                     : getString(R.string.summary_run, duration(s.runMin));
-            text = what + "\n" + when + "\n" + getString(R.string.summary_heat, number(s.heatLimitC));
+            text = what + "\n" + when + "\n" + getString(R.string.summary_heat, number(s.heatLimitC)) + " "
+                    + (s.screenOffMin > 0 ? getString(R.string.summary_screen_off, s.screenOffMin)
+                            : getString(R.string.summary_screen_off_never));
+            showScreenOffNote(s.screenOffMin);
         } catch (IllegalArgumentException e) {
             text = e.getMessage();
             ok = false;
@@ -550,6 +562,7 @@ public final class MainActivity extends Activity {
         s.windows = windows.getText().toString().trim();
         s.days = (int) Math.round(decimal(days, R.string.days_label));
         s.heatLimitC = decimal(heatLimitC, R.string.heat_label);
+        s.screenOffMin = (int) Math.round(decimal(screenOffMin, R.string.screen_off_label));
         String p = s.problem();
         if (p != null) throw new IllegalArgumentException(p);
         return s;
@@ -1174,6 +1187,43 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+        lastTouchMs = SystemClock.elapsedRealtime();
+    }
+
+    /** Screen off by itself, in case Screen off was forgotten: during a session (not in a pause),
+     *  with the Screen off right, the screen stays on until the set minutes after the last touch on
+     *  this screen (also where the phone's own timeout is shorter), then FaunaLapse switches it off.
+     *  Without the right, or set to never, the phone's own screen timeout acts, as outside sessions.
+     *  Not while the GPS searches: it keeps the screen on itself. */
+    private void autoScreenOff(boolean recording) {
+        boolean auto = recording && sessionScreenOffMin > 0 && ScreenOff.allowed(this);
+        boolean due = SystemClock.elapsedRealtime() - lastTouchMs >= sessionScreenOffMin * 60000L;
+        scroll.setKeepScreenOn(auto && !due);
+        if (auto && due && gps == null) {
+            lastTouchMs = SystemClock.elapsedRealtime(); // once; waking the screen counts as a touch
+            ScreenOff.lock(this);
+        }
+    }
+
+    /** Under the setting, when FaunaLapse will not switch the screen off: what does it instead. */
+    private void showScreenOffNote(int minutes) {
+        String text = minutes == 0 ? getString(R.string.screen_off_note_never, phoneTimeout())
+                : !ScreenOff.allowed(this) ? getString(R.string.screen_off_note_right, phoneTimeout()) : "";
+        if (!text.contentEquals(screenOffNote.getText())) screenOffNote.setText(text);
+        screenOffNote.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    /** The phone's own screen timeout in words (Android settings, Display). */
+    private String phoneTimeout() {
+        int ms = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, -1);
+        if (ms <= 0) return "?";
+        if (ms >= 24 * 3600000) return getString(R.string.timeout_never); // some phones: "never"
+        return ms < 60000 ? ms / 1000 + " s" : duration(Math.round(ms / 60000f));
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SCREEN_OFF_REQUEST && ScreenOff.allowed(this)) ScreenOff.lock(this);
@@ -1229,6 +1279,7 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
             setFromExtra(intent, "heat_limit_c", heatLimitC);
+            setFromExtra(intent, "screen_off_min", screenOffMin);
             // The square has no field on this screen: save it, settingsOnScreen then loads it.
             SessionSettings saved = SessionSettings.load(this);
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
@@ -1355,6 +1406,11 @@ public final class MainActivity extends Activity {
         if (wasRunning && !running) countStorage();
         // A session took the site photos and their text at its start: show what is left.
         if ((session && !wasRunning) || (wasSession && !running)) showField(FieldInfo.load(this));
+        if (session && !wasSession) {
+            sessionScreenOffMin = SessionSettings.load(this).screenOffMin;
+            lastTouchMs = SystemClock.elapsedRealtime(); // the minutes count from the start
+        }
+        autoScreenOff(session && !paused);
         wasRunning = running;
         wasSession = session;
         showStorage();

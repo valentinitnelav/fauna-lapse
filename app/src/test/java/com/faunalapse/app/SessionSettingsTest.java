@@ -120,4 +120,18 @@ public class SessionSettingsTest {
         assertEquals("Saved square side: use a multiple of 32 from 224 to 4096 px, for example 4064 or 4096.",
                 s.problem());
     }
+
+    @Test
+    public void screenOffByItselfFrom1To10MinOrNever() {
+        SessionSettings s = new SessionSettings();
+        assertEquals(3, s.screenOffMin);
+        for (int min : new int[] {0, 1, 10}) {
+            s.screenOffMin = min;
+            assertNull(s.problem());
+        }
+        s.screenOffMin = 11;
+        assertNotNull(s.problem());
+        s.screenOffMin = -1;
+        assertNotNull(s.problem());
+    }
 }

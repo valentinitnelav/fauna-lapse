@@ -32,6 +32,7 @@ final class SessionSettings {
     int savedSidePx = 1280;      // photos and video; input size of many insect detectors (owner, 2026-10-04)
     int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
     double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
+    int screenOffMin = 3;        // after the last touch, if Screen off is forgotten; 0: never (owner, 2026-10-05)
 
     /** Saved square side limits: the smallest common classifier input; a sanity bound (squares are
      *  never enlarged beyond their real pixels anyway). */
@@ -60,6 +61,7 @@ final class SessionSettings {
         s.savedSidePx = p.getInt("saved_side_px", s.savedSidePx);
         s.videoFps = p.getInt("video_fps", s.videoFps);
         s.heatLimitC = p.getFloat("heat_limit_c", (float) s.heatLimitC);
+        s.screenOffMin = p.getInt("screen_off_min", s.screenOffMin);
         return s;
     }
 
@@ -83,6 +85,7 @@ final class SessionSettings {
                 .putInt("saved_side_px", savedSidePx)
                 .putInt("video_fps", videoFps)
                 .putFloat("heat_limit_c", (float) heatLimitC)
+                .putInt("screen_off_min", screenOffMin)
                 .apply();
     }
 
@@ -102,6 +105,7 @@ final class SessionSettings {
         }
         if (focusFixed && (focusDiopters < 0 || focusDiopters > 50)) return "Fixed focus: set it again on the aim screen.";
         if (heatLimitC < 35 || heatLimitC > 50) return "Heat pause: use 35 to 50 °C.";
+        if (screenOffMin < 0 || screenOffMin > 10) return "Screen off by itself: use 1 to 10 min, or 0 for never.";
         if (daily) {
             try {
                 CapturePlan.parseWindows(windows);
@@ -174,6 +178,7 @@ final class SessionSettings {
         SessionLog.put(j, "focus_distance", only(focusFixed, distanceWords(focusDiopters)));
         SessionLog.put(j, "heat_pause_c", round(heatLimitC));
         SessionLog.put(j, "heat_resume_c", round(heatLimitC - Guards.RESUME_GAP_C));
+        SessionLog.put(j, "screen_off_after_min", only(screenOffMin > 0, screenOffMin)); // null: never
         SessionLog.put(j, "schedule", daily ? "daily windows" : "run from start");
         SessionLog.put(j, "run_min", only(!daily, runMin));
         SessionLog.put(j, "daily_windows", only(daily, windows));

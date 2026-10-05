@@ -76,7 +76,41 @@ stands); anyone who wakes the phone could then see and stop the session without 
   the owner unplugs once for a series of tests. Wi-Fi must stay on, which costs a little energy
   and differs from the field.
 
-**Why parked:** it needs such a hub (owner deciding). Until then, the owner unplugs the phone.
+**Why parked:** it needs such a hub (owner deciding). Until then: adb over Wi-Fi (Redmi: wireless
+debugging; Samsung: `adb tcpip 5555` over the cable first, until the phone restarts), with Wi-Fi on
+as a known bias in the results, or the owner unplugs the phone.
+
+## Packing each session into one file (zip)
+
+**Wish:** faster copies to a computer: one file per session instead of thousands of photos.
+
+**What was found:**
+- Over "File transfer" (MTP), each file costs extra time. Samsung M12 to a Linux laptop: 300 files
+  of 400 KB took 12 to 16 s, one file of the same 117 MB 5 s (2.5 to 3 times faster). A day of
+  photos (about 4800) would take 3 to 4 min per phone instead of about 1; Windows is often slower
+  with many files.
+- Android has zip built in (`java.util.zip`): no library, a few KB in the APK. JPEG and MP4 are
+  already compressed (1 to 3 % smaller), so the files are only stored, not compressed: faster and
+  less battery. Unzipping checks every file (CRC), so a broken copy shows.
+- Costs: free space as large as the session while packing, time and battery on the phone (on the
+  charger), and an unzip step on the computer. Writing into a zip during the session is not safe:
+  an empty battery or a crash may damage the whole file.
+
+**Option studied:** a "Pack for the computer" button per finished session (on the charger; the
+originals deleted only after the zip is checked). A card reader is fast without it.
+
+**Why parked:** not needed before the first release (owner).
+
+## Emulated phones
+
+**Wish:** test other phones (for example Android 7) without having them.
+
+**What was found:** the Android emulator and one system image need about 3 to 5 GB, and it runs at
+a usable speed only with the user in the `kvm` group (one `sudo` command and a new login). It finds
+crashes, Android 7 permission and storage problems and layout problems, but not camera speed,
+battery, heat or the battery managers of Xiaomi, Huawei and others.
+
+**Why parked:** the three real Android 7 and 8.1 phones come first (owner).
 
 ## Camtrap DP export
 
@@ -119,8 +153,9 @@ and identification checked by a taxonomist.
 
 **What was found:** with the screen really off, the touch screen sleeps too, so no app gets a tap.
 Some phones have their own "double tap to turn on screen" (Samsung M12: Settings, Advanced features,
-Motions and gestures; off on the test phone): it keeps the touch screen listening (a little energy),
-and rain or insects might wake the screen. A black screen kept on would take taps, but costs energy.
+Motions and gestures; off on the test phone); on the Redmi Note 9S a double tap did not wake it. It
+keeps the touch screen listening (a little energy), and rain or insects might wake the screen. A
+black screen kept on would take taps, but costs energy.
 
 **Why parked:** the power button, pressed gently, or the phone's own setting is enough (owner).
 

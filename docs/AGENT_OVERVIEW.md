@@ -7,11 +7,11 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 ## What works now
 
 - **Sessions** on a schedule, with the screen off: daily windows for N days or a run of Z hours;
-  photo bursts (step, burst length, break) or video clips (clip length, 5, 10 or 15 fps, break); both
-  save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone; every
-  event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off), clean
-  stop on low battery without charging or too little storage; a pause by the user (camera off, aim
-  screen to adjust, goes on by itself after 10 min). Tested on the Samsung M12.
+  photo bursts (step, burst length, break) or video clips (clip length, 5, 10 or 15 fps, break);
+  both save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone;
+  every event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off),
+  clean stop on low battery without charging or too little storage; a pause by the user (camera off,
+  aim screen to adjust, goes on by itself after 10 min). Tested on 2 phones.
 - **Main screen**: status card (state; while running: counts, last saved square or clip frame,
   warnings, phone checks, MB so far, Pause or Continue; folder, use, free space, memory card choice;
   Open the folder; Screen off; last session, battery, clock fold away); 1 Aim; 2 Field metadata
@@ -49,13 +49,13 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
   keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
-- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 254 KB).
+- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 300 KB).
 
 ## Defaults
 
 | Default | Value | Where |
 |---|---|---|
-| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 5 min, run 1 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 5 fps) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
+| Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 5 min, run 1 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 5 fps, screen off by itself 3 min after the last touch on the main screen, with the Screen off right) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
 | Video frame rate and bit rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps); Camera2 sends every n-th frame to the recorder (repeating group), with Camera1 `FrameRates.Picker` keeps frames on the time grid; real time stamps; bit rate asked = the phone's best preset in bits per pixel, encoder's own rate control (best detail, owner's choice; Samsung 3.9 Mbit/s at 1280 px); key frame every 2 s | `FrameRates`, `Camera2Session.startClip`, `SquareRecorder` |
 | Wake lead / autofocus lead / keep camera on if off for less than / shortest clip | 5 s / 3 s / 30 s / 3 s | `SessionRunner` constants |
 | Stop after camera errors in a row; wake lock | 3; held for the whole session (plan end + 10 min) | `SessionRunner.MAX_ERRORS_IN_A_ROW`, `CaptureService.startSession` |

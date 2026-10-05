@@ -302,6 +302,14 @@
                     android:inputType="numberDecimal" tools:targetApi="o" />
                 <TextView style="@style/Hint.Help" android:text="@string/heat_hint" />
 
+                <!-- Screen off by itself (MainActivity.autoScreenOff); the note says what acts instead -->
+                <TextView style="@style/Label.Help" android:labelFor="@id/screen_off_min" android:text="@string/screen_off_label" />
+                <EditText android:id="@+id/screen_off_min" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="number" android:maxLength="2" tools:targetApi="o" />
+                <TextView style="@style/Hint.Help" android:text="@string/screen_off_hint" />
+                <TextView android:id="@+id/screen_off_note" style="@style/Hint" android:layout_marginTop="4dp"
+                    android:visibility="gone" />
+
                 <Button android:id="@+id/defaults" style="@style/SecondaryButton" android:layout_marginTop="16dp"
                     android:text="@string/defaults" />
             </LinearLayout>
