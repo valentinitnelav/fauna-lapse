@@ -93,6 +93,11 @@
                 <EditText android:id="@+id/session_id" style="@style/Field.Row" android:hint="@string/field_optional"
                     android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
             </LinearLayout>
+            <!-- The user's own fields (CustomFields), then the button that adds one -->
+            <LinearLayout android:id="@+id/custom_fields" style="@style/Group" />
+            <Button android:id="@+id/custom_add" style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content" android:layout_height="48dp" android:textAllCaps="false"
+                android:textColor="@color/heading" android:textSize="16sp" android:text="@string/custom_add_button" />
             <LinearLayout style="@style/FieldRow">
                 <TextView style="@style/FieldLabel" android:labelFor="@id/latitude" android:text="@string/field_latitude" />
                 <EditText android:id="@+id/latitude" style="@style/Field.Row" android:hint="@string/field_latitude_hint"

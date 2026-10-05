@@ -39,9 +39,10 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
-- Field metadata for each session: site, transect, plant (or sample ID), session ID, and the phone
-  model and ID (filled in by the app); one GPS position on a tap (the GPS switches off again when
-  the position is within 10 m), or latitude, longitude and accuracy typed from another GPS device.
+- Field metadata for each session: site, transect, plant (or sample ID), session ID, your own
+  fields (text, number, date or time), and the phone model and ID (filled in by the app); one GPS
+  position on a tap (the GPS switches off again when the position is within 10 m), or latitude,
+  longitude and accuracy typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone, one folder per session (phone model and ID, start

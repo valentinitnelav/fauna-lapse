@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One custom field in card 2 (CustomFields): its name, its value and a remove button. The
+     button's description names the field; it is set in code. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/FieldRow">
+
+    <TextView android:id="@+id/custom_name" style="@style/FieldLabel" />
+
+    <EditText android:id="@+id/custom_value" style="@style/Field.Row" android:inputType="text"
+        android:importantForAutofill="no" tools:ignore="LabelFor" tools:targetApi="o" />
+
+    <ImageButton android:id="@+id/custom_remove" android:layout_width="48dp" android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_close"
+        tools:ignore="ContentDescription" />
+</LinearLayout>

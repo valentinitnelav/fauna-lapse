@@ -6,6 +6,9 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SessionSettingsTest {
 
     @Test
@@ -20,6 +23,24 @@ public class SessionSettingsTest {
         assertNotNull(FieldInfo.positionProblem(0, 0, -1f));
         assertNotNull(FieldInfo.positionProblem(0, 0, 10001f));
         assertEquals("48.858370", FieldInfo.degrees(48.85837));
+    }
+
+    @Test
+    public void customFieldsKeepTheirType() {
+        List<FieldInfo.Custom> fields = new ArrayList<>();
+        fields.add(new FieldInfo.Custom("Observer", FieldInfo.Custom.TEXT, "Anna"));
+        assertNotNull(FieldInfo.nameProblem("", fields));
+        assertNotNull(FieldInfo.nameProblem("observer", fields)); // names are keys in the record
+        assertNull(FieldInfo.nameProblem("Air temperature (°C)", fields));
+        FieldInfo.Custom t = new FieldInfo.Custom("T", FieldInfo.Custom.NUMBER, "21,5");
+        assertNull(t.problem());
+        assertEquals(21.5, (Double) t.jsonValue(), 0);
+        assertNotNull(new FieldInfo.Custom("T", FieldInfo.Custom.NUMBER, "1.2.3").problem());
+        assertNotNull(new FieldInfo.Custom("T", FieldInfo.Custom.NUMBER, "Infinity").problem());
+        assertNull(new FieldInfo.Custom("D", FieldInfo.Custom.DATE, "2026-10-05").problem());
+        assertNotNull(new FieldInfo.Custom("D", FieldInfo.Custom.DATE, "5.10.2026").problem());
+        assertNull(new FieldInfo.Custom("H", FieldInfo.Custom.TIME, "14:30").problem());
+        assertEquals("Anna", fields.get(0).jsonValue());
     }
 
     @Test

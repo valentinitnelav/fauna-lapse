@@ -14,9 +14,9 @@ Last update: 2026-10-04.
   stop on low battery without charging or too little storage. Tested on the Samsung M12.
 - **Main screen**: status card (state; while running: counts, warnings, phone check lines, session
   folder and MB so far; files folder, use, free space; last session, battery, clock fold away);
-  1 Aim; 2 Field metadata (phone model and ID; site, transect, plant, sample ID, session ID; latitude,
-  longitude, accuracy typed or from Get location: GPS on until 10 m or 3 min, its values ask before an
-  edit); 3 Schedule (summary; settings on Change); 4 Phone for the field (radios, location, battery
+  1 Aim; 2 Field metadata (phone model and ID; site, transect, plant, sample ID, session ID; custom
+  fields: text, number, date, time; latitude, longitude, accuracy typed or from Get location: GPS on
+  until 10 m or 3 min, its values ask before an edit); 3 Schedule (summary; settings on Change); 4 Phone for the field (radios, location, battery
   limits, each with its settings page). A problem stops Aim and Start with a dialog to its card.
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch anywhere or slider for
@@ -69,7 +69,7 @@ Last update: 2026-10-04.
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
-| `FieldInfo.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone model and ID, folder names); one GPS position, then the GPS off |
+| `FieldInfo.java`, `CustomFields.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone model and ID, folder names); the user's own fields on card 2; one GPS position, then the GPS off |
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |

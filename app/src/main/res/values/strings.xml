@@ -43,7 +43,7 @@
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Phone model and phone ID: filled in by the app. The ID is Android\'s ID for FaunaLapse on this phone; nobody can change it, only a factory reset gives a new one. With the start time they make each session folder name unique, so folders from several phones never mix on one computer.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Get location: the GPS stays on until the position is within 10 m (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, in decimal degrees (WGS 84, as GPS devices and web maps show them; south and west are negative), and its accuracy if it shows one. Empty all three fields to remove the location.</string>
+    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Phone model and phone ID: filled in by the app. The ID is Android\'s ID for FaunaLapse on this phone; nobody can change it, only a factory reset gives a new one. With the start time they make each session folder name unique, so folders from several phones never mix on one computer.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Add a field: your own fields, for example Observer, Weather or Air temperature, as text (up to 200 characters), a number, a date or a time. They stay until you remove them; the record lists them under "custom".\n• Get location: the GPS stays on until the position is within 10 m (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, in decimal degrees (WGS 84, as GPS devices and web maps show them; south and west are negative), and its accuracy if it shows one. Empty all three fields to remove the location.</string>
     <string name="field_site">Site</string>
     <string name="field_site_hint">for example Meadow 2</string>
     <string name="field_transect">Transect</string>
@@ -56,6 +56,27 @@
     <string name="field_phone_id">Phone ID</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
+    <string name="custom_add_button">+ Add a field</string>
+    <string name="custom_add">Add a field</string>
+    <string name="custom_add_yes">Add</string>
+    <string name="custom_add_no">Cancel</string>
+    <string name="custom_name_label">Name</string>
+    <string name="custom_name_hint">for example Observer or Weather</string>
+    <string name="custom_type_label">Type</string>
+    <string name="custom_type_text">Text (letters and digits)</string>
+    <string name="custom_type_number">Number</string>
+    <string name="custom_type_date">Date</string>
+    <string name="custom_type_time">Time</string>
+    <string name="custom_hint_text" tools:ignore="PluralsCandidate">text, up to %1$d characters</string>
+    <string name="custom_hint_number">number</string>
+    <string name="custom_hint_date">tap to choose a date</string>
+    <string name="custom_hint_time">tap to choose a time</string>
+    <string name="custom_number_needed">Write a number, for example 21.5</string>
+    <string name="custom_clear">Clear</string>
+    <string name="custom_remove">Remove the field %1$s?</string>
+    <string name="custom_remove_text">Its value goes too. You can add the field again later.</string>
+    <string name="custom_remove_yes">Remove</string>
+    <string name="custom_remove_no">Keep</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
     <string name="field_longitude">Longitude</string>

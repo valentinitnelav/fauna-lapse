@@ -141,6 +141,7 @@ public final class MainActivity extends Activity {
     private EditText plant;
     private EditText sampleId;
     private EditText sessionId;
+    private CustomFields customFields;
     private EditText latitude;
     private EditText longitude;
     private EditText accuracy;
@@ -239,6 +240,7 @@ public final class MainActivity extends Activity {
         plant = findViewById(R.id.plant);
         sampleId = findViewById(R.id.sample_id);
         sessionId = findViewById(R.id.session_id);
+        customFields = new CustomFields(this, findViewById(R.id.custom_fields), findViewById(R.id.custom_add));
         ((TextView) findViewById(R.id.phone_model)).setText(getString(R.string.phone_model, Build.MANUFACTURER, Build.MODEL));
         ((TextView) findViewById(R.id.phone_id)).setText(FieldInfo.phoneId(this));
         latitude = findViewById(R.id.latitude);
@@ -477,6 +479,7 @@ public final class MainActivity extends Activity {
         plant.setText(f.plant);
         sampleId.setText(f.sampleId);
         sessionId.setText(f.sessionId);
+        customFields.show(f.custom);
         showPosition(f.location);
     }
 
@@ -531,6 +534,7 @@ public final class MainActivity extends Activity {
         f.plant = text(plant);
         f.sampleId = text(sampleId);
         f.sessionId = text(sessionId);
+        f.custom = customFields.read();
         f.location = locationOnScreen();
         String p = f.problem();
         if (p != null) throw new IllegalArgumentException(p);
