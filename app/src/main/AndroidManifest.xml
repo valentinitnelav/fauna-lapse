@@ -60,5 +60,17 @@
             android:name=".CaptureService"
             android:exported="false"
             android:foregroundServiceType="camera" />
+
+        <!-- "Screen off" (ScreenOff): a device admin app with the single right to lock the screen;
+             only Android itself can bind to it (BIND_DEVICE_ADMIN). -->
+        <receiver
+            android:name=".ScreenOff"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/screen_off" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

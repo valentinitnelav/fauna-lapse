@@ -28,6 +28,14 @@
     <string name="storage_missing">The memory card chosen for the sessions is not in the phone: new sessions go to the phone until it is back.</string>
     <string name="storage_card_app_folder">This is FaunaLapse\'s own folder on the card (Android 7 to 10 let apps write nowhere else there): Android deletes it when the app is uninstalled, so copy the sessions to a computer first.</string>
     <string name="open_folder">Open the folder</string>
+    <string name="screen_off">Screen off</string>
+    <string name="screen_off_title">Allow the Screen off button?</string>
+    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
+    <string name="screen_off_yes">Continue</string>
+    <string name="screen_off_no">Not now</string>
+    <string name="screen_off_reason">FaunaLapse uses this only for its Screen off button: it switches the screen off and locks the phone, as the power button does, so the phone need not be pressed where it stands. The session goes on.</string>
+    <string name="screen_off_allowed">FaunaLapse may switch the screen off (device admin app). Remove this right before you uninstall FaunaLapse.</string>
+    <string name="screen_off_remove">Remove</string>
     <string name="open_folder_failed">No file app could open it. The files are in %1$s.</string>
     <plurals name="sessions">
         <item quantity="one">%d session</item>
@@ -177,7 +185,7 @@
 
     <!-- Start -->
     <string name="start_session">Start session</string>
-    <string name="start_hint">After Start, switch the screen off with the power button: the session goes on.</string>
+    <string name="start_hint">After Start, tap Screen off on the status card (or press the power button gently): the session goes on with the screen off.</string>
 
     <!-- Aim screen -->
     <string name="square_label">Square side</string>

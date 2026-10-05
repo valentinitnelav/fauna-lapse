@@ -70,8 +70,11 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    until the flower is sharp. Tap *Done*, fill in *2 · Field metadata* (site, transect, plant) and,
    if you want the position, tap *Get location* outdoors (Location must be on; turn it off again
    afterwards) or type latitude and longitude from another GPS device. Then tap *Start session*.
-4. Switch the screen off with the power button. The session goes on; the camera is off in the
-   breaks.
+4. Tap *Screen off* on the status card: the screen switches off as with the power button, but
+   without pressing the phone where it stands. The first time, Android asks you to allow it
+   (FaunaLapse becomes a "device admin app" with the single right to lock the screen; remove it
+   under *Last session, battery and clock* before you uninstall FaunaLapse). Or press the power
+   button gently. The session goes on; the camera is off in the breaks.
 5. To stop early: open the app, tap *Stop session*, then *Stop*.
 6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
    phone and copy the session folders from `Internal storage/Documents/FaunaLapse/` (or the same

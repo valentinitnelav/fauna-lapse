@@ -74,6 +74,7 @@ public final class MainActivity extends Activity {
     private static final String EXTRA_CAMERA1 = "camera1";
     private static final int PERMISSION_REQUEST = 1;
     private static final int LOCATION_REQUEST = 2;
+    private static final int SCREEN_OFF_REQUEST = 3;
     private static final int TEST_PHOTO = 0;
     private static final int SPEED_TEST = 1;
     private static final int SESSION = 2;
@@ -108,6 +109,8 @@ public final class MainActivity extends Activity {
     private long[][] storageUse; // per place: bytes and sessions in its FaunaLapse folder; null until counted
     private boolean wasRunning;
     private Button stopButton;
+    private Button screenOffButton;
+    private View screenOffRight;
     private View aimCard;
     private View fieldCard;
     private View scheduleCard;
@@ -195,6 +198,13 @@ public final class MainActivity extends Activity {
             showStorage();
         });
         findViewById(R.id.open_folder).setOnClickListener(v -> openFolder());
+        screenOffButton = findViewById(R.id.screen_off);
+        screenOffButton.setOnClickListener(v -> screenOff());
+        screenOffRight = findViewById(R.id.screen_off_right);
+        findViewById(R.id.screen_off_remove).setOnClickListener(v -> {
+            ScreenOff.remove(this);
+            screenOffRight.setVisibility(View.GONE);
+        });
         places = Storage.places(this);
         showPlaces();
         stopButton = findViewById(R.id.stop_session);
@@ -811,6 +821,32 @@ public final class MainActivity extends Activity {
         scroll.post(() -> scroll.smoothScrollTo(0, 0)); // the status card shows the session
     }
 
+    /** Screen off: at once when allowed; else first why Android asks, then Android's own screen. */
+    private void screenOff() {
+        if (ScreenOff.allowed(this)) {
+            ScreenOff.lock(this);
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.screen_off_title)
+                .setMessage(R.string.screen_off_text)
+                .setPositiveButton(R.string.screen_off_yes, (d, w) -> {
+                    try {
+                        startActivityForResult(ScreenOff.ask(this), SCREEN_OFF_REQUEST);
+                    } catch (ActivityNotFoundException e) {
+                        openPage(new Intent(Settings.ACTION_SECURITY_SETTINGS)); // a phone without that screen
+                    }
+                })
+                .setNegativeButton(R.string.screen_off_no, null)
+                .show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCREEN_OFF_REQUEST && ScreenOff.allowed(this)) ScreenOff.lock(this);
+    }
+
     private void askToStop() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.stop_question)
@@ -984,6 +1020,8 @@ public final class MainActivity extends Activity {
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())));
         // One big button at a time: Start while idle, Stop during a session.
         stopButton.setVisibility(session ? View.VISIBLE : View.GONE);
+        screenOffButton.setVisibility(session ? View.VISIBLE : View.GONE);
+        screenOffRight.setVisibility(!running && detailsOpen && ScreenOff.allowed(this) ? View.VISIBLE : View.GONE);
         startButton.setVisibility(running ? View.GONE : View.VISIBLE);
         startHint.setVisibility(running ? View.GONE : View.VISIBLE);
         setControlsEnabled(!running);

@@ -13,7 +13,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
   stop on low battery without charging or too little storage. Tested on the Samsung M12.
 - **Main screen**: status card (state; while running: counts, warnings, phone check lines, session
   folder and MB so far; files folder, use, free space, with a memory card a choice of place and the
-  total; Open the folder in Android's file app; last session, battery, clock fold away);
+  total; Open the folder in Android's file app; Screen off; last session, battery, clock fold away);
   1 Aim; 2 Field metadata (phone model and ID; site, transect, plant, sample ID, session ID; custom
   fields: text, number, date, time; latitude, longitude, accuracy typed or from Get location: GPS on
   until 10 m or 3 min, its values ask before an edit); 3 Schedule (summary; settings on Change); 4 Phone for the field (radios, location, battery
@@ -79,7 +79,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 | `RoiMath.java`, `PhotoSaver.java` | Square position, saved size, screen and focus-area maps, upright turn, video crop and texture corners (unit tested); cutting, turning and saving the photo square |
 | `SquareRecorder.java` | Video of the square: camera texture, GPU cut and turn, hardware H.264 encoder, MP4; encoder choice and bit rate |
 | `SessionLog.java` | `session.jsonl` lines, time formats, file names |
-| `PhoneCheck.java`, `HelpToggles.java` | Phone settings for the field (read only; main screen and record); explanations behind the (i) of a label |
+| `PhoneCheck.java`, `HelpToggles.java`, `ScreenOff.java` | Phone settings for the field (read only; main screen and record); explanations behind the (i) of a label; Screen off: a device admin app with only the right to lock the screen (`lockNow`), granted once by the user |
 | `Camera1Backend.java`, `SpeedTest.java`, `Camera2StillTest.java`, `CameraFacts.java`, `Camera2Facts.java` | Phase 0 tests and shared Camera1 size helpers |
 | `tools/phase0_speed_report.py` | PC: copy the newest speed test from a phone and summarise it |
 

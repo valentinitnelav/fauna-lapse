@@ -33,7 +33,13 @@
             <!-- With a memory card: where new sessions go (Storage), and all places together -->
             <RadioGroup android:id="@+id/storage_places" style="@style/Group" android:visibility="gone" />
             <TextView android:id="@+id/storage_total" style="@style/Body" android:textSize="15sp" />
-            <Button android:id="@+id/open_folder" style="@style/SecondaryButton" android:text="@string/open_folder" />
+            <!-- Screen off only during a session; then Open the folder shares the line -->
+            <LinearLayout style="@style/FieldRow" android:layout_marginTop="0dp">
+                <Button android:id="@+id/screen_off" style="@style/SecondaryButton" android:layout_width="0dp"
+                    android:layout_weight="1" android:layout_marginEnd="8dp" android:text="@string/screen_off" />
+                <Button android:id="@+id/open_folder" style="@style/SecondaryButton" android:layout_width="0dp"
+                    android:layout_weight="1" android:text="@string/open_folder" />
+            </LinearLayout>
             <TextView android:id="@+id/details_toggle" style="@style/Body" android:minHeight="48dp"
                 android:gravity="center_vertical" android:textColor="@color/heading" />
             <LinearLayout android:id="@+id/details" style="@style/Group" android:visibility="gone">
@@ -41,6 +47,15 @@
                     android:textSize="15sp" />
                 <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
                 <TextView android:id="@+id/phone_time" style="@style/Hint" />
+                <!-- While FaunaLapse may lock the screen (ScreenOff): how to give that right back -->
+                <LinearLayout android:id="@+id/screen_off_right" style="@style/FieldRow" android:layout_marginTop="8dp"
+                    android:visibility="gone">
+                    <TextView style="@style/Hint" android:layout_width="0dp" android:layout_weight="1"
+                        android:text="@string/screen_off_allowed" />
+                    <Button android:id="@+id/screen_off_remove" style="@style/SecondaryButton"
+                        android:layout_width="wrap_content" android:layout_height="48dp" android:layout_marginTop="0dp"
+                        android:layout_marginStart="12dp" android:textSize="15sp" android:text="@string/screen_off_remove" />
+                </LinearLayout>
             </LinearLayout>
             <Button android:id="@+id/stop_session" style="@style/BigButton"
                 android:backgroundTint="@color/stop" android:text="@string/stop_session" />
