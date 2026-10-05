@@ -25,6 +25,7 @@ Thumbs.db
 *.jks
 *.keystore
 key.properties
+signing.properties
 
 # Field data: photos, videos and session logs stay on the phone or the PC
 *.jpg

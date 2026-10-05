@@ -94,7 +94,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
 3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
    the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
-4. More test phones (three Android 7 and 8.1 phones at work; a Redmi Note 9S, Android 12): battery
-   first, then the speed test (`sensor_pixels` above `jpeg_largest`: enlarged photos).
-5. First release (owner decides): licence, history without private data, signing key, Zenodo.
-   Parked by the owner: `docs/PARKED.md`. Lint warnings kept: `allowBackup`, newer Gradle.
+4. Three Android 7 and 8.1 phones at work: battery first, then the speed test (`sensor_pixels`
+   above `jpeg_largest`: enlarged photos). Parked: `docs/PARKED.md`; lint kept: `allowBackup`, Gradle.
+5. First release `0.1.0-alpha.1`: the owner makes the signing key (`tools/create_release_key.sh`),
+   links Zenodo to GitHub, approves the push. Before it: a field day and an outdoor GPS test.

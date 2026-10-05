@@ -42,7 +42,7 @@ plain language at first use, and write plain English with short sentences and no
 
 ## Code origin and licence
 
-- All code is written from scratch here; the owner chooses the licence before the first release.
+- All code is written from scratch here, under AGPL-3.0-only (`LICENSE`).
 - GPL projects (Open Camera, TimeLapseCam, Background-Timelapse, FreeDcam, Haven and others) may be
   read for ideas and behaviour. Never copy, translate or closely paraphrase their code.
 - Code from permissive projects (MIT, Apache-2.0) may be re-used only with credit, in `NOTICE.md` and
@@ -60,7 +60,7 @@ Needs JDK 17+ and the Android SDK (platform 36), with its path in `local.propert
 (`sdk.dir=/path/to/Android/Sdk`, not in git). `gradlew` downloads Gradle itself.
 
 ```bash
-./gradlew assembleDebug    # APK: app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleDebug    # APK: app/build/outputs/apk/debug/app-debug.apk (release: docs/INSTALL.md)
 ./gradlew test             # unit tests on the PC (JUnit)
 ./gradlew lintDebug        # Android code checks: app/build/reports/lint-results-debug.txt
 adb install -r app/build/outputs/apk/debug/app-debug.apk

@@ -2,6 +2,17 @@ plugins {
     id "com.android.application"
 }
 
+// Release signing: the key and its passwords stay outside the repository, in a properties file
+// (storeFile, storePassword, keyAlias, keyPassword) at ~/faunalapse-signing/signing.properties or
+// where FAUNALAPSE_SIGNING names it. Debug builds and tests need no key; release builds stop without
+// it ("missing required property storeFile"), so no release APK goes out with another key.
+def signingFile = file(System.getenv("FAUNALAPSE_SIGNING")
+        ?: "${System.getProperty("user.home")}/faunalapse-signing/signing.properties")
+def signing = new Properties()
+if (signingFile.exists()) {
+    signingFile.withInputStream { signing.load(it) }
+}
+
 android {
     namespace = "com.faunalapse.app"
     compileSdk = 36
@@ -11,7 +22,24 @@ android {
         minSdk = 24       // Android 7.0, the oldest phone we can test
         targetSdk = 36
         versionCode = 1
-        versionName = "0.0.1-phase0"
+        versionName = "0.1.0-alpha.1"
+    }
+
+    signingConfigs {
+        release {
+            if (signing["storeFile"]) {
+                storeFile = file(signing["storeFile"])
+                storePassword = signing["storePassword"]
+                keyAlias = signing["keyAlias"]
+                keyPassword = signing["keyPassword"]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.release
+        }
     }
 
     compileOptions {
