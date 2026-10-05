@@ -96,5 +96,5 @@ All Java files are in `app/src/main/java/com/faunalapse/app/`.
 4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi): battery first, then the
    speed test (`sensor_pixels` above `jpeg_largest`: enlarged photos; `all_camera1_parameters`).
 5. Lint warnings left on purpose: `allowBackup`, newer Gradle (update with the Android plugin).
-6. Later, when needed (owner): heat drift of the fixed focus (printed target at 20 cm while the
-   phone warms; per phone); copying settings between phones (a file, then a QR code) before release.
+6. Parked by the owner (copying to a computer, heat drift of the fixed focus, settings between
+   phones, and more): `docs/PARKED.md`.

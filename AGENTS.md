@@ -82,13 +82,13 @@ Keep schedule and maths code in classes without Android code, and test it. On th
 
 ## Where knowledge lives (keep these files short)
 
-- `AGENTS.md`: rules for every task (at most 120 lines).
+- `AGENTS.md`: rules for every task (at most 120 lines). `README.md`: for humans.
 - `docs/AGENT_OVERVIEW.md`: current state, defaults, file map, next steps (at most 100 lines).
 - `docs/PHONES.md`: phone facts and measurements; read it only for camera or energy work.
-- `README.md`: for humans. Git commit messages: the history (`git log --oneline -- <file>`).
-- Upkeep: one home per fact. When something changes, replace or remove its text; never add history,
-  dates of changes or "replaces X" notes. Merge or remove lines before passing a line limit. A reason
-  goes in one clause next to its rule or in a code comment; longer reasoning in the commit message.
+- `docs/PARKED.md`: ideas put aside and what was found; read it before reopening one.
+- Upkeep: one home per fact; history only in commit messages (`git log --oneline -- <file>`).
+  On a change, replace or remove the text; no dates or "replaces X" notes. Merge or remove lines
+  before passing a limit. A reason: one clause next to its rule, or a comment; longer: the commit.
 
 ## Git
 
