@@ -3,6 +3,8 @@ package com.faunalapse.app;
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.OrientationEventListener;
 import android.view.TextureView;
@@ -17,6 +19,9 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +32,8 @@ import java.util.concurrent.Executors;
  * "More below" while some are hidden; Done and Start stay at the bottom. Focus is fixed at a distance where Camera2 allows it, or
  * automatic. The camera is open only while this screen is shown. "Start session here" starts the
  * session with the saved settings while the phone is already in its place (its position counts).
+ * While a session is paused (SessionRunner.userPaused) the same screen adjusts it: a red bar says
+ * that nothing is recorded, and "Continue session" replaces Start.
  *
  * The screen stays upright (portrait, set in the manifest), so the view turns with the phone like
  * a window, and the photo is shown turned by the sensor orientation.
@@ -43,6 +50,23 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
 
     /** Camera calls wait for answers, so they run here: a plain thread, as Camera1Session needs. */
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    /** True while this screen holds the camera: a session going on after a pause waits for it. */
+    static volatile boolean cameraInUse;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private boolean forPause; // opened while a session is paused
+    private final Runnable pauseWatch = new Runnable() {
+        @Override
+        public void run() {
+            // The session went on by itself (or ended): let go of the camera at once.
+            if (!CaptureService.sessionRunning || !SessionRunner.userPaused) {
+                Toast.makeText(AimActivity.this, CaptureService.sessionRunning ? R.string.aim_continued
+                        : R.string.aim_session_ended, Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+            handler.postDelayed(this, 1000);
+        }
+    };
     private SessionCamera camera; // used only on the worker thread
     private TextureView view;
     private SquareView square;
@@ -78,6 +102,11 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_aim);
+        if (CaptureService.running && !(CaptureService.sessionRunning && SessionRunner.userPaused)) {
+            finish(); // the session or a test uses the camera
+            return;
+        }
+        forPause = CaptureService.sessionRunning;
         SessionSettings s = SessionSettings.load(this); // the main screen saved its values
         video = s.video;
         videoFps = s.videoFps;
@@ -101,7 +130,14 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         findViewById(R.id.done).setOnClickListener(v -> finish());
         startButton = findViewById(R.id.start_here);
         startButton.setOnClickListener(v -> startHere());
-        startButton.setText(MainActivity.withIcon(startButton, R.drawable.ic_start, R.string.aim_start));
+        startButton.setText(MainActivity.withIcon(startButton, R.drawable.ic_start,
+                forPause ? R.string.continue_session : R.string.aim_start));
+        if (forPause) {
+            TextView bar = findViewById(R.id.paused_bar);
+            bar.setText(getString(SessionRunner.pauseEndsSession ? R.string.aim_paused_end : R.string.aim_paused,
+                    new SimpleDateFormat("HH:mm", Locale.US).format(new Date(SessionRunner.pauseEnds))));
+            bar.setVisibility(View.VISIBLE);
+        }
         findViewById(R.id.middle).setOnClickListener(v -> {
             square.centreX = 0.5;
             square.centreY = 0.5;
@@ -181,12 +217,14 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         super.onResume();
         resumed = true;
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
+        if (forPause) handler.post(pauseWatch);
         if (view.isAvailable()) openCamera(view.getSurfaceTexture());
     }
 
     @Override
     protected void onPause() {
         resumed = false;
+        handler.removeCallbacks(pauseWatch);
         orientationListener.disable();
         worker.execute(this::closeCamera); // free the camera for the session
         super.onPause();
@@ -195,7 +233,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
     @Override
     protected void onDestroy() {
         // With a camera view, Android destroys it only after this; the worker ends there.
-        if (!view.isAvailable()) worker.shutdown();
+        if (view == null || !view.isAvailable()) worker.shutdown();
         super.onDestroy();
     }
 
@@ -244,6 +282,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
                 return;
             }
             camera = c;
+            cameraInUse = true;
             final JSONObject d = c.describe();
             runOnUiThread(() -> cameraReady(d));
         });
@@ -253,6 +292,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         if (camera == null) return;
         camera.close();
         camera = null;
+        cameraInUse = false;
     }
 
     private void cameraReady(JSONObject d) {
@@ -408,15 +448,16 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         });
     }
 
-    /** Closes the camera, then starts the session (it opens the camera at once) and goes back to
-     *  the main screen, which shows the session. */
+    /** Closes the camera, then starts the session (it opens the camera at once), or lets a paused
+     *  one go on, and goes back to the main screen, which shows the session. */
     private void startHere() {
         startButton.setEnabled(false);
         final int turn = phoneTurn;
         worker.execute(() -> {
             closeCamera();
             runOnUiThread(() -> {
-                if (!CaptureService.running) CaptureService.startSession(this, turn);
+                if (forPause) CaptureService.pauseSession(this, false, turn);
+                else if (!CaptureService.running) CaptureService.startSession(this, turn);
                 finish();
             });
         });

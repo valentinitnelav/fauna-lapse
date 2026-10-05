@@ -39,10 +39,15 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
-- Field metadata for each session: site, transect, plant (or sample ID), session ID, your own
-  fields (text, number, date or time), and the phone model and ID (filled in by the app); one GPS
-  position on a tap (the GPS switches off again when the position is within 10 m), or latitude,
-  longitude and accuracy typed from another GPS device.
+- During a session: the last saved photo on the main screen, and a pause to adjust the phone (with
+  the live camera view; nothing is recorded, and the session goes on by itself after 10 minutes).
+- Field metadata for each session: who set it up, site, transect, plant, habitat, sample and
+  session ID, camera height and distance to the target (named as in the Camtrap DP standard for
+  camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from your
+  own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
+  taken with the phone's camera app and kept apart in the session folder; one GPS position on a tap
+  (WGS 84; the GPS switches off again when the position is within 10 m), or latitude, longitude and
+  uncertainty typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone or on a memory card (SD card), one folder per session
@@ -67,15 +72,19 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 3. Open FaunaLapse, choose *Photos* or *Video*, tap *Aim the camera*, drag the square onto the
    flower (put your finger inside the square) and pinch it to size. The focus starts fixed at about
    20 cm: tap *Focus again* to focus once on the square and fix it there, or move the focus slider
-   until the flower is sharp. Tap *Done*, fill in *2 · Field metadata* (site, transect, plant) and,
-   if you want the position, tap *Get location* outdoors (Location must be on; turn it off again
-   afterwards) or type latitude and longitude from another GPS device. Then tap *Start session*.
+   until the flower is sharp. Tap *Done*, then *Change field metadata* in *2 · Field metadata*: fill
+   in the site, plant and setup, take site photos if you like, and for the position tap *Get
+   location* outdoors (Location must be on: *Open settings* beside it switches it on and, afterwards,
+   off) or type latitude and longitude from another GPS device. Then tap *Start session*.
 4. Tap *Screen off* on the status card: the screen switches off as with the power button, but
    without pressing the phone where it stands. The first time, Android asks you to allow it
    (FaunaLapse becomes a "device admin app" with the single right to lock the screen; remove it
    under *Last session, battery and clock* before you uninstall FaunaLapse). Or press the power
    button gently. The session goes on; the camera is off in the breaks.
-5. To stop early: open the app, tap *Stop session*, then *Stop*.
+5. To adjust the phone during a session: tap *Pause to adjust the phone*, then *Aim the camera
+   again*; move the phone, the square or the focus, and tap *Continue session*. Nothing is recorded
+   during the pause, and the session goes on by itself after 10 minutes. To stop early: tap *Stop
+   session*, then *Stop*.
 6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
    phone and copy the session folders from `Internal storage/Documents/FaunaLapse/` (or the same
    folder on the SD card, if you chose it on the status card). Each folder
@@ -83,7 +92,9 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    field metadata and the battery use.
 
 Tips: a daily window may cross midnight (22:00-04:00), and 00:00-24:00 records all day, for example
-under the midnight sun. The session pauses while the battery is too warm (45 °C by default) and stops
+under the midnight sun. Memory cards differ in speed: before photos every 1 or 2 s on a card, run a
+short test session; if FaunaLapse then says that photo times were skipped, use video or the phone
+storage. The session pauses while the battery is too warm (45 °C by default) and stops
 cleanly when the battery falls to 15 % without charging. Some phones stop apps in the background to
 save power with their own battery manager (Huawei, Xiaomi, Samsung): the checklist under the (i) of
 *4 · Phone for the field* says where to allow FaunaLapse.

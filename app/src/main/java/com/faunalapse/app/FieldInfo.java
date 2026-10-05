@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 
 import org.json.JSONArray;
@@ -17,49 +18,80 @@ import java.util.Locale;
 import java.util.Random;
 
 /**
- * Field metadata: which phone recorded what, and where. The user changes these at each site or
- * plant, so they are kept apart from the camera settings (SessionSettings). Saved on the phone and
- * written into each session record. The phone model and ID come from Android; with the start time
- * they make each session folder name unique.
+ * Field metadata: which phone recorded what, where and how it was set up. The user changes these at
+ * each site or plant, so they are kept apart from the camera settings (SessionSettings). Saved on
+ * the phone and written into each session record. The phone model and ID come from Android; with
+ * the start time they make each session folder name unique. Record keys follow the Camtrap DP
+ * deployment terms where one fits (setup_by, habitat, camera_height_m, detection_distance_m,
+ * coordinate_uncertainty_m), in this record's style: lower case with the unit.
  */
 final class FieldInfo {
 
     /** Longest text in a field: enough for a site or a plant description. */
     static final int MAX_TEXT = 100;
-    /** Custom fields: the longest name, and the longest text value (a short note; longer notes
-     *  belong in the field notebook). */
+    /** Custom fields: the longest name (also of a choice), the longest text (a short value), the
+     *  longest notes (about 1.5 pages: a phone keyboard is slow for more, and the record stays
+     *  small) and the most choices in a list. */
     static final int MAX_NAME = 40;
-    static final int MAX_CUSTOM_TEXT = 200;
-    /** Highest accuracy that may be typed, in m: a position from a map is rarely worse. */
-    static final float MAX_ACCURACY_M = 10000;
+    static final int MAX_CUSTOM_TEXT = 100;
+    static final int MAX_NOTES = 5000;
+    static final int MAX_CHOICES = 30;
+    /** Highest uncertainty that may be typed, in m: a position from a map is rarely worse. */
+    static final float MAX_UNCERTAINTY_M = 10000;
+    /** Highest camera height and distance to the target, in m. */
+    static final double MAX_SETUP_M = 100;
+    /** Location extras key: the satellites used for the position (as Android's GPS sets it). */
+    static final String SATELLITES = "satellites";
 
+    String setupBy = "";
     String site = "";
     String transect = "";
     String plant = "";
+    String habitat = "";
     String sampleId = "";
     String sessionId = "";
-    /** The position: from "Get location" (provider GPS, with its accuracy and time) or typed by
-     *  hand from another device (provider TYPED, accuracy only if given); null when there is none. */
+    /** In m as typed ("" = not given): text, so the field shows what was typed. */
+    String cameraHeight = "";
+    String distance = "";
+    /** The distance comes from the fixed focus (the main screen fills it in) until the user types. */
+    boolean distanceFromFocus = true;
+    /** What the site photos show (optional); the photos themselves: SitePhotos. */
+    String sitePhotosAbout = "";
+    /** The position: from "Get location" (provider GPS, with its uncertainty, time and satellites)
+     *  or typed by hand from another device (provider TYPED, uncertainty only if given); null when
+     *  there is none. Android's getAccuracy() is the uncertainty: a radius in m with a 68 % chance. */
     Location location;
     /** Fields the user added (for example Observer or Weather), in the order added. */
     List<Custom> custom = new ArrayList<>();
 
-    /** A field the user added: its name, type (TEXT, NUMBER, DATE or TIME) and value ("" = empty).
-     *  Dates and times come from Android's pickers: 2026-10-05 and 14:30. */
+    /** A field the user added: its name, type, value ("" = empty) and, for CHOICE, its choices.
+     *  Dates and times come from Android's pickers (2026-10-05 and 14:30), yes or no and choices
+     *  from a list, so they are always written the same way. */
     static final class Custom {
         static final String TEXT = "text";
+        static final String NOTES = "notes";
         static final String NUMBER = "number";
         static final String DATE = "date";
         static final String TIME = "time";
+        static final String YES_NO = "yes_no";
+        static final String CHOICE = "choice";
+        static final String YES = "yes";
+        static final String NO = "no";
 
         final String name;
         final String type;
         final String value;
+        final List<String> choices; // CHOICE only, else empty
 
         Custom(String name, String type, String value) {
+            this(name, type, value, new ArrayList<String>());
+        }
+
+        Custom(String name, String type, String value, List<String> choices) {
             this.name = name;
             this.type = type;
             this.value = value;
+            this.choices = choices;
         }
 
         /** What is wrong with the value, or null. */
@@ -68,14 +100,20 @@ final class FieldInfo {
             if (NUMBER.equals(type) && number(value) == null) return name + ": write a number.";
             if (DATE.equals(type) && !value.matches("\\d{4}-\\d{2}-\\d{2}")) return name + ": choose a date.";
             if (TIME.equals(type) && !value.matches("\\d{2}:\\d{2}")) return name + ": choose a time.";
-            if (value.length() > MAX_CUSTOM_TEXT) return name + ": use at most " + MAX_CUSTOM_TEXT + " characters.";
+            if (YES_NO.equals(type) && !YES.equals(value) && !NO.equals(value)) return name + ": choose yes or no.";
+            if (CHOICE.equals(type) && !choices.contains(value)) return name + ": choose from the list.";
+            int max = NOTES.equals(type) ? MAX_NOTES : MAX_CUSTOM_TEXT;
+            if (value.length() > max) return name + ": use at most " + max + " characters.";
             return null;
         }
 
-        /** For the record: a number for NUMBER, else the text; null when empty. */
+        /** For the record: a number for NUMBER, true or false for YES_NO, else the text; null when
+         *  empty. */
         Object jsonValue() {
             if (value.isEmpty()) return JSONObject.NULL;
-            return NUMBER.equals(type) ? number(value) : value;
+            if (NUMBER.equals(type)) return number(value);
+            if (YES_NO.equals(type)) return YES.equals(value);
+            return value;
         }
 
         /** "21,5" or "21.5": the value as a finite number, or null. */
@@ -96,16 +134,25 @@ final class FieldInfo {
     static FieldInfo load(Context context) {
         SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         FieldInfo f = new FieldInfo();
+        f.setupBy = p.getString("setup_by", "");
         f.site = p.getString("site", "");
         f.transect = p.getString("transect", "");
         f.plant = p.getString("plant", "");
+        f.habitat = p.getString("habitat", "");
         f.sampleId = p.getString("sample_id", "");
         f.sessionId = p.getString("session_id", "");
+        f.cameraHeight = p.getString("camera_height_m", "");
+        f.distance = p.getString("detection_distance_m", "");
+        f.distanceFromFocus = p.getBoolean("distance_from_focus", true);
+        f.sitePhotosAbout = p.getString("site_photos_about", "");
         try {
             JSONArray a = new JSONArray(p.getString("custom_fields", "[]"));
             for (int i = 0; i < a.length(); i++) {
                 JSONObject c = a.getJSONObject(i);
-                f.custom.add(new Custom(c.getString("name"), c.getString("type"), c.optString("value")));
+                List<String> choices = new ArrayList<>();
+                JSONArray ch = c.optJSONArray("choices");
+                for (int k = 0; ch != null && k < ch.length(); k++) choices.add(ch.getString(k));
+                f.custom.add(new Custom(c.getString("name"), c.getString("type"), c.optString("value"), choices));
             }
         } catch (JSONException ignored) {
             // never written that way; the fields can be added again
@@ -114,15 +161,20 @@ final class FieldInfo {
             // Strings: a float would round the position to about 1 m.
             double lat = Double.parseDouble(p.getString("latitude", "0"));
             double lon = Double.parseDouble(p.getString("longitude", "0"));
-            Float accuracy = p.contains("accuracy_m") ? p.getFloat("accuracy_m", 0) : null;
+            Float uncertainty = p.contains("accuracy_m") ? p.getFloat("accuracy_m", 0) : null;
             if (TYPED.equals(p.getString("location_source", GPS))) {
-                f.location = typed(lat, lon, accuracy);
+                f.location = typed(lat, lon, uncertainty);
             } else {
                 Location l = new Location(GPS);
                 l.setLatitude(lat);
                 l.setLongitude(lon);
-                l.setAccuracy(accuracy == null ? 0 : accuracy);
+                l.setAccuracy(uncertainty == null ? 0 : uncertainty);
                 l.setTime(p.getLong("fix_time", 0));
+                if (p.contains(SATELLITES)) {
+                    Bundle b = new Bundle();
+                    b.putInt(SATELLITES, p.getInt(SATELLITES, 0));
+                    l.setExtras(b);
+                }
                 f.location = l;
             }
         }
@@ -132,39 +184,90 @@ final class FieldInfo {
     void save(Context context) {
         SharedPreferences.Editor e = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .remove("phone_name") // a name the user could change, saved by older versions
+                .putString("setup_by", setupBy)
                 .putString("site", site)
                 .putString("transect", transect)
                 .putString("plant", plant)
+                .putString("habitat", habitat)
                 .putString("sample_id", sampleId)
-                .putString("session_id", sessionId);
+                .putString("session_id", sessionId)
+                .putString("camera_height_m", cameraHeight)
+                .putString("detection_distance_m", distance)
+                .putBoolean("distance_from_focus", distanceFromFocus)
+                .putString("site_photos_about", sitePhotosAbout);
         JSONArray a = new JSONArray();
         for (Custom c : custom) {
             JSONObject o = new JSONObject();
             SessionLog.put(o, "name", c.name);
             SessionLog.put(o, "type", c.type);
             SessionLog.put(o, "value", c.value);
+            if (Custom.CHOICE.equals(c.type)) SessionLog.put(o, "choices", new JSONArray(c.choices));
             a.put(o);
         }
         e.putString("custom_fields", a.toString());
-        e.remove("latitude").remove("longitude").remove("location_source").remove("accuracy_m").remove("fix_time");
+        e.remove("latitude").remove("longitude").remove("location_source").remove("accuracy_m").remove("fix_time")
+                .remove(SATELLITES);
         if (location != null) {
             e.putString("latitude", String.valueOf(location.getLatitude()))
                     .putString("longitude", String.valueOf(location.getLongitude()))
                     .putString("location_source", location.getProvider());
             if (location.hasAccuracy()) e.putFloat("accuracy_m", location.getAccuracy());
             if (fromGps(location)) e.putLong("fix_time", location.getTime());
+            Integer n = satellites(location);
+            if (n != null) e.putInt(SATELLITES, n);
         }
         e.apply();
     }
 
     /** A plain-language problem with the values, or null when they are usable. */
     String problem() {
-        for (Custom c : custom) {
-            String p = c.problem();
-            if (p != null) return p;
-        }
+        String p = setupProblem("Camera height", cameraHeight);
+        if (p == null) p = setupProblem("Distance to target", distance);
+        for (int i = 0; p == null && i < custom.size(); i++) p = custom.get(i).problem();
+        if (p != null) return p;
         return location == null ? null : positionProblem(location.getLatitude(), location.getLongitude(),
                 location.hasAccuracy() ? location.getAccuracy() : null);
+    }
+
+    /** A camera height or distance in m: empty, or 0 to MAX_SETUP_M. */
+    static String setupProblem(String label, String value) {
+        if (value.isEmpty()) return null;
+        Double m = Custom.number(value);
+        if (m == null || m < 0 || m > MAX_SETUP_M) {
+            return label + ": use 0 to " + (int) MAX_SETUP_M + " m, or leave it empty.";
+        }
+        return null;
+    }
+
+    /** What is wrong with the choices of a new list field, or null. */
+    static String choicesProblem(List<String> choices) {
+        if (choices.size() < 2) return "Write at least 2 choices, one per line.";
+        if (choices.size() > MAX_CHOICES) return "Use at most " + MAX_CHOICES + " choices.";
+        for (int i = 0; i < choices.size(); i++) {
+            if (choices.get(i).length() > MAX_NAME) return "Use at most " + MAX_NAME + " characters per choice.";
+            for (int k = 0; k < i; k++) {
+                if (choices.get(k).equalsIgnoreCase(choices.get(i))) return "\"" + choices.get(i) + "\" is there twice.";
+            }
+        }
+        return null;
+    }
+
+    /** The lines of a text as choices: trimmed, empty lines left out. */
+    static List<String> choiceLines(String text) {
+        List<String> list = new ArrayList<>();
+        for (String line : text.split("\n")) {
+            if (!line.trim().isEmpty()) list.add(line.trim());
+        }
+        return list;
+    }
+
+    /** The fixed focus distance in m (two decimals) as a first guess of the distance to the target,
+     *  or null: autofocus, a lens that does not tell distances (calibration "uncalibrated" or
+     *  none), or farther than 10 m. */
+    static Double focusDistanceM(SessionSettings s, String calibration) {
+        boolean real = "calibrated".equals(calibration) || "approximate".equals(calibration);
+        if (!s.focusFixed || !real || s.focusDiopters < 0.1) return null;
+        return Math.round(100 / s.focusDiopters) / 100.0;
     }
 
     /** What is wrong with the name of a new custom field, or null. Names are unique (in any case):
@@ -178,26 +281,34 @@ final class FieldInfo {
         return null;
     }
 
-    /** What is wrong with a position in decimal degrees and its accuracy in m (null: not given),
-     *  or null. */
-    static String positionProblem(double latitude, double longitude, Float accuracyM) {
+    /** What is wrong with a position in decimal degrees and its uncertainty in m (null: not
+     *  given), or null. */
+    static String positionProblem(double latitude, double longitude, Float uncertaintyM) {
         if (!(latitude >= -90 && latitude <= 90)) return "Latitude: use -90 to 90 (decimal degrees; south is negative).";
         if (!(longitude >= -180 && longitude <= 180)) return "Longitude: use -180 to 180 (decimal degrees; west is negative).";
-        if (accuracyM != null && !(accuracyM >= 0 && accuracyM <= MAX_ACCURACY_M)) return "Accuracy: use 0 to 10000 m, or leave it empty.";
+        if (uncertaintyM != null && !(uncertaintyM >= 0 && uncertaintyM <= MAX_UNCERTAINTY_M)) {
+            return "Uncertainty: use 0 to 10000 m, or leave it empty.";
+        }
         return null;
     }
 
-    /** A position typed by hand: no time; the accuracy only if given. */
-    static Location typed(double latitude, double longitude, Float accuracyM) {
+    /** A position typed by hand: no time; the uncertainty only if given. */
+    static Location typed(double latitude, double longitude, Float uncertaintyM) {
         Location l = new Location(TYPED);
         l.setLatitude(latitude);
         l.setLongitude(longitude);
-        if (accuracyM != null) l.setAccuracy(accuracyM);
+        if (uncertaintyM != null) l.setAccuracy(uncertaintyM);
         return l;
     }
 
     static boolean fromGps(Location l) {
         return GPS.equals(l.getProvider());
+    }
+
+    /** The satellites used for a GPS position, or null when not known. */
+    static Integer satellites(Location l) {
+        Bundle b = l.getExtras();
+        return b != null && b.containsKey(SATELLITES) ? b.getInt(SATELLITES) : null;
     }
 
     /** The start of each session folder name: the phone model and ID, for example
@@ -241,11 +352,18 @@ final class FieldInfo {
         SessionLog.put(j, "phone_maker", Build.MANUFACTURER);
         SessionLog.put(j, "phone_model", Build.MODEL);
         SessionLog.put(j, "phone_id", phoneId(context));
+        SessionLog.put(j, "setup_by", setupBy);
         SessionLog.put(j, "site", site);
         SessionLog.put(j, "transect", transect);
         SessionLog.put(j, "plant", plant);
+        SessionLog.put(j, "habitat", habitat);
         SessionLog.put(j, "sample_id", sampleId);
         SessionLog.put(j, "session_id", sessionId);
+        SessionLog.put(j, "camera_height_m", metres(cameraHeight));
+        SessionLog.put(j, "detection_distance_m", metres(distance)); // camera to target
+        SessionLog.put(j, "detection_distance_source", distance.isEmpty() ? JSONObject.NULL
+                : distanceFromFocus ? "fixed focus" : "typed");
+        SessionLog.put(j, "site_photos_about", sitePhotosAbout);
         JSONObject c = new JSONObject(); // name: value, as the user named them
         for (Custom f : custom) SessionLog.put(c, f.name, f.jsonValue());
         SessionLog.put(j, "custom", c);
@@ -257,11 +375,20 @@ final class FieldInfo {
             SessionLog.put(l, "longitude", Math.round(location.getLongitude() * 1e6) / 1e6);
             SessionLog.put(l, "datum", "WGS 84");
             SessionLog.put(l, "source", location.getProvider()); // "gps" of this phone, or "typed" by hand
-            SessionLog.put(l, "accuracy_m", location.hasAccuracy()
+            // Android: a radius with a 68 % chance of holding the true position (one standard error)
+            SessionLog.put(l, "coordinate_uncertainty_m", location.hasAccuracy()
                     ? Math.round(location.getAccuracy() * 10) / 10.0 : JSONObject.NULL);
+            Integer n = satellites(location);
+            SessionLog.put(l, "satellites_used", n == null ? JSONObject.NULL : n);
             SessionLog.put(l, "fix_time", fromGps(location) ? SessionLog.isoTime(location.getTime()) : JSONObject.NULL);
             SessionLog.put(j, "location", l);
         }
         return j;
+    }
+
+    /** A typed number of m for the record, or null when empty. */
+    private static Object metres(String value) {
+        Double m = Custom.number(value);
+        return m == null ? JSONObject.NULL : m;
     }
 }

@@ -61,6 +61,14 @@
             android:exported="false"
             android:foregroundServiceType="camera" />
 
+        <!-- Site photos (SitePhotos): the phone's camera app writes each photo through this link.
+             Not exported: a camera app may use only the one link FaunaLapse gives it. -->
+        <provider
+            android:name=".SitePhotos$Provider"
+            android:authorities="${applicationId}.sitephotos"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
         <!-- "Screen off" (ScreenOff): a device admin app with the single right to lock the screen;
              only Android itself can bind to it (BIND_DEVICE_ADMIN). -->
         <receiver

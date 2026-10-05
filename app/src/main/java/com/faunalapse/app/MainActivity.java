@@ -5,19 +5,23 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -34,6 +38,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -52,6 +57,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +81,10 @@ public final class MainActivity extends Activity {
     private static final int PERMISSION_REQUEST = 1;
     private static final int LOCATION_REQUEST = 2;
     private static final int SCREEN_OFF_REQUEST = 3;
+    private static final int SITE_PHOTO_REQUEST = 4;
+    private static final int SITE_PHOTO_PERMISSION = 5;
+    /** The last photo view is read again at most this often: a little work for the processor. */
+    private static final long LAST_PHOTO_MS = 3000;
     private static final int TEST_PHOTO = 0;
     private static final int SPEED_TEST = 1;
     private static final int SESSION = 2;
@@ -104,11 +114,20 @@ public final class MainActivity extends Activity {
     private TextView storage;
     private RadioGroup storagePlaces; // the phone and each memory card, when there is a card
     private TextView storageTotal;
+    private View storageNote; // memory card and short photo steps: test first
     private List<Storage.Place> places; // listed when the screen opens
     private boolean buildingPlaces; // the place buttons are being made: not a choice
     private long[][] storageUse; // per place: bytes and sessions in its FaunaLapse folder; null until counted
     private boolean wasRunning;
+    private boolean wasSession;
     private Button stopButton;
+    private Button pauseButton;
+    private Button adjustButton;
+    private Button continueButton;
+    private ImageView lastPhoto;
+    private TextView lastPhotoText;
+    private File lastShown;      // the file the last photo view shows, or is being read
+    private long lastShownAt;    // when it was read: at most one every LAST_PHOTO_MS
     private Button screenOffButton;
     private View screenOffRight;
     private View aimCard;
@@ -146,12 +165,28 @@ public final class MainActivity extends Activity {
     private EditText windows;
     private EditText days;
     private EditText heatLimitC;
+    private TextView fieldSummary;
+    private Button fieldChange;
+    private View fieldGroup;
+    private EditText setupBy;
     private EditText site;
     private EditText transect;
     private EditText plant;
+    private EditText habitat;
     private EditText sampleId;
     private EditText sessionId;
+    private EditText cameraHeight;
+    private EditText distance;
+    private TextView distanceNote;
+    private boolean distanceFromFocus; // the distance shows the fixed focus until the user types
+    private boolean settingDistance;   // the app writes into the distance field, not the user
     private CustomFields customFields;
+    private View sitePhotosScroll;
+    private LinearLayout sitePhotos;   // the waiting site photos, small
+    private TextView sitePhotosText;
+    private EditText sitePhotosAbout;
+    private File photoToTake;          // the file the camera app writes now, or null
+    private TextView locationSwitch;
     private EditText latitude;
     private EditText longitude;
     private EditText accuracy;
@@ -191,6 +226,7 @@ public final class MainActivity extends Activity {
         storage = findViewById(R.id.storage);
         storagePlaces = findViewById(R.id.storage_places);
         storageTotal = findViewById(R.id.storage_total);
+        storageNote = findViewById(R.id.storage_note);
         storagePlaces.setOnCheckedChangeListener((group, id) -> {
             View b = group.findViewById(id);
             if (b == null || buildingPlaces) return;
@@ -210,6 +246,22 @@ public final class MainActivity extends Activity {
         stopButton = findViewById(R.id.stop_session);
         stopButton.setOnClickListener(v -> askToStop());
         stopButton.setText(withIcon(stopButton, R.drawable.ic_stop, R.string.stop_session));
+        pauseButton = findViewById(R.id.pause_session);
+        pauseButton.setOnClickListener(v -> {
+            pauseButton.setEnabled(false); // until the session has paused
+            CaptureService.pauseSession(this, true, phoneTurn);
+        });
+        adjustButton = findViewById(R.id.adjust_camera);
+        adjustButton.setOnClickListener(v -> startActivity(new Intent(this, AimActivity.class)));
+        continueButton = findViewById(R.id.continue_session);
+        continueButton.setText(withIcon(continueButton, R.drawable.ic_start, R.string.continue_session));
+        continueButton.setOnClickListener(v -> {
+            continueButton.setEnabled(false);
+            CaptureService.pauseSession(this, false, phoneTurn);
+        });
+        lastPhoto = findViewById(R.id.last_photo);
+        lastPhotoText = findViewById(R.id.last_photo_text);
+        lastPhoto.setOnClickListener(v -> showLastPhotoLarge());
         aimCard = findViewById(R.id.aim_card);
         fieldCard = findViewById(R.id.field_card);
         scheduleCard = findViewById(R.id.schedule_card);
@@ -268,7 +320,43 @@ public final class MainActivity extends Activity {
         plant = findViewById(R.id.plant);
         sampleId = findViewById(R.id.sample_id);
         sessionId = findViewById(R.id.session_id);
+        fieldSummary = findViewById(R.id.field_summary);
+        fieldChange = findViewById(R.id.field_change);
+        fieldGroup = findViewById(R.id.field_group);
+        fieldChange.setOnClickListener(v -> showFieldGroup(fieldGroup.getVisibility() != View.VISIBLE));
+        setupBy = findViewById(R.id.setup_by);
+        habitat = findViewById(R.id.habitat);
+        cameraHeight = findViewById(R.id.camera_height);
+        distance = findViewById(R.id.distance);
+        distanceNote = findViewById(R.id.distance_note);
+        distance.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (settingDistance) return;
+                distanceFromFocus = s.toString().trim().isEmpty(); // typed; empty: the focus again
+                distanceNote.setVisibility(View.GONE);
+            }
+        });
+        distance.setOnFocusChangeListener((v, focused) -> {
+            if (!focused && distanceFromFocus) showFocusDistance();
+        });
         customFields = new CustomFields(this, findViewById(R.id.custom_fields), findViewById(R.id.custom_add));
+        sitePhotosScroll = findViewById(R.id.site_photos_scroll);
+        sitePhotos = findViewById(R.id.site_photos);
+        sitePhotosText = findViewById(R.id.site_photos_text);
+        sitePhotosAbout = findViewById(R.id.site_photos_about);
+        findViewById(R.id.site_photo_take).setOnClickListener(v -> takeSitePhoto());
+        if (savedInstanceState != null && savedInstanceState.getString("photo_to_take") != null) {
+            photoToTake = new File(savedInstanceState.getString("photo_to_take")); // Android closed us meanwhile
+        }
         ((TextView) findViewById(R.id.phone_model)).setText(getString(R.string.phone_model, Build.MANUFACTURER, Build.MODEL));
         ((TextView) findViewById(R.id.phone_id)).setText(FieldInfo.phoneId(this));
         latitude = findViewById(R.id.latitude);
@@ -295,6 +383,9 @@ public final class MainActivity extends Activity {
         locationText = findViewById(R.id.location_text);
         locationButton = findViewById(R.id.get_location);
         locationButton.setOnClickListener(v -> getLocation());
+        locationSwitch = findViewById(R.id.location_switch);
+        findViewById(R.id.location_settings).setOnClickListener(
+                v -> openPage(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
         HelpToggles.wire(scroll);
         showSettings(SessionSettings.load(this), true);
         showField(FieldInfo.load(this));
@@ -315,6 +406,10 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
         showAimSummary(); // the aim screen may have moved the square
+        if (!CaptureService.running) {
+            if (distanceFromFocus) showFocusDistance(); // or changed the focus
+            showSitePhotos();
+        }
         lastSession = null;
         places = Storage.places(this); // a card may have come or gone
         storageUse = null;
@@ -322,6 +417,12 @@ public final class MainActivity extends Activity {
         countStorage();
         if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
         handler.post(refresher);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        if (photoToTake != null) out.putString("photo_to_take", photoToTake.getPath());
     }
 
     @Override
@@ -449,7 +550,13 @@ public final class MainActivity extends Activity {
     private boolean saveSettings() {
         try {
             problemCard = fieldCard;
-            FieldInfo f = fieldOnScreen();
+            FieldInfo f;
+            try {
+                f = fieldOnScreen();
+            } catch (IllegalArgumentException e) {
+                showFieldGroup(true);
+                throw e;
+            }
             problemCard = scheduleCard;
             try {
                 settingsOnScreen().save(this);
@@ -505,13 +612,179 @@ public final class MainActivity extends Activity {
     // ---- Field metadata ---------------------------------------------------------------------
 
     private void showField(FieldInfo f) {
+        setupBy.setText(f.setupBy);
         site.setText(f.site);
         transect.setText(f.transect);
         plant.setText(f.plant);
+        habitat.setText(f.habitat);
         sampleId.setText(f.sampleId);
         sessionId.setText(f.sessionId);
+        cameraHeight.setText(f.cameraHeight);
+        distanceFromFocus = f.distanceFromFocus;
+        settingDistance = true;
+        distance.setText(f.distance);
+        settingDistance = false;
+        if (distanceFromFocus) showFocusDistance();
         customFields.show(f.custom);
+        sitePhotosAbout.setText(f.sitePhotosAbout);
+        showSitePhotos();
         showPosition(f.location);
+    }
+
+    private void showFieldGroup(boolean show) {
+        fieldGroup.setVisibility(show ? View.VISIBLE : View.GONE);
+        fieldChange.setText(show ? R.string.field_close : R.string.field_open);
+        showFieldSummary();
+    }
+
+    /** While the fields are closed: what is filled in (so values left from the last site show
+     *  before Start), or what is wrong. */
+    private void showFieldSummary() {
+        if (fieldGroup.getVisibility() == View.VISIBLE) {
+            show(fieldSummary, "");
+            return;
+        }
+        String text;
+        boolean ok = true;
+        try {
+            FieldInfo f = fieldOnScreen();
+            List<String> lines = new ArrayList<>();
+            line(lines, R.string.field_setup_by, f.setupBy);
+            line(lines, R.string.field_site, f.site);
+            line(lines, R.string.field_transect, f.transect);
+            line(lines, R.string.field_plant, f.plant);
+            line(lines, R.string.field_habitat, f.habitat);
+            line(lines, R.string.field_sample, f.sampleId);
+            line(lines, R.string.field_session, f.sessionId);
+            line(lines, R.string.field_height, f.cameraHeight);
+            line(lines, R.string.field_distance, f.distance);
+            for (FieldInfo.Custom c : f.custom) {
+                String v = c.value.replace('\n', ' ');
+                if (!v.isEmpty()) lines.add(getString(R.string.field_summary_line, c.name,
+                        v.length() > 40 ? v.substring(0, 39) + "…" : v));
+            }
+            int photos = sitePhotos.getChildCount();
+            if (photos > 0) lines.add(getResources().getQuantityString(R.plurals.field_summary_photos, photos, photos));
+            boolean empty = lines.isEmpty();
+            Location l = f.location;
+            lines.add(l == null ? getString(R.string.field_summary_no_position)
+                    : getString(R.string.field_summary_position, FieldInfo.degrees(l.getLatitude()),
+                            FieldInfo.degrees(l.getLongitude()),
+                            l.hasAccuracy() ? getString(R.string.field_summary_uncertainty, accuracyText(l)) : "",
+                            getString(FieldInfo.fromGps(l) ? R.string.field_summary_gps : R.string.field_summary_typed)));
+            if (empty && l == null) lines = Collections.singletonList(getString(R.string.field_summary_empty));
+            text = TextUtils.join("\n", lines);
+        } catch (IllegalArgumentException e) {
+            text = e.getMessage();
+            ok = false;
+        }
+        show(fieldSummary, text);
+        fieldSummary.setTextColor(ok ? bodyColor : ColorStateList.valueOf(getColor(R.color.warning)));
+        fieldSummary.setTypeface(null, ok ? Typeface.NORMAL : Typeface.BOLD);
+    }
+
+    private void line(List<String> lines, int label, String value) {
+        if (!value.isEmpty()) lines.add(getString(R.string.field_summary_line, getString(label), value));
+    }
+
+    /** While the distance follows the fixed focus: the focus distance in m (empty where the phone
+     *  does not tell lens distances), with a note to check it. */
+    private void showFocusDistance() {
+        SessionSettings s = SessionSettings.load(this);
+        Double m = FieldInfo.focusDistanceM(s, Camera2Session.fixedFocusCalibration(this));
+        settingDistance = true;
+        distance.setText(m == null ? "" : number(m));
+        settingDistance = false;
+        if (m != null) distanceNote.setText(getString(R.string.distance_note, SessionSettings.distanceWords(s.focusDiopters)));
+        distanceNote.setVisibility(m == null ? View.GONE : View.VISIBLE);
+    }
+
+    // ---- Site photos (SitePhotos) -------------------------------------------------------------
+
+    /** Opens the phone's camera app for one site photo; it writes into a waiting file. */
+    private void takeSitePhoto() {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            // Android lets an app that declares the camera permission open the camera app only with it.
+            requestPermissions(new String[] {Manifest.permission.CAMERA}, SITE_PHOTO_PERMISSION);
+            return;
+        }
+        File file = SitePhotos.newFile(this);
+        Uri uri = SitePhotos.uri(this, file);
+        Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                .putExtra(MediaStore.EXTRA_OUTPUT, uri)
+                .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        camera.setClipData(ClipData.newRawUri("", uri)); // the right to write goes with the link
+        try {
+            photoToTake = file;
+            startActivityForResult(camera, SITE_PHOTO_REQUEST);
+        } catch (ActivityNotFoundException | SecurityException e) {
+            photoToTake = null;
+            Toast.makeText(this, R.string.site_photo_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** The waiting site photos, small, in a row; a tap shows one larger. Decoded on a second thread. */
+    private void showSitePhotos() {
+        final List<File> files = SitePhotos.waiting(this);
+        sitePhotos.removeAllViews();
+        sitePhotosScroll.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);
+        sitePhotosText.setText(files.isEmpty() ? getString(R.string.site_photos_none)
+                : getResources().getQuantityString(R.plurals.site_photos_count, files.size(), files.size()));
+        final int side = Math.round(72 * getResources().getDisplayMetrics().density);
+        final List<ImageView> views = new ArrayList<>();
+        for (final File f : files) {
+            ImageView v = new ImageView(this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(side, side);
+            lp.setMarginEnd(side / 8);
+            lp.topMargin = side / 8;
+            v.setLayoutParams(lp);
+            v.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            v.setContentDescription(getString(R.string.site_photo_title, photoTime(f)));
+            v.setOnClickListener(x -> showSitePhoto(f));
+            sitePhotos.addView(v);
+            views.add(v);
+        }
+        new Thread(() -> {
+            for (int i = 0; i < files.size(); i++) {
+                final Bitmap b = SitePhotos.picture(files.get(i), side);
+                final ImageView v = views.get(i);
+                handler.post(() -> v.setImageBitmap(b));
+            }
+        }, "site-photos").start();
+    }
+
+    /** One site photo, as large as the screen allows, with Delete. */
+    private void showSitePhoto(final File f) {
+        final int side = getResources().getDisplayMetrics().widthPixels;
+        new Thread(() -> {
+            final Bitmap b = SitePhotos.picture(f, side / 2);
+            handler.post(() -> {
+                if (isFinishing()) return;
+                AlertDialog.Builder d = new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.site_photo_title, photoTime(f)))
+                        .setPositiveButton(R.string.site_photo_close, null)
+                        .setNegativeButton(R.string.site_photo_delete, (dialog, w) -> {
+                            f.delete();
+                            showSitePhotos();
+                        });
+                if (b == null) {
+                    d.setMessage(R.string.site_photo_unreadable);
+                } else {
+                    ImageView v = new ImageView(this);
+                    v.setAdjustViewBounds(true);
+                    v.setImageBitmap(b);
+                    d.setView(v);
+                }
+                d.show();
+            });
+        }, "site-photo").start();
+    }
+
+    /** "2026-10-05 15:01" from a photo's name (its time). */
+    private static String photoTime(File f) {
+        String n = f.getName();
+        return n.length() < 13 ? n : n.substring(0, 4) + "-" + n.substring(4, 6) + "-" + n.substring(6, 8) + " "
+                + n.substring(9, 11) + ":" + n.substring(11, 13);
     }
 
     /** Puts a position into the latitude, longitude and accuracy fields (empty for none). A GPS
@@ -560,12 +833,18 @@ public final class MainActivity extends Activity {
      *  not usable. */
     private FieldInfo fieldOnScreen() {
         FieldInfo f = new FieldInfo();
+        f.setupBy = text(setupBy);
         f.site = text(site);
         f.transect = text(transect);
         f.plant = text(plant);
+        f.habitat = text(habitat);
         f.sampleId = text(sampleId);
         f.sessionId = text(sessionId);
+        f.cameraHeight = text(cameraHeight);
+        f.distance = text(distance);
+        f.distanceFromFocus = distanceFromFocus;
         f.custom = customFields.read();
+        f.sitePhotosAbout = text(sitePhotosAbout);
         f.location = locationOnScreen();
         String p = f.problem();
         if (p != null) throw new IllegalArgumentException(p);
@@ -586,7 +865,7 @@ public final class MainActivity extends Activity {
         if (lat.isEmpty() || lon.isEmpty()) throw new IllegalArgumentException(getString(R.string.location_both));
         double la = decimal(latitude, R.string.field_latitude);
         double lo = decimal(longitude, R.string.field_longitude);
-        Float ac = acc.isEmpty() ? null : (float) decimal(accuracy, R.string.field_accuracy);
+        Float ac = acc.isEmpty() ? null : (float) decimal(accuracy, R.string.field_uncertainty);
         String p = FieldInfo.positionProblem(la, lo, ac);
         if (p != null) throw new IllegalArgumentException(p);
         if (location != null && lat.equals(FieldInfo.degrees(location.getLatitude()))
@@ -608,8 +887,10 @@ public final class MainActivity extends Activity {
             } else if (!FieldInfo.fromGps(l)) {
                 text = getString(R.string.location_typed);
             } else {
+                Integer n = FieldInfo.satellites(l);
                 text = getString(R.string.location_saved,
-                        new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(l.getTime())));
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(l.getTime())),
+                        n == null ? "" : getResources().getQuantityString(R.plurals.location_saved_satellites, n, n));
                 if (l.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
             }
         } catch (IllegalArgumentException e) {
@@ -643,10 +924,12 @@ public final class MainActivity extends Activity {
         }
         gps = new GpsFix(this, new GpsFix.Listener() {
             @Override
-            public void onSearching(Location best, long elapsedMs) {
+            public void onSearching(Location best, long elapsedMs, int heard, int used) {
                 String text = getString(R.string.location_searching, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
-                // From the first second, so the wait has a reason; its own line, as the seconds before
-                // it would move it at each tick.
+                // From the first second, so the wait has a reason; own lines, as the seconds before
+                // them would move them at each tick.
+                text += "\n" + (heard <= 0 ? getString(R.string.location_satellites_none)
+                        : getString(R.string.location_satellites, heard, Math.max(0, used)));
                 text += "\n" + (best == null ? getString(R.string.location_best_none)
                         : getString(R.string.location_best, Math.round(best.getAccuracy())));
                 locationText.setText(text);
@@ -686,8 +969,10 @@ public final class MainActivity extends Activity {
         }
     }
 
+    /** "5", "0.1": at most 4 decimals, so a saved float (0.1 comes back as 0.10000000149) shows as typed. */
     private static String number(double d) {
-        return d == Math.rint(d) ? String.valueOf((long) d) : String.valueOf(d);
+        double r = Math.round(d * 10000) / 10000.0;
+        return r == Math.rint(r) ? String.valueOf((long) r) : String.valueOf(r);
     }
 
     /** Counts what each FaunaLapse folder holds, on a second thread: many files take a moment. */
@@ -743,13 +1028,15 @@ public final class MainActivity extends Activity {
         File folder = SessionRunner.folder;
         boolean session = CaptureService.sessionRunning && folder != null;
         storagePlaces.setVisibility(session || places.size() < 2 ? View.GONE : View.VISIBLE);
+        Storage.Place chosen = Storage.chosen(this, places);
+        storageNote.setVisibility(!CaptureService.running && !chosen.key.equals(Storage.PHONE) && shortPhotoStep()
+                ? View.VISIBLE : View.GONE);
         if (session) {
             show(storage, getString(R.string.storage_session, Storage.shownPath(this, places, folder),
                     size(SessionRunner.savedBytes.get()), size(folder.getUsableSpace())));
             show(storageTotal, "");
             return;
         }
-        Storage.Place chosen = Storage.chosen(this, places);
         int c = places.indexOf(chosen);
         String path = Storage.shownPath(this, places, chosen.dir);
         String free = size(chosen.dir.getUsableSpace());
@@ -785,6 +1072,14 @@ public final class MainActivity extends Activity {
             }
         }
         show(storageTotal, storageUse == null ? "" : getString(R.string.storage_total, size(total[0]), sessions(total[1])));
+    }
+
+    /** Photos every 2 s or faster, as on the screen now: on a memory card, worth a test first (one
+     *  save took 1.5 s on the Samsung M12's card, where the phone took 0.4 s at most). */
+    private boolean shortPhotoStep() {
+        if (mode.getCheckedRadioButtonId() != R.id.mode_photo) return false;
+        Double step = FieldInfo.Custom.number(text(stepS));
+        return step != null && step <= 2;
     }
 
     private String size(long bytes) {
@@ -845,6 +1140,11 @@ public final class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SCREEN_OFF_REQUEST && ScreenOff.allowed(this)) ScreenOff.lock(this);
+        if (requestCode == SITE_PHOTO_REQUEST && photoToTake != null) {
+            if (resultCode != RESULT_OK) photoToTake.delete(); // cancelled; an empty file goes anyway
+            photoToTake = null;
+            showSitePhotos();
+        }
     }
 
     private void askToStop() {
@@ -947,6 +1247,10 @@ public final class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        if (requestCode == SITE_PHOTO_PERMISSION) {
+            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) takeSitePhoto();
+            return;
+        }
         if (requestCode == LOCATION_REQUEST) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 getLocation();
@@ -989,8 +1293,10 @@ public final class MainActivity extends Activity {
     private void refresh() {
         boolean running = CaptureService.running;
         boolean session = CaptureService.sessionRunning;
+        boolean paused = session && SessionRunner.userPaused;
         if (session) {
-            show(sessionState, getString(SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session));
+            show(sessionState, getString(paused ? R.string.status_user_paused
+                    : SessionRunner.heatPaused ? R.string.status_paused : R.string.status_session));
             show(sessionStatus, SessionRunner.status);
             show(sessionProgress, SessionRunner.progress);
             show(sessionWarning, SessionRunner.warning);
@@ -1010,7 +1316,10 @@ public final class MainActivity extends Activity {
         showDetailsToggle();
         if (running) lastSession = null; // read again when it has ended
         if (wasRunning && !running) countStorage();
+        // A session took the site photos and their text at its start: show what is left.
+        if ((session && !wasRunning) || (wasSession && !running)) showField(FieldInfo.load(this));
         wasRunning = running;
+        wasSession = session;
         showStorage();
         CaptureService.Battery b = CaptureService.Battery.read(this);
         battery.setText(getString(R.string.battery_line, b.percent >= 0 ? b.percent + " %" : "?",
@@ -1018,19 +1327,116 @@ public final class MainActivity extends Activity {
                 b.tempC == null ? "?" : String.format(Locale.US, "%.1f", b.tempC)));
         phoneTime.setText(getString(R.string.phone_time,
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date())));
-        // One big button at a time: Start while idle, Stop during a session.
+        // A pause shows in the warning colour (bold also without colour).
+        sessionState.setTextColor(paused || (session && SessionRunner.heatPaused)
+                ? ColorStateList.valueOf(getColor(R.color.warning)) : bodyColor);
+        showLastPhoto(session);
+        // Start while idle; during a session Stop, and Pause or (while paused) Continue.
         stopButton.setVisibility(session ? View.VISIBLE : View.GONE);
+        pauseButton.setVisibility(session && !paused ? View.VISIBLE : View.GONE);
+        adjustButton.setVisibility(paused ? View.VISIBLE : View.GONE);
+        continueButton.setVisibility(paused ? View.VISIBLE : View.GONE);
+        if (!paused) continueButton.setEnabled(true);
+        if (paused || !session) pauseButton.setEnabled(true);
         screenOffButton.setVisibility(session ? View.VISIBLE : View.GONE);
         screenOffRight.setVisibility(!running && detailsOpen && ScreenOff.allowed(this) ? View.VISIBLE : View.GONE);
         startButton.setVisibility(running ? View.GONE : View.VISIBLE);
         startHint.setVisibility(running ? View.GONE : View.VISIBLE);
         setControlsEnabled(!running);
-        if (!running) showScheduleSummary();
+        if (!running) {
+            showScheduleSummary();
+            showFieldSummary();
+            showLocationSwitch();
+        }
         showPhoneCheck(session);
         if (problem != null && !running) problem = currentProblem(); // gone once it is corrected
         String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
         show(startMessage, message == null ? "" : message);
         if (testsGroup.getVisibility() == View.VISIBLE) showTestStatus(running && !session);
+    }
+
+    /** During a session: the newest saved square (or the last frame of the last clip), small. Read
+     *  on a second thread, at most every LAST_PHOTO_MS. */
+    private void showLastPhoto(boolean session) {
+        final File f = session ? SessionRunner.lastFile : null;
+        if (f == null) {
+            lastPhoto.setVisibility(View.GONE);
+            lastPhotoText.setVisibility(View.GONE);
+            lastShown = null;
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (f.equals(lastShown) || now - lastShownAt < LAST_PHOTO_MS) return;
+        lastShown = f;
+        lastShownAt = now;
+        final int side = Math.round(160 * getResources().getDisplayMetrics().density);
+        new Thread(() -> {
+            final Bitmap b = picture(f, side);
+            handler.post(() -> {
+                if (b == null || !f.equals(lastShown)) return;
+                lastPhoto.setImageBitmap(b);
+                lastPhoto.setVisibility(View.VISIBLE);
+                String n = f.getName(); // yyyyMMdd_HHmmss_SSS: the time it was taken
+                String time = n.substring(9, 11) + ":" + n.substring(11, 13) + ":" + n.substring(13, 15);
+                lastPhotoText.setText(getString(n.endsWith(".mp4") ? R.string.last_clip : R.string.last_photo, time));
+                lastPhotoText.setVisibility(View.VISIBLE);
+                lastPhoto.setContentDescription(lastPhotoText.getText());
+            });
+        }, "last-photo").start();
+    }
+
+    /** A saved square, or a frame near the end of a clip, about {@code side} px; null if unreadable. */
+    private static Bitmap picture(File f, int side) {
+        if (!f.getName().endsWith(".mp4")) return SitePhotos.picture(f, side);
+        MediaMetadataRetriever r = new MediaMetadataRetriever();
+        try {
+            r.setDataSource(f.getPath());
+            String ms = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            long us = ms == null ? 0 : Math.max(0, Long.parseLong(ms) * 1000 - 500000);
+            Bitmap b = r.getFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+            if (b == null || b.getWidth() <= side) return b;
+            return Bitmap.createScaledBitmap(b, side, Math.round((float) b.getHeight() * side / b.getWidth()), true);
+        } catch (RuntimeException e) {
+            return null;
+        } finally {
+            try {
+                r.release();
+            } catch (Exception ignored) {
+                // Android 10+ declares an IOException here
+            }
+        }
+    }
+
+    /** The last photo or frame as large as the screen allows. */
+    private void showLastPhotoLarge() {
+        final File f = lastShown;
+        if (f == null) return;
+        final int side = getResources().getDisplayMetrics().widthPixels;
+        new Thread(() -> {
+            final Bitmap b = picture(f, side);
+            handler.post(() -> {
+                if (b == null || isFinishing()) return;
+                ImageView v = new ImageView(this);
+                v.setAdjustViewBounds(true);
+                v.setImageBitmap(b);
+                new AlertDialog.Builder(this)
+                        .setTitle(lastPhotoText.getText().toString().replaceFirst("\\. .*", ""))
+                        .setView(v)
+                        .setPositiveButton(R.string.site_photo_close, null)
+                        .show();
+            });
+        }, "last-photo-large").start();
+    }
+
+    /** The phone's Location switch beside Get location (also in card 4): it is needed for the GPS,
+     *  and then best switched off again. */
+    private void showLocationSwitch() {
+        boolean on = PhoneCheck.locationOn(this);
+        Location l = location;
+        String text = getString(!on ? R.string.location_switch_off
+                : l != null && FieldInfo.fromGps(l) && gps == null ? R.string.location_switch_on_done
+                : R.string.location_switch_on);
+        if (!text.contentEquals(locationSwitch.getText())) locationSwitch.setText(text);
     }
 
     /** Settings and buttons can be changed only while nothing runs (the camera is busy). */

@@ -7,6 +7,12 @@
     <string name="status_idle">No session running</string>
     <string name="status_session">Session running</string>
     <string name="status_paused">Session paused: the phone is too warm</string>
+    <string name="status_user_paused">Session paused: nothing is recorded</string>
+    <string name="pause_session">Pause to adjust the phone</string>
+    <string name="adjust_camera">Aim the camera again</string>
+    <string name="continue_session">Continue session</string>
+    <string name="last_photo">Last photo, %1$s (as saved). Tap to see it larger.</string>
+    <string name="last_clip">Last clip, started %1$s: its last frame. Tap to see it larger.</string>
     <string name="status_test">Phone test running</string>
     <string name="last_session">Last session (%1$s): %2$s. Ended: %3$s.</string>
     <string name="last_session_warning">Last session: %1$s</string>
@@ -23,6 +29,7 @@
     <string name="storage_place">%1$s: FaunaLapse uses %2$s (%3$s); %4$s free</string>
     <string name="storage_place_counting">%1$s: %2$s free</string>
     <string name="storage_total">All places together: %1$s (%2$s).</string>
+    <string name="storage_card_speed">Photos every 2 s or faster on a memory card: cards differ in speed, so run a short test session first. If FaunaLapse then says that photo times were skipped, use video or the phone storage.</string>
     <string name="storage_phone">Phone</string>
     <string name="storage_phone_top">Internal storage</string>
     <string name="storage_missing">The memory card chosen for the sessions is not in the phone: new sessions go to the phone until it is back.</string>
@@ -61,17 +68,40 @@
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Phone model and phone ID: filled in by the app. The ID is Android\'s ID for FaunaLapse on this phone; nobody can change it, only a factory reset gives a new one. With the start time they make each session folder name unique, so folders from several phones never mix on one computer.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Add a field: your own fields, for example Observer, Weather or Air temperature, as text (up to 200 characters), a number, a date or a time. They stay until you remove them; the record lists them under "custom".\n• Get location: the GPS stays on until the position is within 10 m (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, in decimal degrees (WGS 84, as GPS devices and web maps show them; south and west are negative), and its accuracy if it shows one. Empty all three fields to remove the location.</string>
+    <string name="field_help">Saved in the record of each session. The values stay for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to the target are named as in Camtrap DP, a data standard for camera traps, so the records can be shared in it later.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Distance to target: from the camera to the flower. Where the phone tells the lens distance, the fixed focus fills it in; type a measured value to replace it, or empty the field to take the focus distance again.\n• Add a field: your own fields, for example Observer, Weather or Air temperature: text, notes, a number, a date, a time, yes or no, or a choice from your own list. They stay until you remove them; the record lists them under \"custom\".\n• Get location: the GPS stays on until the uncertainty is 10 m or less (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, and its uncertainty if it shows one. Empty all three fields to remove the position.</string>
+    <string name="field_open">Change field metadata</string>
+    <string name="field_close">Close field metadata</string>
+    <string name="field_summary_empty">Nothing filled in yet.</string>
+    <string name="field_summary_line" translatable="false">%1$s: %2$s</string>
+    <string name="field_summary_position">Position: %1$s, %2$s%3$s (%4$s)</string>
+    <string name="field_summary_uncertainty" translatable="false">, ± %1$s m</string>
+    <string name="field_summary_gps">GPS</string>
+    <string name="field_summary_typed">typed</string>
+    <string name="field_summary_no_position">Position: none yet.</string>
+    <plurals name="field_summary_photos">
+        <item quantity="one">%d site photo</item>
+        <item quantity="other">%d site photos</item>
+    </plurals>
+    <string name="field_setup_by">Set up by</string>
+    <string name="field_setup_by_hint">name</string>
     <string name="field_site">Site</string>
     <string name="field_site_hint">for example Meadow 2</string>
     <string name="field_transect">Transect</string>
     <string name="field_transect_hint">for example 3</string>
     <string name="field_plant">Plant</string>
     <string name="field_plant_hint">common or Latin name</string>
+    <string name="field_habitat">Habitat</string>
+    <string name="field_habitat_hint">for example dry grassland</string>
     <string name="field_sample">Sample ID</string>
     <string name="field_session">Session ID</string>
+    <string name="field_height">Camera height (m)</string>
+    <string name="field_height_hint">above the ground</string>
+    <string name="field_distance">Distance to target (m)</string>
+    <string name="field_distance_hint">camera to flower</string>
+    <string name="distance_note">From the fixed focus (%1$s). The lens distance differs between phones: check it with a ruler now and then.</string>
     <string name="field_phone_model">Phone model</string>
     <string name="field_phone_id">Phone ID</string>
+    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone; nobody can change it. A factory reset gives a new one, and so does a FaunaLapse version signed by someone else (for example a test version). FaunaLapse cannot read an ID that survives a factory reset: Android allows that only to phone makers\' apps. For a lasting name, write it on the phone and add it as your own field, for example Device ID.</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="custom_add_button">+ Add a field</string>
@@ -81,45 +111,82 @@
     <string name="custom_name_label">Name</string>
     <string name="custom_name_hint">for example Observer or Weather</string>
     <string name="custom_type_label">Type</string>
-    <string name="custom_type_text">Text (letters and digits)</string>
+    <string name="custom_type_text">Text (up to 100 characters)</string>
+    <string name="custom_type_notes">Notes (several lines, up to 5000 characters)</string>
     <string name="custom_type_number">Number</string>
     <string name="custom_type_date">Date</string>
     <string name="custom_type_time">Time</string>
+    <string name="custom_type_yes_no">Yes or no</string>
+    <string name="custom_type_choice">Choice from a list that you write</string>
+    <string name="custom_choices_label">Choices, one per line</string>
+    <string name="custom_choices_hint">for example\nsunny\ncloudy\nrain</string>
     <string name="custom_hint_text" tools:ignore="PluralsCandidate">text, up to %1$d characters</string>
+    <string name="custom_hint_notes" tools:ignore="PluralsCandidate">notes, up to %1$d characters</string>
+    <string name="custom_count" tools:ignore="PluralsCandidate">%1$d of %2$d characters</string>
+    <string name="custom_text_full" tools:ignore="PluralsCandidate">At most %1$d characters. For longer text, add a Notes field.</string>
     <string name="custom_hint_number">number</string>
     <string name="custom_hint_date">tap to choose a date</string>
     <string name="custom_hint_time">tap to choose a time</string>
+    <string name="custom_hint_choose">tap to choose</string>
+    <string name="custom_yes">Yes</string>
+    <string name="custom_no">No</string>
     <string name="custom_number_needed">Write a number, for example 21.5</string>
     <string name="custom_clear">Clear</string>
     <string name="custom_remove">Remove the field %1$s?</string>
     <string name="custom_remove_text">Its value goes too. You can add the field again later.</string>
     <string name="custom_remove_yes">Remove</string>
     <string name="custom_remove_no">Keep</string>
+    <string name="site_photos_label">Site photos</string>
+    <string name="site_photos_help">Photos of the surroundings, to document the site. They are taken at full size with the phone\'s camera app. At Start they move into the session folder, in its own folder site_photos, apart from the time-lapse photos; the record lists them with the text in About them. Take them before Start: during a session the camera is busy. Tap a photo to see it larger or to delete it.</string>
+    <string name="site_photos_none">No site photos yet.</string>
+    <plurals name="site_photos_count">
+        <item quantity="one">%d site photo: it moves into the session folder at Start.</item>
+        <item quantity="other">%d site photos: they move into the session folder at Start.</item>
+    </plurals>
+    <string name="site_photo_take">Take a site photo</string>
+    <string name="site_photos_about">About them</string>
+    <string name="site_photo_failed">No camera app could take the photo.</string>
+    <string name="site_photo_title">Site photo, %1$s</string>
+    <string name="site_photo_delete">Delete</string>
+    <string name="site_photo_close">Close</string>
+    <string name="site_photo_unreadable">This photo cannot be shown.</string>
+    <string name="position_label">Position</string>
+    <string name="position_datum">Coordinate system: WGS 84 (EPSG:4326), decimal degrees, as GPS devices and web maps use. Typed values must use it too.</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
     <string name="field_longitude">Longitude</string>
     <string name="field_longitude_hint">decimal degrees, -180 to 180</string>
-    <string name="field_accuracy">Accuracy (m)</string>
-    <string name="field_accuracy_hint">± m, optional</string>
+    <string name="field_uncertainty">Uncertainty (m)</string>
+    <string name="field_uncertainty_hint">± m, optional</string>
+    <string name="field_uncertainty_help" formatted="false">How far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
     <string name="location_get">Get location</string>
     <string name="location_stop">Stop and keep the best</string>
-    <string name="location_none">No location: tap Get location, or type it from another GPS device.</string>
-    <string name="location_saved">From this phone\'s GPS, at %1$s. A tap on these values asks before they can be changed.</string>
-    <string name="location_both">Location: write both latitude and longitude (the accuracy is optional), or leave all three empty.</string>
+    <string name="location_none">No position: tap Get location, or type it from another GPS device.</string>
+    <string name="location_saved">From this phone\'s GPS, at %1$s%2$s. A tap on these values asks before they can be changed.</string>
+    <plurals name="location_saved_satellites">
+        <item quantity="one">, with %d satellite</item>
+        <item quantity="other">, with %d satellites</item>
+    </plurals>
+    <string name="location_both">Position: write both latitude and longitude (the uncertainty is optional), or leave all three empty.</string>
     <string name="location_typed">Typed by hand.</string>
     <string name="position_edit_title">Change the GPS values?</string>
-    <string name="position_edit_text">Latitude, longitude and accuracy come from this phone\'s GPS. Change them only for a better position, for example from another GPS device: the record then says they were typed by hand.</string>
+    <string name="position_edit_text">Latitude, longitude and uncertainty come from this phone\'s GPS. Change them only for a better position, for example from another GPS device: the record then says they were typed by hand.</string>
     <string name="position_edit_yes">Change</string>
     <string name="position_edit_no">Keep</string>
-    <string name="location_weak">Less exact than 10 m: try again under open sky if you need more.</string>
+    <string name="location_weak">The uncertainty is above 10 m: try again under open sky if you need it smaller.</string>
     <string name="location_searching">Searching for GPS satellites; keep the phone under open sky. Time: %1$d s of at most %2$d s.</string>
-    <string name="location_best">Best so far: ± %1$d m.</string>
+    <string name="location_satellites" tools:ignore="PluralsCandidate">Satellites: signal from %1$d, %2$d used for the position.</string>
+    <string name="location_satellites_none">Satellites: no signal yet.</string>
+    <string name="location_best">Best so far: uncertainty ± %1$d m.</string>
     <string name="location_best_none">Best so far: no position yet.</string>
     <string name="location_failed">No GPS position in %1$d s. Try again outdoors, away from buildings and trees.</string>
     <string name="location_cancelled">Search stopped before a position came.</string>
     <string name="location_stopped">The search stopped when the screen was left.</string>
     <string name="location_off">Location is off: turn it on, then tap Get location again. Turn it off again when the position is saved.</string>
     <string name="location_permission">FaunaLapse needs the precise location permission to save where the phone is. Tap Get location again to allow it.</string>
+    <string name="location_switch_on">Location is on: Get location can use the GPS.</string>
+    <string name="location_switch_on_done">Location is still on: switch it off for the field, so no app uses the GPS. Android lets only you switch it.</string>
+    <string name="location_switch_off">Location is off. Switch it on for Get location, and off again afterwards.</string>
 
     <!-- 3 Schedule -->
     <string name="card_schedule">3 · Schedule</string>
@@ -201,6 +268,10 @@
     <string name="aim_done">Done</string>
     <string name="aim_middle">Middle</string>
     <string name="aim_start">Start session here</string>
+    <string name="aim_paused">Session paused: nothing is recorded. It goes on by itself at %1$s.</string>
+    <string name="aim_paused_end">Session paused: nothing is recorded. The session ends at %1$s.</string>
+    <string name="aim_continued">The session went on by itself.</string>
+    <string name="aim_session_ended">The session has ended.</string>
     <string name="aim_top">top</string>
     <string name="aim_focusing">Focusing…</string>
     <string name="focus_label">Focus</string>
@@ -245,4 +316,7 @@
     <string name="notification_text">The camera closes again when the test ends.</string>
     <string name="notification_session_title">FaunaLapse session running</string>
     <string name="notification_session_text">Photos or video on the schedule. Tap to open the app.</string>
+    <string name="notification_paused_title">FaunaLapse session paused</string>
+    <string name="notification_paused_text">Nothing is recorded. It goes on by itself at %1$s.</string>
+    <string name="notification_paused_end">Nothing is recorded. The session ends at %1$s.</string>
 </resources>

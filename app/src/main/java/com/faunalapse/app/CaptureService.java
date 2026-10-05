@@ -54,6 +54,10 @@ public final class CaptureService extends Service {
     static final String EXTRA_PHONE_TURN = "phone_turn";
     /** Intent extra: stop the running session. */
     static final String EXTRA_STOP = "stop";
+    /** Intent extras: pause the running session to adjust the phone, and go on again (with
+     *  EXTRA_PHONE_TURN). */
+    static final String EXTRA_PAUSE = "pause";
+    static final String EXTRA_RESUME = "resume";
     /** True from the start until the camera is closed again; read by the screen. */
     static volatile boolean running;
     /** True while a session (not a test) runs. */
@@ -64,6 +68,7 @@ public final class CaptureService extends Service {
 
     private HandlerThread cameraThread;
     private Thread sessionThread;
+    private SessionRunner runner;
     private PowerManager.WakeLock wakeLock;
 
     /** Folder for photos and the log: the app's own folder, so no storage permission is needed.
@@ -86,6 +91,14 @@ public final class CaptureService extends Service {
         else context.startService(intent);
     }
 
+    /** Pause ({@code pause} true) or go on with the running session; {@code phoneTurn}: how the
+     *  phone is held now. */
+    static void pauseSession(Context context, boolean pause, int phoneTurn) {
+        context.startService(new Intent(context, CaptureService.class)
+                .putExtra(pause ? EXTRA_PAUSE : EXTRA_RESUME, true)
+                .putExtra(EXTRA_PHONE_TURN, phoneTurn));
+    }
+
     /** One JSON record per line, one line per test or session (the screen shows the last one). */
     static File logFile(Context context) {
         return new File(outputDir(context), "log.jsonl");
@@ -101,6 +114,16 @@ public final class CaptureService extends Service {
         if (intent != null && intent.getBooleanExtra(EXTRA_STOP, false)) {
             if (sessionThread != null) sessionThread.interrupt(); // the session closes the camera, then stops us
             else if (!running) stopSelf();
+            return START_NOT_STICKY;
+        }
+        if (intent != null && (intent.getBooleanExtra(EXTRA_PAUSE, false) || intent.getBooleanExtra(EXTRA_RESUME, false))) {
+            if (runner == null) {
+                if (!running) stopSelf(); // no session: this start only delivered the request
+            } else if (intent.getBooleanExtra(EXTRA_PAUSE, false)) {
+                runner.pause();
+            } else {
+                runner.resume(intent.getIntExtra(EXTRA_PHONE_TURN, 0));
+            }
             return START_NOT_STICKY;
         }
         if (running) return START_NOT_STICKY;
@@ -182,10 +205,17 @@ public final class CaptureService extends Service {
             dir = new File(Storage.appSessionsDir(this), name); // the folder refused it
             dir.mkdirs();
         }
-        sessionThread = new Thread(new SessionRunner(this, settings, plan, dir, phoneTurn, summary -> {
+        // The field metadata as it is now; the site photos and their text belong to this session
+        // (SessionRunner moves the photos), so the next session starts without them.
+        FieldInfo f = FieldInfo.load(this);
+        JSONObject field = f.toJson(this);
+        f.sitePhotosAbout = "";
+        f.save(this);
+        runner = new SessionRunner(this, settings, plan, dir, phoneTurn, field, summary -> {
             report(summary);
             new Handler(Looper.getMainLooper()).post(this::stopSelf);
-        }), "session");
+        });
+        sessionThread = new Thread(runner, "session");
         sessionRunning = true;
         sessionThread.start();
     }
@@ -200,32 +230,50 @@ public final class CaptureService extends Service {
         super.onDestroy();
     }
 
-    @SuppressWarnings("deprecation") // Notification.Builder(Context) is the only choice before Android 8
     private void startInForeground(boolean session) {
-        Notification.Builder builder;
-        if (Build.VERSION.SDK_INT >= 26) {
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            nm.createNotificationChannel(new NotificationChannel(CHANNEL_ID,
-                    getString(R.string.channel_name), NotificationManager.IMPORTANCE_LOW));
-            builder = new Notification.Builder(this, CHANNEL_ID);
-        } else {
-            builder = new Notification.Builder(this);
-        }
-        // A tap on the notification opens the main screen (status and Stop).
-        PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class),
-                PendingIntent.FLAG_IMMUTABLE);
-        Notification notification = builder
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentIntent(open)
-                .setContentTitle(getString(session ? R.string.notification_session_title : R.string.notification_title))
-                .setContentText(getString(session ? R.string.notification_session_text : R.string.notification_text))
-                .setOngoing(true)
-                .build();
+        Notification notification = notification(this,
+                getString(session ? R.string.notification_session_title : R.string.notification_title),
+                getString(session ? R.string.notification_session_text : R.string.notification_text));
         if (Build.VERSION.SDK_INT >= 30) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
+    }
+
+    /** The permanent notification; a tap opens the main screen (status, Pause and Stop). */
+    @SuppressWarnings("deprecation") // Notification.Builder(Context) is the only choice before Android 8
+    private static Notification notification(Context context, String title, String text) {
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationManager nm = context.getSystemService(NotificationManager.class);
+            nm.createNotificationChannel(new NotificationChannel(CHANNEL_ID,
+                    context.getString(R.string.channel_name), NotificationManager.IMPORTANCE_LOW));
+            builder = new Notification.Builder(context, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(context);
+        }
+        PendingIntent open = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class),
+                PendingIntent.FLAG_IMMUTABLE);
+        return builder
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(open)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setOngoing(true)
+                .build();
+    }
+
+    /** The notification of a session that the user paused, or that goes on again. */
+    static void showPaused(Context context, boolean paused) {
+        String end = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(SessionRunner.pauseEnds));
+        Notification n = paused
+                ? notification(context, context.getString(R.string.notification_paused_title),
+                        context.getString(SessionRunner.pauseEndsSession ? R.string.notification_paused_end
+                                : R.string.notification_paused_text, end))
+                : notification(context, context.getString(R.string.notification_session_title),
+                        context.getString(R.string.notification_session_text));
+        ((NotificationManager) context.getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, n);
     }
 
     /** Adds phone facts to the record, appends it to the log file and to the Android log. */

@@ -2,6 +2,7 @@ package com.faunalapse.app;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -14,7 +15,9 @@ import android.os.SystemClock;
  * One GPS position for the session record. The GPS runs only until a position is good enough, the
  * user stops it, or the time is up; then it is switched off again to save energy. GPS only, no
  * network positions: in the field the phone is usually in airplane mode, and without network help
- * a first position can take a few minutes. Runs on the main thread.
+ * a first position can take a few minutes. While it searches, Android's satellite status tells how
+ * many satellites (GPS, Galileo and others) send a signal and how many the position uses. Runs on
+ * the main thread.
  */
 final class GpsFix implements LocationListener {
 
@@ -24,8 +27,10 @@ final class GpsFix implements LocationListener {
     static final long TIMEOUT_MS = 180000;
 
     interface Listener {
-        /** Each second while searching; {@code best} is null until the first position. */
-        void onSearching(Location best, long elapsedMs);
+        /** Each second while searching; {@code best} is null until the first position; {@code heard}
+         *  and {@code used}: satellites with a signal and used for the position, -1 until Android
+         *  reports them. */
+        void onSearching(Location best, long elapsedMs, int heard, int used);
 
         /** The search is over; {@code best} is null when no position came. */
         void onDone(Location best);
@@ -37,6 +42,22 @@ final class GpsFix implements LocationListener {
     private final long start = SystemClock.elapsedRealtime();
     private Location best;
     private boolean running;
+    private int heard = -1;
+    private int used = -1;
+
+    private final GnssStatus.Callback satellites = new GnssStatus.Callback() {
+        @Override
+        public void onSatelliteStatusChanged(GnssStatus status) {
+            int h = 0;
+            int u = 0;
+            for (int i = 0; i < status.getSatelliteCount(); i++) {
+                if (status.getCn0DbHz(i) > 0) h++; // a signal; the list also holds satellites expected only
+                if (status.usedInFix(i)) u++;
+            }
+            heard = h;
+            used = u;
+        }
+    };
 
     private final Runnable tick = new Runnable() {
         @Override
@@ -46,7 +67,7 @@ final class GpsFix implements LocationListener {
                 stop();
                 return;
             }
-            listener.onSearching(best, elapsed);
+            listener.onSearching(best, elapsed, heard, used);
             handler.postDelayed(this, 1000);
         }
     };
@@ -67,6 +88,7 @@ final class GpsFix implements LocationListener {
     void start() {
         running = true;
         manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this, Looper.getMainLooper());
+        manager.registerGnssStatusCallback(satellites, handler);
         handler.post(tick);
     }
 
@@ -82,13 +104,22 @@ final class GpsFix implements LocationListener {
         running = false;
         handler.removeCallbacks(tick);
         manager.removeUpdates(this);
+        manager.unregisterGnssStatusCallback(satellites);
         return true;
     }
 
     @Override
     public void onLocationChanged(Location l) {
         if (!l.hasAccuracy()) return;
-        if (best == null || l.getAccuracy() < best.getAccuracy()) best = l;
+        if (best == null || l.getAccuracy() < best.getAccuracy()) {
+            best = l;
+            // Android's GPS usually adds the satellites it used; else the count from the status.
+            if (FieldInfo.satellites(l) == null && used >= 0) {
+                Bundle b = l.getExtras() == null ? new Bundle() : new Bundle(l.getExtras());
+                b.putInt(FieldInfo.SATELLITES, used);
+                l.setExtras(b);
+            }
+        }
         if (l.getAccuracy() <= GOOD_M) stop();
     }
 

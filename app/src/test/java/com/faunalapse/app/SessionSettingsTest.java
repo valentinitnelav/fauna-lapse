@@ -44,6 +44,33 @@ public class SessionSettingsTest {
     }
 
     @Test
+    public void choicesYesNoNotesAndSetup() {
+        List<String> choices = FieldInfo.choiceLines("sunny\n\n cloudy \nrain");
+        assertEquals(3, choices.size()); // empty lines left out, spaces trimmed
+        assertEquals("cloudy", choices.get(1));
+        assertNull(FieldInfo.choicesProblem(choices));
+        assertNotNull(FieldInfo.choicesProblem(FieldInfo.choiceLines("only one")));
+        assertNotNull(FieldInfo.choicesProblem(FieldInfo.choiceLines("Rain\nrain")));
+        assertNull(new FieldInfo.Custom("W", FieldInfo.Custom.CHOICE, "rain", choices).problem());
+        assertNotNull(new FieldInfo.Custom("W", FieldInfo.Custom.CHOICE, "snow", choices).problem());
+        assertEquals(true, new FieldInfo.Custom("F", FieldInfo.Custom.YES_NO, "yes").jsonValue());
+        assertEquals(false, new FieldInfo.Custom("F", FieldInfo.Custom.YES_NO, "no").jsonValue());
+        assertNotNull(new FieldInfo.Custom("F", FieldInfo.Custom.YES_NO, "maybe").problem());
+        String long101 = new String(new char[101]).replace('\0', 'a');
+        assertNotNull(new FieldInfo.Custom("T", FieldInfo.Custom.TEXT, long101).problem());
+        assertNull(new FieldInfo.Custom("N", FieldInfo.Custom.NOTES, long101).problem());
+        assertNull(FieldInfo.setupProblem("Camera height", "0,3"));
+        assertNull(FieldInfo.setupProblem("Camera height", ""));
+        assertNotNull(FieldInfo.setupProblem("Camera height", "-1"));
+        assertNotNull(FieldInfo.setupProblem("Camera height", "101"));
+        SessionSettings s = new SessionSettings(); // fixed focus at 5 diopters: 20 cm
+        assertEquals(0.2, FieldInfo.focusDistanceM(s, "calibrated"), 0);
+        assertNull(FieldInfo.focusDistanceM(s, "uncalibrated")); // the lens tells no distances
+        s.focusFixed = false;
+        assertNull(FieldInfo.focusDistanceM(s, "calibrated"));
+    }
+
+    @Test
     public void runLengthFromOneMinuteTo720Hours() {
         SessionSettings s = new SessionSettings();
         for (int min : new int[] {1, 45, 60, 90, 720 * 60}) {

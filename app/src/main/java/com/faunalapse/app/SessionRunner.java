@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,7 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * video clip, closes it again when the break is long, saves the ROI square of each photo or one MP4
  * per clip, and writes every event into session.jsonl, with the battery use at the end
  * (BatteryMeter). Guards: a heat pause, and clean stops when the battery runs low or the storage is
- * nearly full.
+ * nearly full. The user can pause it to adjust the phone (pause(), resume()): the current photo or
+ * clip is finished, the camera closes, and the session goes on by itself after PAUSE_LIMIT_MS.
  *
  * Runs on its own thread without a message loop (Camera1Session needs that) and simply waits between
  * events. All times come from the phone clock, so a late wake-up or a changed clock heals itself on
@@ -49,6 +51,13 @@ final class SessionRunner implements Runnable {
     private static final long PAUSE_CHECK_MS = 30000;
     /** Longest single wait, so a changed phone clock is noticed within a minute. */
     private static final long MAX_SLEEP_MS = 60000;
+    /** A pause by the user ends by itself after this long (owner): time to adjust the phone without
+     *  hurry, while a forgotten pause costs little. */
+    static final long PAUSE_LIMIT_MS = 10 * 60000L;
+    /** How a burst or clip ended. */
+    private static final int DONE = 0;
+    private static final int HOT = 1;
+    private static final int PAUSED = 2;
 
     /** Debug builds: use Camera1 even where Camera2 is suitable, to test the Camera1 path (adb
      *  hook; lasts until the app is closed). */
@@ -60,6 +69,13 @@ final class SessionRunner implements Runnable {
     static volatile String progress = "";
     static volatile String warning = "";
     static volatile boolean heatPaused;
+    /** Paused by the user (the camera is closed then), and until when at most; when that is the
+     *  session end, pauseEndsSession. */
+    static volatile boolean userPaused;
+    static volatile long pauseEnds;
+    static volatile boolean pauseEndsSession;
+    /** The newest saved photo or finished clip, for the screen; null until the first. */
+    static volatile File lastFile;
     /** The running session's folder, and the bytes of the photos and clips saved there so far
      *  (counted here, so the screen never has to walk through thousands of files). */
     static volatile File folder;
@@ -69,10 +85,11 @@ final class SessionRunner implements Runnable {
     private final SessionSettings settings;
     private final CapturePlan plan;
     private final File dir;
+    private final JSONObject field; // FieldInfo at the start
     private final SessionLog log;
     private final Camera1Backend.Listener onDone;
     private final boolean useCamera2;
-    private final int phoneTurn;
+    private volatile int phoneTurn;
     private final long videoBitRate; // for the storage check
     private final BatteryMeter meter;
     private SessionCamera camera;
@@ -85,15 +102,24 @@ final class SessionRunner implements Runnable {
     private int errors;
     private int heatPauses;
     private long heatPauseMs;
+    private int userPauses;
+    private long userPauseMs;
+    /** Asked on the screen: pause after the current photo or clip, or go on again. */
+    private volatile boolean pauseAsked;
+    private volatile boolean resumeAsked;
+    private final Object bell = new Object(); // wakes the waits when one of them is asked
+    private long cutBurstStart = -1; // the burst a pause cut, so the rest of it is marked as such
+    private long cutAt;              // when it was cut
 
     /** {@code phoneTurn}: how the phone was held at Start (RoiMath.quarterTurn), to save the
-     *  squares upright. */
+     *  squares upright; {@code field}: FieldInfo.toJson at Start. */
     SessionRunner(Context context, SessionSettings settings, CapturePlan plan, File dir, int phoneTurn,
-                  Camera1Backend.Listener onDone) {
+                  JSONObject field, Camera1Backend.Listener onDone) {
         this.context = context;
         this.settings = settings;
         this.plan = plan;
         this.dir = dir;
+        this.field = field;
         this.phoneTurn = phoneTurn;
         this.log = new SessionLog(new File(dir, "session.jsonl"));
         this.onDone = onDone;
@@ -117,14 +143,39 @@ final class SessionRunner implements Runnable {
                 : new Camera1Session(video, squareSide, videoFps, shown);
     }
 
+    /** From the screen: pause after the current photo or clip, and close the camera. */
+    void pause() {
+        resumeAsked = false;
+        pauseAsked = true;
+        ring();
+    }
+
+    /** From the screen: go on; {@code turn}: how the phone is held now (RoiMath.quarterTurn). */
+    void resume(int turn) {
+        phoneTurn = turn;
+        resumeAsked = true;
+        ring();
+    }
+
+    private void ring() {
+        synchronized (bell) {
+            bell.notifyAll();
+        }
+    }
+
     @Override
     public void run() {
         status = "Session starting.";
         warning = "";
         heatPaused = false;
+        userPaused = false;
+        lastFile = null;
         folder = dir;
         savedBytes.set(0);
         updateProgress();
+        // Before the record: a copy to a memory card can take some seconds.
+        List<String> sitePhotos = SitePhotos.moveInto(context, dir);
+        SessionLog.put(field, "site_photos", new JSONArray(sitePhotos)); // in the folder site_photos
         writeStart();
         Thread meterThread = new Thread(meter, "battery");
         meterThread.start();
@@ -137,6 +188,10 @@ final class SessionRunner implements Runnable {
         long doneUntil = 0; // end of the last burst or clip handled: never run it twice
         try {
             while (true) {
+                if (pauseAsked) {
+                    userPause();
+                    continue; // plan again from the new time
+                }
                 long now = System.currentTimeMillis();
                 CapturePlan.Burst b = plan.burstAtOrAfter(Math.max(now, doneUntil));
                 if (b == null) break;
@@ -153,6 +208,7 @@ final class SessionRunner implements Runnable {
                 if (camera == null) {
                     status = "Camera off. Next " + (settings.video ? "clip" : "burst") + " at " + clock(b.start) + ".";
                     sleepUntil(b.start - WAKE_LEAD_MS);
+                    if (pauseAsked) continue;
                 }
                 String stop = stopReason();
                 if (stop != null) {
@@ -166,10 +222,16 @@ final class SessionRunner implements Runnable {
                 try {
                     if (camera == null) openCamera();
                     sleepUntil(b.start - FOCUS_LEAD_MS);
-                    boolean hot = settings.video ? clip(b) : burst(b);
-                    doneUntil = b.end;
+                    if (pauseAsked) continue;
+                    int end = settings.video ? clip(b) : burst(b);
+                    // A pause may end within this burst or clip: then its rest is recorded.
+                    doneUntil = end == PAUSED ? System.currentTimeMillis() : b.end;
+                    if (end == PAUSED && System.currentTimeMillis() > b.start) {
+                        cutBurstStart = b.start;
+                        cutAt = System.currentTimeMillis();
+                    }
                     errorsInRow = 0;
-                    if (hot) coolDown();
+                    if (end == HOT) coolDown();
                 } catch (InterruptedException e) {
                     throw e;
                 } catch (Exception e) {
@@ -208,6 +270,8 @@ final class SessionRunner implements Runnable {
             SessionLog.put(end, "errors", errors);
             SessionLog.put(end, "heat_pauses", heatPauses);
             SessionLog.put(end, "heat_pause_min", Math.round(heatPauseMs / 6000.0) / 10.0);
+            SessionLog.put(end, "user_pauses", userPauses);
+            SessionLog.put(end, "user_pause_min", Math.round(userPauseMs / 6000.0) / 10.0);
             SessionLog.put(end, "battery", meter.toJson());
             log.write(end);
             if (Build.VERSION.SDK_INT <= 29) {
@@ -226,6 +290,7 @@ final class SessionRunner implements Runnable {
             status = "Session ended (" + reason + "): " + counts + ".";
             progress = "";
             heatPaused = false;
+            userPaused = false;
 
             JSONObject summary = new JSONObject();
             SessionLog.put(summary, "test", "session");
@@ -246,7 +311,7 @@ final class SessionRunner implements Runnable {
     @SuppressLint("UsableSpace")
     private void writeStart() {
         JSONObject r = SessionLog.record("session_start");
-        SessionLog.put(r, "field", FieldInfo.load(context).toJson(context)); // site, plant, location
+        SessionLog.put(r, "field", field); // site, plant, location, site photos
         SessionLog.put(r, "settings", settings.toJson());
         SessionLog.put(r, "camera_api", useCamera2 ? "camera2" : "camera1");
         SessionLog.put(r, "phone_turn_deg", phoneTurn); // 0 upright or flat, 90 left side up
@@ -272,6 +337,8 @@ final class SessionRunner implements Runnable {
     }
 
     private void openCamera() throws Exception {
+        // The aim screen may still hold the camera after a pause; it lets go when it closes.
+        for (int i = 0; i < 100 && AimActivity.cameraInUse; i++) Thread.sleep(100);
         long t = SpeedTest.now();
         SessionCamera c = newCamera(context, useCamera2, settings.video, settings.savedSidePx,
                 settings.videoFps, null);
@@ -352,7 +419,7 @@ final class SessionRunner implements Runnable {
             long left = plan.end() - System.currentTimeMillis();
             if (left <= 0) break;
             sleepUntil(System.currentTimeMillis() + Math.min(PAUSE_CHECK_MS, left));
-        } while (tooHot(true));
+        } while (tooHot(true) && !pauseAsked); // a pause by the user takes over; the heat is checked after it
         heatPaused = false;
         long end = System.currentTimeMillis();
         heatPauseMs += end - start;
@@ -363,12 +430,61 @@ final class SessionRunner implements Runnable {
         log.write(e);
     }
 
+    /** Paused by the user: the camera closes (the aim screen may use it) until the user goes on,
+     *  PAUSE_LIMIT_MS is over, or the schedule ends. Then the session takes the square and the
+     *  focus as saved now, and the way the phone is held. */
+    private void userPause() throws InterruptedException {
+        pauseAsked = false;
+        closeCamera();
+        userPauses++;
+        long start = System.currentTimeMillis();
+        pauseEnds = Math.min(start + PAUSE_LIMIT_MS, plan.end());
+        pauseEndsSession = pauseEnds == plan.end();
+        log.write(SessionLog.record("pause"));
+        status = "Paused at " + clock(start) + ": nothing is recorded. The session "
+                + (pauseEndsSession ? "ends" : "goes on by itself") + " at " + clock(pauseEnds) + ".";
+        userPaused = true;
+        CaptureService.showPaused(context, true);
+        for (long left; !resumeAsked && (left = pauseEnds - System.currentTimeMillis()) > 0; ) {
+            synchronized (bell) {
+                if (!resumeAsked) bell.wait(Math.min(left, MAX_SLEEP_MS));
+            }
+        }
+        boolean byUser = resumeAsked;
+        resumeAsked = false;
+        long end = System.currentTimeMillis();
+        userPauseMs += end - start;
+        SessionSettings now = SessionSettings.load(context); // the aim screen saves its changes at once
+        settings.squarePercent = now.squarePercent;
+        settings.squareX = now.squareX;
+        settings.squareY = now.squareY;
+        settings.focusFixed = now.focusFixed;
+        settings.focusDiopters = now.focusDiopters;
+        JSONObject r = SessionLog.record("pause_end");
+        SessionLog.put(r, "ended_by", byUser ? "user" : "time limit");
+        SessionLog.put(r, "paused_min", Math.round((end - start) / 6000.0) / 10.0);
+        SessionLog.put(r, settings.video ? "clips_starting_in_pause" : "bursts_starting_in_pause",
+                plan.burstsStartingIn(start, end));
+        JSONObject now2 = settings.toJson();
+        for (String key : new String[] {"square_percent_of_short_side", "square_centre_x", "square_centre_y",
+                "focus", "focus_diopters", "focus_distance"}) {
+            SessionLog.put(r, key, now2.opt(key));
+        }
+        SessionLog.put(r, "phone_turn_deg", phoneTurn);
+        log.write(r);
+        userPaused = false;
+        CaptureService.showPaused(context, false);
+    }
+
     /** One photo burst: focus once, then one photo per step on the grid from the burst start.
-     *  Returns true when it stopped early because the phone got too warm. */
-    private boolean burst(CapturePlan.Burst b) throws Exception {
-        bursts++;
+     *  Returns HOT when it stopped early because the phone got too warm, PAUSED when the user
+     *  paused it, else DONE. */
+    private int burst(CapturePlan.Burst b) throws Exception {
+        boolean continued = b.start == cutBurstStart;
+        if (!continued) bursts++;
         JSONObject r = SessionLog.record("burst_start");
         putBurstFacts(r, b);
+        if (continued) SessionLog.put(r, "continues_after_pause", true);
         SessionLog.put(r, "focus", camera.focus());
         log.write(r);
 
@@ -381,8 +497,11 @@ final class SessionRunner implements Runnable {
         long t = CapturePlan.nextPhotoTime(b, step, System.currentTimeMillis());
         // Grid times already over when the burst could start (camera or focus too slow).
         long firstPossible = t >= 0 ? t : b.end;
-        int lateStart = (int) Math.max(0, (firstPossible - b.start + step - 1) / step);
+        // In the rest of a burst a pause cut: only the grid times since the cut.
+        long from = CapturePlan.nextPhotoTime(b, step, continued ? cutAt : b.start);
+        int lateStart = from < 0 ? 0 : (int) Math.max(0, (firstPossible - from + step - 1) / step);
         boolean hot = false;
+        boolean paused = false;
         long nextHeatCheck = System.currentTimeMillis() + HEAT_CHECK_MS;
         while (t >= 0) {
             if (System.currentTimeMillis() >= nextHeatCheck) {
@@ -393,6 +512,10 @@ final class SessionRunner implements Runnable {
                 nextHeatCheck = System.currentTimeMillis() + HEAT_CHECK_MS;
             }
             sleepUntil(t);
+            if (pauseAsked) {
+                paused = true;
+                break;
+            }
             status = "Burst " + bursts + ": photo " + (taken + 1) + ". Burst ends at " + clock(b.end) + ".";
             long takenAt = System.currentTimeMillis();
             long c0 = SpeedTest.now();
@@ -417,6 +540,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(e, "photo_times_missed_at_start", lateStart);
         if (taken > 0) SessionLog.put(e, "mean_photo_ms", captureMsSum / taken);
         if (hot) SessionLog.put(e, "stopped_for_heat", true);
+        if (paused) SessionLog.put(e, "paused_by_user", true);
         log.write(e);
         if (missed > 0 && warning.isEmpty() && taken > 0) {
             double photoS = captureMsSum / (double) taken / 1000;
@@ -428,7 +552,7 @@ final class SessionRunner implements Runnable {
             SessionLog.put(w, "warning", warning);
             log.write(w);
         }
-        return hot;
+        return hot ? HOT : paused ? PAUSED : DONE;
     }
 
     /** Cuts and saves the ROI square on the saver thread; one "photo" record per photo. */
@@ -450,6 +574,7 @@ final class SessionRunner implements Runnable {
                 SessionLog.put(r, "save_ms", SpeedTest.now() - s0);
                 SessionLog.put(r, "kb", file.length() / 1024);
                 savedBytes.addAndGet(file.length());
+                lastFile = file;
             } catch (Exception e) {
                 SessionLog.put(r, "error", e.toString());
             }
@@ -457,20 +582,28 @@ final class SessionRunner implements Runnable {
         });
     }
 
-    /** One video clip: prepare and focus before the start, record from start to end. Returns true
-     *  when it stopped early because the phone got too warm. */
-    private boolean clip(CapturePlan.Burst b) throws Exception {
+    /** One video clip: prepare and focus before the start, record from start to end. Returns HOT
+     *  when it stopped early because the phone got too warm, PAUSED when the user paused it, else
+     *  DONE. */
+    private int clip(CapturePlan.Burst b) throws Exception {
         clips++;
+        boolean continued = b.start == cutBurstStart;
         File file = new File(dir, SessionLog.fileStem(Math.max(b.start, System.currentTimeMillis())) + ".mp4");
         String focus = camera.prepareClip(file, photoTurn);
         sleepUntil(b.start);
+        if (pauseAsked) { // before the clip began: no file
+            clips--;
+            closeCamera();
+            file.delete();
+            return PAUSED;
+        }
         long started = System.currentTimeMillis();
         camera.startClip();
         status = "Recording clip " + clips + " until " + clock(b.end) + ".";
         boolean stoppedEarly = false;
         boolean hot = false;
         try {
-            while (!hot && System.currentTimeMillis() < b.end) {
+            while (!hot && !pauseAsked && System.currentTimeMillis() < b.end) {
                 sleepUntil(Math.min(b.end, System.currentTimeMillis() + HEAT_CHECK_MS));
                 hot = tooHot(false);
             }
@@ -497,10 +630,14 @@ final class SessionRunner implements Runnable {
         savedBytes.addAndGet(file.length());
         if (stoppedEarly) SessionLog.put(r, "stopped_early", true);
         if (hot) SessionLog.put(r, "stopped_for_heat", true);
+        boolean paused = !stoppedEarly && !hot && stopped < b.end;
+        if (paused) SessionLog.put(r, "paused_by_user", true);
+        if (continued) SessionLog.put(r, "continues_after_pause", true);
         log.write(r);
+        lastFile = file;
         updateProgress();
         if (stoppedEarly) throw new InterruptedException();
-        return hot;
+        return hot ? HOT : paused ? PAUSED : DONE;
     }
 
     /** The counts so far and the session end, for the screen. */
@@ -530,9 +667,12 @@ final class SessionRunner implements Runnable {
         }
     }
 
-    private static void sleepUntil(long target) throws InterruptedException {
-        for (long left; (left = target - System.currentTimeMillis()) > 0; ) {
-            Thread.sleep(Math.min(left, MAX_SLEEP_MS));
+    /** Waits until {@code target}, or until the user asks for a pause. */
+    private void sleepUntil(long target) throws InterruptedException {
+        for (long left; !pauseAsked && (left = target - System.currentTimeMillis()) > 0; ) {
+            synchronized (bell) {
+                if (!pauseAsked) bell.wait(Math.min(left, MAX_SLEEP_MS));
+            }
         }
     }
 

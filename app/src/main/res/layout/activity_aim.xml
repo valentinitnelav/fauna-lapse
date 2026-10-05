@@ -12,6 +12,19 @@
     android:keepScreenOn="true"
     android:orientation="vertical">
 
+    <!-- While a session is paused: above the view, so it never covers the square -->
+    <TextView
+        android:id="@+id/paused_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/warning"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="#FFFFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
     <FrameLayout
         android:id="@+id/camera_frame"
         android:layout_width="match_parent"

@@ -1,30 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- "Add a field" (CustomFields): its name and its type; the tags are the types in FieldInfo.Custom.
+<!-- "Add a field" (CustomFields): its name, its type and, for a list, the choices; the tags are the
+     types in FieldInfo.Custom. It scrolls: on small screens the dialog is shorter than the form.
      LabelFor: the name has its label, and the grey hint inside gives an example. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingStart="24dp"
-    android:paddingEnd="24dp"
-    android:paddingTop="8dp"
     tools:ignore="LabelFor">
 
-    <TextView style="@style/Body" android:labelFor="@id/custom_new_name" android:text="@string/custom_name_label" />
-    <EditText android:id="@+id/custom_new_name" style="@style/Field" android:hint="@string/custom_name_hint"
-        android:inputType="textCapSentences" android:importantForAutofill="no" tools:targetApi="o" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp">
 
-    <TextView style="@style/Body" android:layout_marginTop="16dp" android:text="@string/custom_type_label" />
-    <RadioGroup android:id="@+id/custom_new_type" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:checkedButton="@id/custom_type_text">
-        <RadioButton android:id="@+id/custom_type_text" android:layout_width="match_parent"
-            android:layout_height="48dp" android:tag="text" android:text="@string/custom_type_text" />
-        <RadioButton android:id="@+id/custom_type_number" android:layout_width="match_parent"
-            android:layout_height="48dp" android:tag="number" android:text="@string/custom_type_number" />
-        <RadioButton android:id="@+id/custom_type_date" android:layout_width="match_parent"
-            android:layout_height="48dp" android:tag="date" android:text="@string/custom_type_date" />
-        <RadioButton android:id="@+id/custom_type_time" android:layout_width="match_parent"
-            android:layout_height="48dp" android:tag="time" android:text="@string/custom_type_time" />
-    </RadioGroup>
-</LinearLayout>
+        <TextView style="@style/Body" android:labelFor="@id/custom_new_name" android:text="@string/custom_name_label" />
+        <EditText android:id="@+id/custom_new_name" style="@style/Field" android:hint="@string/custom_name_hint"
+            android:inputType="textCapSentences" android:importantForAutofill="no" tools:targetApi="o" />
+
+        <TextView style="@style/Body" android:layout_marginTop="16dp" android:text="@string/custom_type_label" />
+        <RadioGroup android:id="@+id/custom_new_type" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:checkedButton="@id/custom_type_text">
+            <RadioButton android:id="@+id/custom_type_text" style="@style/TypeChoice" android:tag="text"
+                android:text="@string/custom_type_text" />
+            <RadioButton android:id="@+id/custom_type_notes" style="@style/TypeChoice" android:tag="notes"
+                android:text="@string/custom_type_notes" />
+            <RadioButton android:id="@+id/custom_type_number" style="@style/TypeChoice" android:tag="number"
+                android:text="@string/custom_type_number" />
+            <RadioButton android:id="@+id/custom_type_date" style="@style/TypeChoice" android:tag="date"
+                android:text="@string/custom_type_date" />
+            <RadioButton android:id="@+id/custom_type_time" style="@style/TypeChoice" android:tag="time"
+                android:text="@string/custom_type_time" />
+            <RadioButton android:id="@+id/custom_type_yes_no" style="@style/TypeChoice" android:tag="yes_no"
+                android:text="@string/custom_type_yes_no" />
+            <RadioButton android:id="@+id/custom_type_choice" style="@style/TypeChoice" android:tag="choice"
+                android:text="@string/custom_type_choice" />
+        </RadioGroup>
+
+        <!-- Only for "Choice from a list" -->
+        <TextView android:id="@+id/custom_choices_label" style="@style/Body" android:layout_marginTop="8dp"
+            android:labelFor="@id/custom_choices" android:text="@string/custom_choices_label" android:visibility="gone" />
+        <EditText android:id="@+id/custom_choices" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:gravity="top" android:hint="@string/custom_choices_hint"
+            android:inputType="textMultiLine|textCapSentences" android:minLines="3" android:maxLines="8"
+            android:importantForAutofill="no" android:visibility="gone" tools:targetApi="o" />
+    </LinearLayout>
+</ScrollView>

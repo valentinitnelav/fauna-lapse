@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A notes field in card 2 (CustomFields): its name and remove button, then the notes across the
+     whole card (several lines), then how many characters are used. The button's description names
+     the field; it is set in code. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Group"
+    android:layout_marginTop="4dp">
+
+    <LinearLayout style="@style/FieldRow" android:layout_marginTop="0dp">
+        <TextView android:id="@+id/custom_name" style="@style/FieldLabel" android:layout_width="0dp"
+            android:layout_weight="1" />
+        <ImageButton android:id="@+id/custom_remove" android:layout_width="48dp" android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_close"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
+
+    <EditText android:id="@+id/custom_value" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="top" android:textSize="16sp"
+        android:inputType="textMultiLine|textCapSentences" android:minLines="3" android:maxLines="12"
+        android:importantForAutofill="no" tools:ignore="LabelFor" tools:targetApi="o" />
+
+    <TextView android:id="@+id/custom_count" style="@style/Hint" android:gravity="end" />
+</LinearLayout>

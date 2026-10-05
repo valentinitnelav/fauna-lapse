@@ -45,7 +45,7 @@ final class PhoneCheck {
     }
 
     @SuppressWarnings("deprecation") // LOCATION_MODE is the only way before Android 9
-    private static boolean locationOn(Context c) {
+    static boolean locationOn(Context c) {
         if (Build.VERSION.SDK_INT >= 28) {
             return ((LocationManager) c.getSystemService(Context.LOCATION_SERVICE)).isLocationEnabled();
         }
