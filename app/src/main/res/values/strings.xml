@@ -270,6 +270,7 @@
     <string name="aim_video_info" tools:ignore="PluralsCandidate">%1$d %% of the short side of the view: %2$d px across in the camera stream (%3$s), saved at %4$d px, %5$d frames per s.</string>
     <string name="aim_zoom_anywhere">Camera2: the camera zooms onto the square in hardware, so a small square keeps its real detail.</string>
     <string name="aim_zoom_centred">Camera2: the camera can zoom only towards the middle, so a square near the middle keeps more detail.</string>
+    <string name="aim_zoom_middle_more">In the middle (tap Middle), this phone can zoom onto the square: %1$d px.</string>
     <string name="aim_zoom_none">Camera1: no hardware zoom, so the square has only its share of the stream\'s pixels.</string>
     <string name="aim_camera_failed">The camera did not open: %1$s</string>
     <string name="aim_focus">Focus again</string>

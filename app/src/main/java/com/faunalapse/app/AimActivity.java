@@ -523,14 +523,21 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
         long percent = Math.round(square.sideShare * 100);
         int real;
         String text;
+        String middle = null; // where the camera zooms only towards the middle: what the middle gives
         if (video) {
             int[] stream = size(facts.optString("video_stream_size"));
             int[] array = facts.has("pixel_array") ? size(facts.optString("pixel_array")) : photo;
             String zoom = facts.optString("video_zoom", "none");
+            double maxZoom = facts.optDouble("max_digital_zoom", 1);
             real = RoiMath.videoSquare(photo[0], photo[1], array[0], array[1], stream[0], stream[1],
-                    facts.optDouble("max_digital_zoom", 1), zoom, square.sideShare, square.centreX, square.centreY).realPx;
+                    maxZoom, zoom, square.sideShare, square.centreX, square.centreY).realPx;
             text = getString(R.string.aim_video_info, percent, real, facts.optString("video_stream_size"),
                     RoiMath.savedSide(real, savedSidePx), videoFps);
+            if ("centred".equals(zoom)) {
+                int inMiddle = RoiMath.videoSquare(photo[0], photo[1], array[0], array[1], stream[0], stream[1],
+                        maxZoom, zoom, square.sideShare, 0.5, 0.5).realPx;
+                if (inMiddle > real * 1.1) middle = getString(R.string.aim_zoom_middle_more, inMiddle);
+            }
             squareHelp.setText(getString(R.string.two_paragraphs, getString(R.string.aim_hint),
                     getString("anywhere".equals(zoom) ? R.string.aim_zoom_anywhere
                             : "centred".equals(zoom) ? R.string.aim_zoom_centred : R.string.aim_zoom_none)));
@@ -541,6 +548,7 @@ public final class AimActivity extends Activity implements TextureView.SurfaceTe
                     RoiMath.savedSide(real, savedSidePx));
         }
         if (real < savedSidePx) text += " " + getString(R.string.aim_not_enlarged, savedSidePx);
+        if (middle != null) text += " " + middle;
         info.setText(text);
     }
 
