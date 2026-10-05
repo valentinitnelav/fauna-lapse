@@ -45,10 +45,12 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   longitude and accuracy typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
-- Files in `Documents/FaunaLapse` on the phone, one folder per session (phone model and ID, start
-  time, photo or video): easy to copy to a computer over USB, and kept when the app is removed. The main
-  screen shows how much space FaunaLapse uses and how much is free; during a session, what it saved
-  so far and any phone setting that wastes energy (for example Wi-Fi left on).
+- Files in `Documents/FaunaLapse` on the phone or on a memory card (SD card), one folder per session
+  (phone model and ID, start time, photo or video): easy to copy to a computer over USB, and kept
+  when the app is removed (on a card with Android 7 to 10, Android allows only the app's own folder,
+  which goes with the app). The main screen shows how much space FaunaLapse uses and how much is
+  free, opens the folder in Android's file app, and during a session shows what it saved so far and
+  any phone setting that wastes energy (for example Wi-Fi left on).
 
 ## Using it in the field
 
@@ -72,7 +74,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    breaks.
 5. To stop early: open the app, tap *Stop session*, then *Stop*.
 6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
-   phone and copy the session folders from `Internal storage/Documents/FaunaLapse/`. Each folder
+   phone and copy the session folders from `Internal storage/Documents/FaunaLapse/` (or the same
+   folder on the SD card, if you chose it on the status card). Each folder
    holds the photos (or videos) and `session.jsonl`, the record of every photo and event with the
    field metadata and the battery use.
 

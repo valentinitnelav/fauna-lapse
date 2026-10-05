@@ -2,8 +2,7 @@
 
 A short snapshot for coding agents (humans may read it too), read at the start of every session; at
 most 100 lines. Each entry says only what is true now and where it lives: replace or remove text when
-it changes, never add history. Rules and their reasons are in `AGENTS.md`; history is in git.
-Last update: 2026-10-04.
+it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Last update: 2026-10-05.
 
 ## What works now
 
@@ -13,7 +12,8 @@ Last update: 2026-10-04.
   event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off), clean
   stop on low battery without charging or too little storage. Tested on the Samsung M12.
 - **Main screen**: status card (state; while running: counts, warnings, phone check lines, session
-  folder and MB so far; files folder, use, free space; last session, battery, clock fold away);
+  folder and MB so far; files folder, use, free space, with a memory card a choice of place and the
+  total; Open the folder in Android's file app; last session, battery, clock fold away);
   1 Aim; 2 Field metadata (phone model and ID; site, transect, plant, sample ID, session ID; custom
   fields: text, number, date, time; latitude, longitude, accuracy typed or from Get location: GPS on
   until 10 m or 3 min, its values ask before an edit); 3 Schedule (summary; settings on Change); 4 Phone for the field (radios, location, battery
@@ -58,7 +58,7 @@ Last update: 2026-10-04.
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
-| Output | `Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/` (phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
+| Output | `Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/` on the phone or a memory card (user's choice; phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery). The app's own `Android/data/com.faunalapse.app/files/sessions/` (deleted with the app) on the phone with Android 10 and older without the storage permission, on a card with Android 7 to 10; tests in `Android/data/.../files/phase0/` | `Storage`, `CaptureService.outputDir` |
 | Phase 0 test defaults (start delay 10 s, wake lead 5 s, speed test sizes) | | `CaptureService`, `Camera1Backend`, `SpeedTest` |
 
 ## File map
@@ -67,7 +67,7 @@ Last update: 2026-10-04.
 |---|---|
 | `MainActivity.java` | Main screen (status card, aim and schedule cards, Start, Stop) and phase 0 test buttons; permissions; phone turn at Start; adb hooks in debug builds |
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
-| `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
+| `CaptureService.java`, `Storage.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl`. The places for sessions (phone, memory cards), the chosen one, paths as file apps show them |
 | `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
 | `FieldInfo.java`, `CustomFields.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone model and ID, folder names); the user's own fields on card 2; one GPS position, then the GPS off |
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |

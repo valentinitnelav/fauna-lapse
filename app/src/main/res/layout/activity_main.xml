@@ -30,6 +30,10 @@
             <LinearLayout android:id="@+id/session_checks" style="@style/Group" />
             <TextView android:id="@+id/storage" style="@style/Body" android:layout_marginTop="8dp"
                 android:textSize="15sp" />
+            <!-- With a memory card: where new sessions go (Storage), and all places together -->
+            <RadioGroup android:id="@+id/storage_places" style="@style/Group" android:visibility="gone" />
+            <TextView android:id="@+id/storage_total" style="@style/Body" android:textSize="15sp" />
+            <Button android:id="@+id/open_folder" style="@style/SecondaryButton" android:text="@string/open_folder" />
             <TextView android:id="@+id/details_toggle" style="@style/Body" android:minHeight="48dp"
                 android:gravity="center_vertical" android:textColor="@color/heading" />
             <LinearLayout android:id="@+id/details" style="@style/Group" android:visibility="gone">

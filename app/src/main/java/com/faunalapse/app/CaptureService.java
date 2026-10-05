@@ -1,6 +1,5 @@
 package com.faunalapse.app;
 
-import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,11 +8,9 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -77,36 +74,6 @@ public final class CaptureService extends Service {
         File dir = new File(base, "phase0");
         dir.mkdirs();
         return dir;
-    }
-
-    /** Sessions: one folder per session (phone model and ID, start time, photo or video) with the files and
-     *  session.jsonl. Documents/FaunaLapse in the shared storage, so the files survive an uninstall
-     *  and are easy to find over USB. Android 11+ lets apps write there without a permission;
-     *  Android 10 and older need the storage permission, else the app's own folder is used. */
-    @SuppressWarnings("deprecation") // the shared folder's path: direct paths work again from Android 11
-    static File sessionsDir(Context context) {
-        if (Build.VERSION.SDK_INT >= 30 || context.checkSelfPermission(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            File shared = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOCUMENTS), "FaunaLapse");
-            if (shared.isDirectory() || shared.mkdirs()) return shared;
-        }
-        return appSessionsDir(context);
-    }
-
-    /** The app's own folder: no permission needed, but Android removes it with the app. */
-    static File appSessionsDir(Context context) {
-        File base = context.getExternalFilesDir(null);
-        if (base == null) base = context.getFilesDir(); // no shared storage mounted
-        return new File(base, "sessions");
-    }
-
-    /** A folder as file manager apps show it: "Internal storage/Documents/FaunaLapse". */
-    @SuppressWarnings("deprecation") // only to shorten the path for the screen
-    static String shownPath(File dir) {
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
-        String path = dir.getAbsolutePath();
-        return path.startsWith(root) ? "Internal storage/" + path.substring(root.length()) : path;
     }
 
     /** Starts a session with the saved settings; {@code phoneTurn}: how the phone is held at Start
@@ -208,9 +175,11 @@ public final class CaptureService extends Service {
         String name = FieldInfo.folderPrefix(this) + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
                 + (settings.video ? "_video" : "_photo");
-        File dir = new File(sessionsDir(this), name);
+        // One folder per session (phone model and ID, start time, photo or video) with the files and
+        // session.jsonl, on the storage chosen on the status card (Storage).
+        File dir = new File(Storage.sessionsDir(this), name);
         if (!dir.mkdirs()) {
-            dir = new File(appSessionsDir(this), name); // the shared folder refused it
+            dir = new File(Storage.appSessionsDir(this), name); // the folder refused it
             dir.mkdirs();
         }
         sessionThread = new Thread(new SessionRunner(this, settings, plan, dir, phoneTurn, summary -> {

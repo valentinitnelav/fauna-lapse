@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -34,9 +35,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +101,11 @@ public final class MainActivity extends Activity {
     private TextView battery;
     private TextView phoneTime;
     private TextView storage;
-    private long[] storageUse; // bytes and sessions in the sessions folder; null until counted
+    private RadioGroup storagePlaces; // the phone and each memory card, when there is a card
+    private TextView storageTotal;
+    private List<Storage.Place> places; // listed when the screen opens
+    private boolean buildingPlaces; // the place buttons are being made: not a choice
+    private long[][] storageUse; // per place: bytes and sessions in its FaunaLapse folder; null until counted
     private boolean wasRunning;
     private Button stopButton;
     private View aimCard;
@@ -179,6 +186,17 @@ public final class MainActivity extends Activity {
         battery = findViewById(R.id.battery);
         phoneTime = findViewById(R.id.phone_time);
         storage = findViewById(R.id.storage);
+        storagePlaces = findViewById(R.id.storage_places);
+        storageTotal = findViewById(R.id.storage_total);
+        storagePlaces.setOnCheckedChangeListener((group, id) -> {
+            View b = group.findViewById(id);
+            if (b == null || buildingPlaces) return;
+            Storage.choose(this, (String) b.getTag());
+            showStorage();
+        });
+        findViewById(R.id.open_folder).setOnClickListener(v -> openFolder());
+        places = Storage.places(this);
+        showPlaces();
         stopButton = findViewById(R.id.stop_session);
         stopButton.setOnClickListener(v -> askToStop());
         stopButton.setText(withIcon(stopButton, R.drawable.ic_stop, R.string.stop_session));
@@ -288,6 +306,9 @@ public final class MainActivity extends Activity {
         if (orientationListener.canDetectOrientation()) orientationListener.enable();
         showAimSummary(); // the aim screen may have moved the square
         lastSession = null;
+        places = Storage.places(this); // a card may have come or gone
+        storageUse = null;
+        showPlaces();
         countStorage();
         if (CaptureService.sessionRunning) scroll.post(() -> scroll.smoothScrollTo(0, 0)); // started on the aim screen
         handler.post(refresher);
@@ -659,14 +680,18 @@ public final class MainActivity extends Activity {
         return d == Math.rint(d) ? String.valueOf((long) d) : String.valueOf(d);
     }
 
-    /** Counts what the sessions folder holds, on a second thread: many files take a moment. */
+    /** Counts what each FaunaLapse folder holds, on a second thread: many files take a moment. */
     private void countStorage() {
-        final File dir = CaptureService.sessionsDir(this);
+        final List<Storage.Place> counted = places;
         new Thread(() -> {
-            File[] sessions = dir.listFiles(File::isDirectory);
-            long[] use = {0, sessions == null ? 0 : sessions.length};
-            if (sessions != null) for (File f : sessions) use[0] += bytes(f);
+            long[][] use = new long[counted.size()][];
+            for (int i = 0; i < use.length; i++) {
+                File[] sessions = counted.get(i).dir.listFiles(File::isDirectory);
+                use[i] = new long[] {0, sessions == null ? 0 : sessions.length};
+                if (sessions != null) for (File f : sessions) use[i][0] += bytes(f);
+            }
             handler.post(() -> {
+                if (counted != places) return; // listed again meanwhile
                 storageUse = use;
                 showStorage();
             });
@@ -681,29 +706,99 @@ public final class MainActivity extends Activity {
         return sum;
     }
 
-    /** Where the files go, what FaunaLapse uses there and what is free; in the app's own folder
-     *  (Android 10 and older without the storage permission) also that it goes with the app.
-     *  During a session: its folder and what it saved so far. Reading the free space costs almost
-     *  nothing; the folder is counted only when the screen opens and after a session.
-     *  UsableSpace: leaves out caches Android could clear, a cautious number (as SessionRunner). */
+    /** One button per place (shown only when there is a memory card). */
+    private void showPlaces() {
+        buildingPlaces = true;
+        storagePlaces.removeAllViews();
+        String chosen = Storage.chosen(this, places).key;
+        for (Storage.Place p : places) {
+            RadioButton b = new RadioButton(this);
+            b.setId(View.generateViewId());
+            b.setTag(p.key);
+            b.setMinHeight(Math.round(48 * getResources().getDisplayMetrics().density));
+            b.setTextSize(15);
+            storagePlaces.addView(b);
+            if (p.key.equals(chosen)) storagePlaces.check(b.getId());
+        }
+        buildingPlaces = false;
+    }
+
+    /** Where the files go, what FaunaLapse uses there and what is free; with a memory card, each
+     *  place to choose from and the total. During a session: its folder and what it saved so far.
+     *  Reading the free space costs almost nothing; the folders are counted only when the screen
+     *  opens and after a session. UsableSpace: leaves out caches Android could clear, a cautious
+     *  number (as SessionRunner). */
     @SuppressLint("UsableSpace")
     private void showStorage() {
         File folder = SessionRunner.folder;
-        if (CaptureService.sessionRunning && folder != null) {
-            show(storage, getString(R.string.storage_session, CaptureService.shownPath(folder),
-                    Formatter.formatShortFileSize(this, SessionRunner.savedBytes.get()),
-                    Formatter.formatShortFileSize(this, folder.getUsableSpace())));
+        boolean session = CaptureService.sessionRunning && folder != null;
+        storagePlaces.setVisibility(session || places.size() < 2 ? View.GONE : View.VISIBLE);
+        if (session) {
+            show(storage, getString(R.string.storage_session, Storage.shownPath(this, places, folder),
+                    size(SessionRunner.savedBytes.get()), size(folder.getUsableSpace())));
+            show(storageTotal, "");
             return;
         }
-        File dir = CaptureService.sessionsDir(this);
-        String path = CaptureService.shownPath(dir);
-        String free = Formatter.formatShortFileSize(this, dir.getUsableSpace());
-        String text = storageUse == null ? getString(R.string.storage_counting, path, free)
-                : getString(R.string.storage_line, path, Formatter.formatShortFileSize(this, storageUse[0]),
-                        getResources().getQuantityString(R.plurals.sessions, (int) storageUse[1], (int) storageUse[1]),
-                        free);
-        if (dir.equals(CaptureService.appSessionsDir(this))) text += " " + getString(R.string.storage_app_folder);
+        Storage.Place chosen = Storage.chosen(this, places);
+        int c = places.indexOf(chosen);
+        String path = Storage.shownPath(this, places, chosen.dir);
+        String free = size(chosen.dir.getUsableSpace());
+        String text;
+        if (places.size() > 1) {
+            text = getString(R.string.storage_where, path);
+        } else {
+            text = storageUse == null ? getString(R.string.storage_counting, path, free)
+                    : getString(R.string.storage_line, path, size(storageUse[c][0]), sessions(storageUse[c][1]), free);
+        }
+        if (chosen.appFolder) {
+            text += " " + getString(chosen.key.equals(Storage.PHONE) ? R.string.storage_app_folder
+                    : R.string.storage_card_app_folder);
+        }
+        if (Storage.missingChoice(this, places)) text = getString(R.string.storage_missing) + " " + text;
         show(storage, text);
+        if (places.size() < 2) {
+            show(storageTotal, "");
+            return;
+        }
+        long[] total = {0, 0};
+        for (int i = 0; i < places.size(); i++) {
+            Storage.Place p = places.get(i);
+            RadioButton b = (RadioButton) storagePlaces.getChildAt(i);
+            String line = storageUse == null
+                    ? getString(R.string.storage_place_counting, p.name, size(p.dir.getUsableSpace()))
+                    : getString(R.string.storage_place, p.name, size(storageUse[i][0]), sessions(storageUse[i][1]),
+                            size(p.dir.getUsableSpace()));
+            if (!line.contentEquals(b.getText())) b.setText(line);
+            if (storageUse != null) {
+                total[0] += storageUse[i][0];
+                total[1] += storageUse[i][1];
+            }
+        }
+        show(storageTotal, storageUse == null ? "" : getString(R.string.storage_total, size(total[0]), sessions(total[1])));
+    }
+
+    private String size(long bytes) {
+        return Formatter.formatShortFileSize(this, bytes);
+    }
+
+    private String sessions(long n) {
+        return getResources().getQuantityString(R.plurals.sessions, (int) n, (int) n);
+    }
+
+    /** Opens the folder of the running session, or of the chosen place, in Android's file app. */
+    private void openFolder() {
+        File dir = CaptureService.sessionRunning && SessionRunner.folder != null ? SessionRunner.folder
+                : Storage.chosen(this, places).dir;
+        String id = Storage.documentId(places, dir);
+        try {
+            if (id == null) throw new ActivityNotFoundException();
+            startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(
+                    DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", id),
+                    DocumentsContract.Document.MIME_TYPE_DIR));
+        } catch (ActivityNotFoundException | SecurityException e) {
+            Toast.makeText(this, getString(R.string.open_folder_failed, Storage.shownPath(this, places, dir)),
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     private void startSession() {
