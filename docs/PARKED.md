@@ -63,9 +63,65 @@ stands); anyone who wakes the phone could then see and stop the session without 
 - `dumpsys battery unplug` only tells the apps that the phone is unplugged: the phone still
   charges, so the measured current is wrong.
 - Stopping the charging itself needs root (not on our phones), or a USB hub that can switch the
-  power of each port (the `uhubctl` tool on the computer lists such hubs).
-- The laptop's own USB ports and the small hub in use cannot switch the power off.
+  power of each port: the `uhubctl` tool (installed on the owner's computer) switches such hubs; its
+  README lists hubs known to work.
+- The laptop's own USB ports cannot switch the power. The small hub in use (1a40:0101) only switches
+  the data: with its port "off" for 6 s, the phone still reported USB power the whole time.
 - The app logs the battery itself (`battery` in `session_end`). A hub that switches the power off
   and on again would therefore be enough: no cable data is needed during the test.
 
 **Why parked:** it needs such a hub. Until then, the owner unplugs the phone for battery tests.
+
+## Camtrap DP export
+
+**Wish:** turn the session records into a Camtrap DP data package (the camera trap data standard of
+TDWG, https://camtrap-dp.tdwg.org/), to share and publish the data.
+
+**What was found:**
+- Version 1.0.2 (2025); 1.1 is being written, and insect and time-lapse terms are still proposals
+  (InsectAI COST Action, datathon 2026). A package is `datapackage.json` plus three tables:
+  deployments, media and observations.
+- Card 2 already collects what cannot be found later; its record keys follow Camtrap DP words.
+  Deployments: `deploymentID` = folder name; `latitude`, `longitude` (WGS 84);
+  `coordinateUncertainty` = `coordinate_uncertainty_m` rounded up (whole m, at least 1);
+  `deploymentStart` and `deploymentEnd` = times of `session_start` and `session_end` (no ms);
+  `locationName` = `site`; `setupBy`, `cameraHeight`, `detectionDistance` (camera to target),
+  `habitat`; `cameraID` = `phone_id`; `cameraModel` = maker-model; plant, transect, IDs and custom
+  fields as `deploymentTags` (key:value). Media: one row per photo or clip (`time`, `file`).
+- Study facts (project, people, licence, `captureMethod` timeLapse, `filePublic`) and the
+  observations (`unclassified` until someone looks) are made on the computer.
+
+**Options studied:** the phone writes the whole package; the phone writes deployments and media
+only; a Python or R script on the computer builds one package per study from `session.jsonl`
+(recommended: the standard is still changing, and the app stays small).
+
+**Why parked:** not a priority now (owner). Build the script when the first studies need it.
+
+## Publishing to GBIF
+
+**Idea:** send data to GBIF (Global Biodiversity Information Facility) as it is collected.
+
+**What was found:** GBIF holds occurrences (an organism at a place and time), via Darwin Core or a
+Camtrap DP package. Time-lapse photos become occurrences only after detection (by AI or a person)
+and identification checked by a taxonomist.
+
+**Why parked:** nothing to publish before the photos are analysed (owner).
+
+## Waking the screen with a tap
+
+**Wish:** after Screen off, a tap wakes the screen, so the power button need not be pressed.
+
+**What was found:** with the screen really off, the touch screen sleeps too, so no app gets a tap.
+Some phones have their own "double tap to turn on screen" (Samsung M12: Settings, Advanced features,
+Motions and gestures; off on the test phone): it keeps the touch screen listening (a little energy),
+and rain or insects might wake the screen. A black screen kept on would take taps, but costs energy.
+
+**Why parked:** the power button, pressed gently, or the phone's own setting is enough (owner).
+
+## A phone ID that survives a factory reset
+
+**What was found:** since Android 10 only phone makers' apps may read lasting hardware IDs (IMEI,
+serial number); `ANDROID_ID` changes with a factory reset. A name written on the phone and typed as
+a custom field (for example Device ID) does the job.
+
+**Why parked:** not worth it (owner).
