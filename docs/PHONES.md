@@ -72,3 +72,39 @@ The number of real pixels inside the square depends on how much of the view the 
 | Camera2 full photo | 4000x3000, 0.43 s each | 3000 px (saved at 1024) | 1500 px (saved at 1024) |
 | Square video, Camera2 (hardware zoom onto the square) | 2576x1932 stream | 1932 px (saved at 1280) | 1500 px (saved at 1280) |
 | Square video, Camera1 | 1440x1080 preview frames | 1080 px | 540 px |
+
+## Xiaomi Redmi Note 9S, Android 12 (MIUI 14), 2020
+
+A mid-range phone (Snapdragon 720G), tested like a new user would use it. Tested 2026-10-05, two
+speed-test runs and sessions, on the charger.
+
+### Camera facts (back camera)
+
+- Camera2: hardware level "level 3"; the camera chip crops only in the centre; manual focus,
+  closest 10 cm, lens distances "approximate"; sensor 4000x3000. Android lists the 4000x3000 photo
+  size apart, as a "high resolution" size (15 per s, below the 20 of the usual list, which stops at
+  3840x2160, 16:9); the app uses such sizes when they run at 10 or more per s.
+- Before the camera is allowed, Android hides the lens range (the app then cannot tell whether the
+  focus can be fixed).
+- Camera1: photos up to 4000x3000; camera frame rates 8 to 30 per s, slowest fixed rate 15.
+- Video presets: 2160p, 1080p, 720p and 480p at 30 fps (42, 20, 14 and 2 Mbit/s).
+- MIUI: installs over USB need *Install via USB* in Developer options and a tap on the phone each
+  time. Allowing the Screen off button shows MIUI's own red "Danger" page with rights FaunaLapse
+  does not ask for (Android's page before it lists only "Lock the screen").
+
+### Results
+
+| Test | Result |
+|---|---|
+| **Full photos, Camera2** 4000x3000 | 0.52 to 0.67 s per photo, save 0.02 to 0.03 s; up to 1.8 per s one at a time; 1.6 MB per full JPEG |
+| Full photos, Camera1 4000x3000 / 1280x960 | one every 2.1 s / 1.9 s (photo 1.3 to 1.6 s, preview restart 0.5 to 0.6 s): smaller is not faster |
+| Preview frames, Camera1, 1920x1440, one per second | whole frame to JPEG 41 to 52 ms, 1024 px square 11 to 15 ms; 16 % of one core; as fast as possible 30 squares per s (40 %) |
+| Video 15 fps 1080p / 720p / 480p | works; 11.8 / 8.3 / 1.5 MB per 10 s |
+| Time-lapse video 1080p, 5 and 1 frames per s | works; 2.9 and 0.9 MB per 10 s |
+| Autofocus once | 1.9 to 2.1 s, sharp |
+
+### Sessions (Camera2, screen off, MIUI battery limits on)
+
+| Session | Result |
+|---|---|
+| Photos: step 2 s, 30 s bursts, 1 min breaks, 12 min run, 55 % square (1650 of 3000 real pixels) saved at 1280 px, fixed focus; screen off with the Screen off button | 8 bursts, 120 of 120 photos, 0 skipped, 0 errors (6 bursts with the screen off); photo 0.60 to 0.93 s (median 0.71), cut and save median 0.21 s, about 280 KB per photo; photos started 1 to 6 ms late; camera opened in 0.45 to 0.70 s, 4 s before each burst |

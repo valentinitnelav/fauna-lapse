@@ -80,15 +80,15 @@ final class Camera2Facts {
         if (sensor != null) f.put("sensor_pixels", sensor.getWidth() + "x" + sensor.getHeight());
         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map != null) {
-            f.put("jpeg_largest", largestWithRate(map, ImageFormat.JPEG));
-            f.put("yuv_largest", largestWithRate(map, ImageFormat.YUV_420_888));
+            f.put("jpeg_largest", largestWithRate(map, ImageFormat.JPEG, Camera2Session.photoSizes(map)));
+            f.put("yuv_largest", largestWithRate(map, ImageFormat.YUV_420_888,
+                    map.getOutputSizes(ImageFormat.YUV_420_888)));
         }
         return f;
     }
 
     /** Largest output size and the fastest rate the camera claims for it. */
-    private static String largestWithRate(StreamConfigurationMap map, int format) {
-        Size[] sizes = map.getOutputSizes(format);
+    private static String largestWithRate(StreamConfigurationMap map, int format, Size[] sizes) {
         if (sizes == null || sizes.length == 0) return "none";
         Size best = sizes[0];
         for (Size s : sizes) {

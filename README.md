@@ -55,7 +55,7 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone or on a memory card (SD card), one folder per session
-  (phone model and ID, start time, photo or video): easy to copy to a computer over USB, and kept
+  (phone ID, start time, photo or video): easy to copy to a computer over USB, and kept
   when the app is removed (on a card with Android 7 to 10, Android allows only the app's own folder,
   which goes with the app). The main screen shows how much space FaunaLapse uses and how much is
   free, opens the folder in Android's file app, and during a session shows what it saved so far and
@@ -67,8 +67,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
    older also the storage). Under *3 · Schedule* tap *Change settings* and set the schedule; it stays
    saved on the phone. Check that the phone time is right. With several phones, set them all up
    this way before you go out. *2 · Field metadata* shows each phone's model and ID (write the ID
-   on the phone if you like): they start the session folder names, so the files do not mix on the
-   computer. For a phone used only as a camera, follow
+   on the phone if you like): the ID starts the session folder names, so the files do not mix on
+   the computer. For a phone used only as a camera, follow
    *4 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane mode, and open
    its (i) for the full checklist (factory reset, no account, unneeded apps off).
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer

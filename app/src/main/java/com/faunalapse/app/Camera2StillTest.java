@@ -76,7 +76,7 @@ final class Camera2StillTest {
             String id = backCameraId(manager);
             StreamConfigurationMap map = manager.getCameraCharacteristics(id)
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Size size = largest(map.getOutputSizes(ImageFormat.JPEG));
+            Size size = largest(Camera2Session.photoSizes(map));
             SpeedTest.put(r, "size", size.getWidth() + "x" + size.getHeight());
             Size previewSize = smallestWithShape(map.getOutputSizes(SurfaceTexture.class), size);
 

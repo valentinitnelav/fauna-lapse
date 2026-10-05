@@ -51,6 +51,9 @@ final class Camera2Session implements SessionCamera {
     private static final long CLOSE_TIMEOUT_MS = 2000;
     private static final long RESULT_WAIT_MS = 500; // the report on a photo, after its JPEG
     private static final byte JPEG_QUALITY = 90;
+    // A photo size listed apart as "high resolution" is used when the camera can still take 10 per
+    // second (Redmi Note 9S: 4000x3000 at 15); slower ones are full 48 to 200 MP modes (hot, slow).
+    private static final long HIGH_RES_MAX_FRAME_NS = 100_000_000;
 
     private final Context context;
     private final boolean video;
@@ -174,7 +177,7 @@ final class Camera2Session implements SessionCamera {
             put("focus_distance_calibration", calibration(c));
         }
 
-        Size shape = largest(map.getOutputSizes(ImageFormat.JPEG));
+        Size shape = largest(photoSizes(map));
         photoSize = shape;
         put("photo_size", shape.getWidth() + "x" + shape.getHeight());
         put("focus_on_square", focusOnSquare);
@@ -619,6 +622,20 @@ final class Camera2Session implements SessionCamera {
             if (largest == null || area > (long) largest.getWidth() * largest.getHeight()) largest = s;
         }
         return best != null ? best : largest != null ? largest : smallestWithShape(sizes, shape);
+    }
+
+    /** JPEG sizes: the usual list and the "high resolution" sizes (below 20 per second) that still
+     *  run at 10 per second. Without them, some phones offer only 16:9 at full width. */
+    static Size[] photoSizes(StreamConfigurationMap map) {
+        List<Size> sizes = new ArrayList<>(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)));
+        Size[] high = map.getHighResolutionOutputSizes(ImageFormat.JPEG);
+        if (high != null) {
+            for (Size s : high) {
+                long frameNs = map.getOutputMinFrameDuration(ImageFormat.JPEG, s);
+                if (frameNs > 0 && frameNs <= HIGH_RES_MAX_FRAME_NS) sizes.add(s);
+            }
+        }
+        return sizes.toArray(new Size[0]);
     }
 
     private static Size largest(Size[] sizes) {

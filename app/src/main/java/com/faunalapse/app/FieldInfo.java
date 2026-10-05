@@ -20,8 +20,8 @@ import java.util.Random;
 /**
  * Field metadata: which phone recorded what, where and how it was set up. The user changes these at
  * each site or plant, so they are kept apart from the camera settings (SessionSettings). Saved on
- * the phone and written into each session record. The phone model and ID come from Android; with
- * the start time they make each session folder name unique. Record keys follow the Camtrap DP
+ * the phone and written into each session record. The phone model and ID come from Android; the ID
+ * and the start time make each session folder name unique. Record keys follow the Camtrap DP
  * deployment terms where one fits (setup_by, habitat, camera_height_m, detection_distance_m,
  * coordinate_uncertainty_m), in this record's style: lower case with the unit.
  */
@@ -335,15 +335,6 @@ final class FieldInfo {
         if (!text.matches("\\d{1,4}")) return null;
         int g = Integer.parseInt(text);
         return g <= MAX_GPS_GOAL_M ? g : null;
-    }
-
-    /** The start of each session folder name: the phone model and ID, for example
-     *  SM-M127F_1A2B3C4D, so folders from several phones never mix on one computer. Letters, digits
-     *  and - only in the model part: safe in folder names on every computer, and "_" splits the parts. */
-    static String folderPrefix(Context context) {
-        String model = Build.MODEL.replaceAll("[^A-Za-z0-9-]+", "-").replaceAll("^-+|-+$", "");
-        if (model.length() > 20) model = model.substring(0, 20);
-        return (model.isEmpty() ? "Phone" : model) + "_" + phoneId(context);
     }
 
     /** 8 hex characters of Android's ID for this app on this phone. The user cannot change it; it

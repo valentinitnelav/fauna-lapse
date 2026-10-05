@@ -194,11 +194,12 @@ public final class CaptureService extends Service {
         }
         // Held for the whole session (the phone stays awake between bursts); released when it ends.
         wakeLock.acquire(plan.end() - now + 10 * 60000L);
-        // Phone model and ID first: folders from several phones never get the same name on one computer.
-        String name = FieldInfo.folderPrefix(this) + "_"
+        // Phone ID first (short; the model is in session.jsonl): folders from several phones never
+        // get the same name on one computer.
+        String name = FieldInfo.phoneId(this) + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
                 + (settings.video ? "_video" : "_photo");
-        // One folder per session (phone model and ID, start time, photo or video) with the files and
+        // One folder per session (phone ID, start time, photo or video) with the files and
         // session.jsonl, on the storage chosen on the status card (Storage).
         File dir = new File(Storage.sessionsDir(this), name);
         if (!dir.mkdirs()) {

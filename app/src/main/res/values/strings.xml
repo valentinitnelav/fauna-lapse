@@ -11,6 +11,7 @@
     <string name="pause_session">Pause to adjust the phone</string>
     <string name="adjust_camera">Aim the camera again</string>
     <string name="continue_session">Continue session</string>
+    <string name="last_photo_none">The newest saved photo or clip frame appears here.</string>
     <string name="last_photo">Last photo, %1$s (as saved). Tap to see it larger.</string>
     <string name="last_clip">Last clip, started %1$s: its last frame. Tap to see it larger.</string>
     <string name="status_test">Phone test running</string>
@@ -37,7 +38,7 @@
     <string name="open_folder">Open the folder</string>
     <string name="screen_off">Screen off</string>
     <string name="screen_off_title">Allow the Screen off button?</string>
-    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
+    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nSome phones (for example Xiaomi) then show their own red warning with a general list of rights (erase all data and others): FaunaLapse asks only to lock the screen, as Android\'s page before it shows.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
     <string name="screen_off_yes">Continue</string>
     <string name="screen_off_no">Not now</string>
     <string name="screen_off_reason">FaunaLapse uses this only for its Screen off button: it switches the screen off and locks the phone, as the power button does, so the phone need not be pressed where it stands. The session goes on.</string>
@@ -68,7 +69,7 @@
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in the record of each session. The values stay for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to the target are named as in Camtrap DP, a data standard for camera traps, so the records can be shared in it later.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Distance to target: from the camera to the flower. Where the phone tells the lens distance, the fixed focus fills it in; type a measured value to replace it, or empty the field to take the focus distance again.\n• Add a field: your own fields, for example Observer, Weather or Air temperature: text, notes, a number, a date, a time, yes or no, or a choice from your own list. They stay until you remove them; the record lists them under \"custom\".\n• Get location: the GPS stays on until the uncertainty is 10 m or less (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, and its uncertainty if it shows one. Empty all three fields to remove the position.</string>
+    <string name="field_help">Saved in the record of each session. The values stay for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to the target are named as in Camtrap DP, a data standard for camera traps, so the records can be shared in it later.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Distance to target: from the camera to the flower. Where the phone tells the lens distance, the fixed focus fills it in; type a measured value to replace it, or empty the field to take the focus distance again.\n• Add a field: your own fields, for example Observer, Weather or Air temperature: text, notes, a number, a date, a time, yes or no, or a choice from your own list. They stay until you remove them; the record lists them under \"custom\".\n• Get location: the GPS stays on until the uncertainty reaches your goal (10 m unless you change it; at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, and its uncertainty if it shows one. Empty all three fields to remove the position.</string>
     <string name="field_open">Change field metadata</string>
     <string name="field_close">Close field metadata</string>
     <string name="field_summary_empty">Nothing filled in yet.</string>
@@ -101,7 +102,7 @@
     <string name="distance_note">From the fixed focus (%1$s). The lens distance differs between phones: check it with a ruler now and then.</string>
     <string name="field_phone_model">Phone model</string>
     <string name="field_phone_id">Phone ID</string>
-    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone; nobody can change it. A factory reset gives a new one, and so does a FaunaLapse version signed by someone else (for example a test version). FaunaLapse cannot read an ID that survives a factory reset: Android allows that only to phone makers\' apps. For a lasting name, write it on the phone and add it as your own field, for example Device ID.</string>
+    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone; nobody can change it. It starts each session folder name, so files from several phones never mix. A factory reset gives a new one, and so does a FaunaLapse version signed by someone else (for example a test version). FaunaLapse cannot read an ID that survives a factory reset: Android allows that only to phone makers\' apps. For a lasting name, write it on the phone and add it as your own field, for example Device ID.</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="custom_add_button">+ Add a field</string>
@@ -296,6 +297,7 @@
     <string name="summary_focus_auto">Focus: automatic at the start of each burst or clip.</string>
     <string name="summary_focus_fixed">Focus: fixed at %1$s; check it on the aim screen.</string>
     <string name="summary_focus_fixed_position">Focus: fixed at one lens position, set on the aim screen.</string>
+    <string name="summary_focus_unchecked">Focus: fixed at %1$s if this phone allows it; Aim the camera checks it.</string>
     <string name="summary_focus_cannot_fix">Focus: automatic at the start of each burst or clip, because this phone cannot fix the focus.</string>
     <string name="aim_focus_result">Focus: %1$s</string>
     <string name="two_paragraphs" translatable="false">%1$s\n\n%2$s</string>

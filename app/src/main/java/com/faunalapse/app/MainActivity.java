@@ -491,7 +491,11 @@ public final class MainActivity extends Activity {
     private void showAimSummary() {
         SessionSettings s = SessionSettings.load(this);
         String calibration = Camera2Session.fixedFocusCalibration(this); // null: autofocus only
+        // Android hides the lens range until the camera is allowed (first start); Camera1 phones never fix it.
+        boolean known = checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                || !SessionRunner.useCamera2(this);
         String focus = !s.focusFixed ? getString(R.string.summary_focus_auto)
+                : !known ? getString(R.string.summary_focus_unchecked, SessionSettings.distanceWords(s.focusDiopters))
                 : calibration == null ? getString(R.string.summary_focus_cannot_fix)
                 : "calibrated".equals(calibration) || "approximate".equals(calibration)
                         ? getString(R.string.summary_focus_fixed, SessionSettings.distanceWords(s.focusDiopters))
@@ -1393,8 +1397,12 @@ public final class MainActivity extends Activity {
     private void showLastPhoto(boolean session) {
         final File f = session ? SessionRunner.lastFile : null;
         if (f == null) {
-            lastPhoto.setVisibility(View.GONE);
-            lastPhotoText.setVisibility(View.GONE);
+            // During a session the space stays, so the buttons below do not move under a finger
+            // when the first photo comes.
+            lastPhoto.setImageDrawable(null);
+            lastPhoto.setVisibility(session ? View.INVISIBLE : View.GONE);
+            lastPhotoText.setText(R.string.last_photo_none);
+            lastPhotoText.setVisibility(session ? View.VISIBLE : View.GONE);
             lastShown = null;
             return;
         }

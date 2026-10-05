@@ -63,7 +63,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 | Pause by the user ends by itself; custom text / notes / list | 10 min (or at the session end); 100 / 5000 characters / 2 to 30 choices | `SessionRunner.PAUSE_LIMIT_MS`, `FieldInfo` |
 | Get location: uncertainty goal / time limit | 10 m (user sets 0 to 1000; under 5 m a warning; 0 = full time) / 3 min | `FieldInfo.GPS_GOAL_M`, `GpsFix.TIMEOUT_MS` |
 | JPEG quality (saved square, Camera2 photo); camera while waiting | 90, 90; lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `PhotoSaver`, `Camera2Session`, `Camera1Session` |
-| Output | `Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/` on the phone or a memory card (user's choice; phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery). The app's own `Android/data/com.faunalapse.app/files/sessions/` (deleted with the app) on the phone with Android 10 and older without the storage permission, on a card with Android 7 to 10; tests in `Android/data/.../files/phase0/` | `Storage`, `CaptureService.outputDir` |
+| Output | `Documents/FaunaLapse/<phone ID>_<start time>_<photo or video>/` on the phone or a memory card (user's choice; phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery). The app's own `Android/data/com.faunalapse.app/files/sessions/` (deleted with the app) on the phone with Android 10 and older without the storage permission, on a card with Android 7 to 10; tests in `Android/data/.../files/phase0/` | `Storage`, `CaptureService.outputDir` |
 
 ## File map (Java files in `app/src/main/java/com/faunalapse/app/`)
 
@@ -73,7 +73,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java`, `Storage.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl`. The places for sessions (phone, memory cards), the chosen one, paths as file apps show them |
 | `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
-| `FieldInfo.java`, `CustomFields.java`, `GpsFix.java`, `SitePhotos.java` | Field metadata (saved apart from the settings; phone model and ID, folder names); the user's own fields on card 2; one GPS position (satellites live), then the GPS off; site photos with the camera app |
+| `FieldInfo.java`, `CustomFields.java`, `GpsFix.java`, `SitePhotos.java` | Field metadata (saved apart from the settings; phone model and ID); the user's own fields on card 2; one GPS position (satellites live), then the GPS off; site photos with the camera app |
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |
