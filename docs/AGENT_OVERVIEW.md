@@ -12,12 +12,12 @@ Last update: 2026-10-04.
   save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone; every
   event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off), clean
   stop on low battery without charging or too little storage. Tested on the Samsung M12.
-- **Main screen**: status card (phone name; while running: state, counts, warnings, phone check
-  lines, session folder and MB so far; files folder, FaunaLapse use, free storage; last session,
-  battery, clock and phone ID fold away; Stop asks first); 1 Aim; 2 Field metadata (site, transect,
-  plant, sample ID, session ID, phone name, latitude and longitude typed or from Get location: GPS
-  on until within 10 m or 3 min; `field` in `session_start`); 3 Schedule (summary; settings on
-  Change); 4 Phone for the field (radios, location, battery limits, each with its settings page).
+- **Main screen**: status card (state; while running: counts, warnings, phone check lines, session
+  folder and MB so far; files folder, use, free space; last session, battery, clock fold away);
+  1 Aim; 2 Field metadata (phone model and ID; site, transect, plant, sample ID, session ID; latitude,
+  longitude, accuracy typed or from Get location: GPS on until 10 m or 3 min, its values ask before an
+  edit); 3 Schedule (summary; settings on Change); 4 Phone for the field (radios, location, battery
+  limits, each with its settings page). A problem stops Aim and Start with a dialog to its card.
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch anywhere or slider for
   its size, real and saved pixels live under the slider; focus and exposure follow the square; focus
@@ -58,7 +58,7 @@ Last update: 2026-10-04.
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Saved square JPEG quality; Camera2 photo JPEG quality | 90; 90 | `PhotoSaver.JPEG_QUALITY`, `Camera2Session.JPEG_QUALITY` |
 | Camera while waiting | lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `Camera2Session`, `Camera1Session` |
-| Output | `Documents/FaunaLapse/<phone name>_<start time>_<photo or video>/` (phone name default: model + 4 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
+| Output | `Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/` (phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery; Android 10 and older need the storage permission, else `Android/data/com.faunalapse.app/files/sessions/`); tests in `Android/data/.../files/phase0/` | `CaptureService.sessionsDir`, `outputDir` |
 | Phase 0 test defaults (start delay 10 s, wake lead 5 s, speed test sizes) | | `CaptureService`, `Camera1Backend`, `SpeedTest` |
 
 ## File map
@@ -69,7 +69,7 @@ Last update: 2026-10-04.
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl` |
 | `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
-| `FieldInfo.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone name and ID); one GPS position, then the GPS off |
+| `FieldInfo.java`, `GpsFix.java` | Field metadata (saved apart from the settings; phone model and ID, folder names); one GPS position, then the GPS off |
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |

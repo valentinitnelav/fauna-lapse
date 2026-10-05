@@ -39,13 +39,13 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   with a button to its settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
-- Field metadata for each session: site, transect, plant (or sample ID), session ID and the phone
-  name; one GPS position on a tap (the GPS switches off again when the position is within 10 m), or
-  latitude and longitude typed from another GPS device.
+- Field metadata for each session: site, transect, plant (or sample ID), session ID, and the phone
+  model and ID (filled in by the app); one GPS position on a tap (the GPS switches off again when
+  the position is within 10 m), or latitude, longitude and accuracy typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
-- Files in `Documents/FaunaLapse` on the phone, one folder per session (phone name, start time,
-  photo or video): easy to copy to a computer over USB, and kept when the app is removed. The main
+- Files in `Documents/FaunaLapse` on the phone, one folder per session (phone model and ID, start
+  time, photo or video): easy to copy to a computer over USB, and kept when the app is removed. The main
   screen shows how much space FaunaLapse uses and how much is free; during a session, what it saved
   so far and any phone setting that wastes energy (for example Wi-Fi left on).
 
@@ -54,9 +54,9 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
 1. **At home, once per phone:** install the app, open it and allow the camera (on Android 10 or
    older also the storage). Under *3 · Schedule* tap *Change settings* and set the schedule; it stays
    saved on the phone. Check that the phone time is right. With several phones, set them all up
-   this way before you go out. Each phone has its own name under *2 · Field metadata* (the phone
-   model and part of its ID; you may change it to P1, P2 and so on): it starts the session folder
-   names, so the files do not mix on the computer. For a phone used only as a camera, follow
+   this way before you go out. *2 · Field metadata* shows each phone's model and ID (write the ID
+   on the phone if you like): they start the session folder names, so the files do not mix on the
+   computer. For a phone used only as a camera, follow
    *4 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane mode, and open
    its (i) for the full checklist (factory reset, no account, unneeded apps off).
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer

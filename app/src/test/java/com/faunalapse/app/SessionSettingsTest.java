@@ -1,35 +1,24 @@
 package com.faunalapse.app;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class SessionSettingsTest {
 
     @Test
-    public void phoneNamesAreSafeInFolderNames() {
-        assertFalse(FieldInfo.validPhoneName("")); // the folder name starts with it
-        assertTrue(FieldInfo.validPhoneName("P1"));
-        assertTrue(FieldInfo.validPhoneName("Meadow-3_b"));
-        assertTrue(FieldInfo.validPhoneName("SM-M127F-3A9C"));
-        assertFalse(FieldInfo.validPhoneName("P 1")); // space
-        assertFalse(FieldInfo.validPhoneName("a/b"));
-        assertFalse(FieldInfo.validPhoneName("Wiese-Ü"));
-        assertFalse(FieldInfo.validPhoneName("123456789012345678901")); // 21 characters
-    }
-
-    @Test
     public void typedPositionsInDecimalDegrees() {
-        assertNull(FieldInfo.coordinateProblem(48.858370, 2.294481));
-        assertNull(FieldInfo.coordinateProblem(-33.8568, -151.2153)); // south and west are negative
-        assertNull(FieldInfo.coordinateProblem(90, 180));
-        assertNotNull(FieldInfo.coordinateProblem(90.1, 0));
-        assertNotNull(FieldInfo.coordinateProblem(0, -180.5));
-        assertNotNull(FieldInfo.coordinateProblem(Double.NaN, 0));
+        assertNull(FieldInfo.positionProblem(48.858370, 2.294481, null));
+        assertNull(FieldInfo.positionProblem(-33.8568, -151.2153, 5f)); // south and west are negative
+        assertNull(FieldInfo.positionProblem(90, 180, 0f));
+        assertNotNull(FieldInfo.positionProblem(90.1, 0, null));
+        assertNotNull(FieldInfo.positionProblem(95.5, 0, null));
+        assertNotNull(FieldInfo.positionProblem(0, -180.5, null));
+        assertNotNull(FieldInfo.positionProblem(Double.NaN, 0, null));
+        assertNotNull(FieldInfo.positionProblem(0, 0, -1f));
+        assertNotNull(FieldInfo.positionProblem(0, 0, 10001f));
         assertEquals("48.858370", FieldInfo.degrees(48.85837));
     }
 

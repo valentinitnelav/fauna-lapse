@@ -19,10 +19,10 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Status: the phone name, what runs now (nothing while idle), warnings, where the files
-             go; the last session, battery and clock fold away under their own line. -->
+        <!-- Status: what runs now, warnings, where the files go; the last session, battery and
+             clock fold away under their own line. -->
         <LinearLayout style="@style/Card" android:layout_marginTop="0dp">
-            <TextView android:id="@+id/status_title" style="@style/CardTitle" android:textSize="20sp" />
+            <TextView style="@style/CardTitle" android:textSize="20sp" android:text="@string/status_title" />
             <TextView android:id="@+id/session_state" style="@style/Body" android:textStyle="bold" />
             <TextView android:id="@+id/session_status" style="@style/Body" />
             <TextView android:id="@+id/session_progress" style="@style/Body" />
@@ -37,7 +37,6 @@
                     android:textSize="15sp" />
                 <TextView android:id="@+id/battery" style="@style/Hint" android:layout_marginTop="8dp" />
                 <TextView android:id="@+id/phone_time" style="@style/Hint" />
-                <TextView android:id="@+id/phone_id" style="@style/Hint" />
             </LinearLayout>
             <Button android:id="@+id/stop_session" style="@style/BigButton"
                 android:backgroundTint="@color/stop" android:text="@string/stop_session" />
@@ -60,6 +59,15 @@
         <LinearLayout android:id="@+id/field_card" style="@style/Card" tools:ignore="LabelFor">
             <TextView style="@style/CardTitle.Help" android:text="@string/card_field" />
             <TextView style="@style/Hint.Help" android:text="@string/field_help" />
+            <!-- The phone: from Android, not typed -->
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:text="@string/field_phone_model" />
+                <TextView android:id="@+id/phone_model" style="@style/FieldValue" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:text="@string/field_phone_id" />
+                <TextView android:id="@+id/phone_id" style="@style/FieldValue" />
+            </LinearLayout>
             <LinearLayout style="@style/FieldRow">
                 <TextView style="@style/FieldLabel" android:labelFor="@id/site" android:text="@string/field_site" />
                 <EditText android:id="@+id/site" style="@style/Field.Row" android:hint="@string/field_site_hint"
@@ -86,19 +94,22 @@
                     android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
             </LinearLayout>
             <LinearLayout style="@style/FieldRow">
-                <TextView style="@style/FieldLabel" android:labelFor="@id/device_name" android:text="@string/field_phone" />
-                <EditText android:id="@+id/device_name" style="@style/Field.Row" android:maxLength="20"
-                    android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
-            </LinearLayout>
-            <LinearLayout style="@style/FieldRow">
                 <TextView style="@style/FieldLabel" android:labelFor="@id/latitude" android:text="@string/field_latitude" />
                 <EditText android:id="@+id/latitude" style="@style/Field.Row" android:hint="@string/field_latitude_hint"
-                    android:importantForAutofill="no" android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+                    android:maxLength="13" android:importantForAutofill="no"
+                    android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
             </LinearLayout>
             <LinearLayout style="@style/FieldRow">
                 <TextView style="@style/FieldLabel" android:labelFor="@id/longitude" android:text="@string/field_longitude" />
                 <EditText android:id="@+id/longitude" style="@style/Field.Row" android:hint="@string/field_longitude_hint"
-                    android:importantForAutofill="no" android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+                    android:maxLength="13" android:importantForAutofill="no"
+                    android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+            </LinearLayout>
+            <LinearLayout style="@style/FieldRow">
+                <TextView style="@style/FieldLabel" android:labelFor="@id/accuracy" android:text="@string/field_accuracy" />
+                <EditText android:id="@+id/accuracy" style="@style/Field.Row" android:hint="@string/field_accuracy_hint"
+                    android:maxLength="7" android:importantForAutofill="no"
+                    android:inputType="numberDecimal" tools:targetApi="o" />
             </LinearLayout>
             <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="8dp"
                 android:textSize="15sp" />

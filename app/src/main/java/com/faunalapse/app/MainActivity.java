@@ -30,6 +30,7 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -54,8 +55,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Main screen: a status card (the phone name, what runs now, where the files go; the last session,
- * battery and clock fold away), then
+ * Main screen: a status card (what runs now, where the files go; the last session, battery and
+ * clock fold away), then
  * the steps of a setup: 1 aim (photos or video, the aim screen), 2 field metadata (FieldInfo, with
  * the GPS position), 3 schedule (a short summary; the settings open on "Change"), 4 the phone for
  * the field (PhoneCheck), then Start. The phase 0 test buttons are folded away at the bottom.
@@ -84,7 +85,6 @@ public final class MainActivity extends Activity {
         }
     };
     private ScrollView scroll;
-    private TextView statusTitle;
     private TextView sessionState;
     private TextView sessionStatus;
     private TextView sessionProgress;
@@ -141,16 +141,19 @@ public final class MainActivity extends Activity {
     private EditText plant;
     private EditText sampleId;
     private EditText sessionId;
-    private EditText phoneName;
     private EditText latitude;
     private EditText longitude;
+    private EditText accuracy;
+    private boolean gpsFilled; // the position fields show this phone's GPS position: a tap asks first
     private TextView locationText;
     private Button locationButton;
     private Location location; // the saved position (GPS or typed), or null
     private GpsFix gps;        // while searching
+    private boolean gpsStopped; // the user stopped the search (not the time limit)
     private int requested;
     private boolean cameraDenied;
     private String problem; // why Start or Aim did not go on, shown above Start until the next tap
+    private View problemCard; // the card with that problem
     private Boolean controlsEnabled; // null until first set
     private String lastSession; // from the log; null = read it again
     private String lastWarning; // the last session's warning or early end, or ""
@@ -160,7 +163,6 @@ public final class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         scroll = findViewById(R.id.scroll);
-        statusTitle = findViewById(R.id.status_title);
         sessionState = findViewById(R.id.session_state);
         sessionStatus = findViewById(R.id.session_status);
         sessionProgress = findViewById(R.id.session_progress);
@@ -173,7 +175,6 @@ public final class MainActivity extends Activity {
             showDetailsToggle();
         });
         lastSessionText = findViewById(R.id.last_session);
-        ((TextView) findViewById(R.id.phone_id)).setText(getString(R.string.phone_id, FieldInfo.phoneId(this)));
         battery = findViewById(R.id.battery);
         phoneTime = findViewById(R.id.phone_time);
         storage = findViewById(R.id.storage);
@@ -238,9 +239,11 @@ public final class MainActivity extends Activity {
         plant = findViewById(R.id.plant);
         sampleId = findViewById(R.id.sample_id);
         sessionId = findViewById(R.id.session_id);
-        phoneName = findViewById(R.id.device_name);
+        ((TextView) findViewById(R.id.phone_model)).setText(getString(R.string.phone_model, Build.MANUFACTURER, Build.MODEL));
+        ((TextView) findViewById(R.id.phone_id)).setText(FieldInfo.phoneId(this));
         latitude = findViewById(R.id.latitude);
         longitude = findViewById(R.id.longitude);
+        accuracy = findViewById(R.id.accuracy);
         TextWatcher typed = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -255,8 +258,10 @@ public final class MainActivity extends Activity {
                 if (gps == null) showLocation(null); // GPS or typed by hand
             }
         };
-        latitude.addTextChangedListener(typed);
-        longitude.addTextChangedListener(typed);
+        for (EditText f : new EditText[] {latitude, longitude, accuracy}) {
+            f.addTextChangedListener(typed);
+            f.setOnClickListener(v -> askToEditPosition((EditText) v)); // only while not focusable
+        }
         locationText = findViewById(R.id.location_text);
         locationButton = findViewById(R.id.get_location);
         locationButton.setOnClickListener(v -> getLocation());
@@ -379,7 +384,6 @@ public final class MainActivity extends Activity {
         if (ok) {
             scheduleSummary.setTextColor(bodyColor);
             scheduleSummary.setTypeface(null, Typeface.NORMAL);
-            problem = null; // fixed since the last tap
         } else {
             scheduleSummary.setTextColor(getColor(R.color.warning));
             scheduleSummary.setTypeface(null, Typeface.BOLD); // a problem shows also without colour
@@ -411,7 +415,9 @@ public final class MainActivity extends Activity {
     /** Saves the values on the screen; false (and the reason shown) when a value is not usable. */
     private boolean saveSettings() {
         try {
+            problemCard = fieldCard;
             FieldInfo f = fieldOnScreen();
+            problemCard = scheduleCard;
             try {
                 settingsOnScreen().save(this);
             } catch (IllegalArgumentException e) {
@@ -427,6 +433,28 @@ public final class MainActivity extends Activity {
         } finally {
             refresh();
         }
+    }
+
+    /** What still stops Start or Aim (field card first, as in saveSettings), or null. */
+    private String currentProblem() {
+        try {
+            fieldOnScreen();
+            settingsOnScreen();
+            return null;
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        }
+    }
+
+    /** Why a tap did not go on, in a dialog (the message above Start may be out of sight); OK
+     *  scrolls to the card with the problem. */
+    private void showProblem() {
+        final View card = problemCard;
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.problem_title)
+                .setMessage(problem)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> scroll.smoothScrollTo(0, card.getTop()))
+                .show();
     }
 
     /** "1 h 30 min", "2 h", "45 min". */
@@ -449,20 +477,53 @@ public final class MainActivity extends Activity {
         plant.setText(f.plant);
         sampleId.setText(f.sampleId);
         sessionId.setText(f.sessionId);
-        phoneName.setText(f.phoneName);
         showPosition(f.location);
     }
 
-    /** Puts a position into the latitude and longitude fields (empty for none). */
+    /** Puts a position into the latitude, longitude and accuracy fields (empty for none). A GPS
+     *  position is guarded: a tap on its fields asks before they can be changed. */
     private void showPosition(Location l) {
         location = l;
         latitude.setText(l == null ? "" : FieldInfo.degrees(l.getLatitude()));
         longitude.setText(l == null ? "" : FieldInfo.degrees(l.getLongitude()));
+        accuracy.setText(l == null ? "" : accuracyText(l));
+        guardPosition(l != null && FieldInfo.fromGps(l));
         showLocation(null);
     }
 
-    /** The field metadata on the screen; throws with a plain-language message when the phone name
-     *  or the position is not usable. An empty phone name gets the default again. */
+    /** The accuracy in m as the field shows it: one decimal, as in the record ("" when not given). */
+    private static String accuracyText(Location l) {
+        return l.hasAccuracy() ? number(Math.round(l.getAccuracy() * 10) / 10.0) : "";
+    }
+
+    /** {@code on}: the position fields take no typing; a tap asks first (askToEditPosition), so a
+     *  touch while scrolling cannot change a GPS position by accident. */
+    private void guardPosition(boolean on) {
+        gpsFilled = on;
+        for (EditText f : new EditText[] {latitude, longitude, accuracy}) {
+            f.setFocusable(!on);
+            f.setFocusableInTouchMode(!on);
+        }
+    }
+
+    private void askToEditPosition(final EditText field) {
+        if (!gpsFilled) return;
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.position_edit_title)
+                .setMessage(R.string.position_edit_text)
+                .setPositiveButton(R.string.position_edit_yes, (dialog, which) -> {
+                    guardPosition(false);
+                    field.requestFocus();
+                    field.setSelection(field.length());
+                    ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
+                            .showSoftInput(field, InputMethodManager.SHOW_IMPLICIT);
+                })
+                .setNegativeButton(R.string.position_edit_no, null)
+                .show();
+    }
+
+    /** The field metadata on the screen; throws with a plain-language message when the position is
+     *  not usable. */
     private FieldInfo fieldOnScreen() {
         FieldInfo f = new FieldInfo();
         f.site = text(site);
@@ -470,11 +531,6 @@ public final class MainActivity extends Activity {
         f.plant = text(plant);
         f.sampleId = text(sampleId);
         f.sessionId = text(sessionId);
-        f.phoneName = text(phoneName);
-        if (f.phoneName.isEmpty()) {
-            f.phoneName = FieldInfo.defaultPhoneName(this);
-            phoneName.setText(f.phoneName);
-        }
         f.location = locationOnScreen();
         String p = f.problem();
         if (p != null) throw new IllegalArgumentException(p);
@@ -486,49 +542,56 @@ public final class MainActivity extends Activity {
     }
 
     /** The position in the fields: the GPS position while they still show it, else typed by hand;
-     *  null when both are empty. Throws with a plain-language message when it is not usable. */
+     *  null when all are empty. Throws with a plain-language message when it is not usable. */
     private Location locationOnScreen() {
         String lat = text(latitude);
         String lon = text(longitude);
-        if (lat.isEmpty() && lon.isEmpty()) return null;
+        String acc = text(accuracy);
+        if (lat.isEmpty() && lon.isEmpty() && acc.isEmpty()) return null;
         if (lat.isEmpty() || lon.isEmpty()) throw new IllegalArgumentException(getString(R.string.location_both));
         double la = decimal(latitude, R.string.field_latitude);
         double lo = decimal(longitude, R.string.field_longitude);
+        Float ac = acc.isEmpty() ? null : (float) decimal(accuracy, R.string.field_accuracy);
+        String p = FieldInfo.positionProblem(la, lo, ac);
+        if (p != null) throw new IllegalArgumentException(p);
         if (location != null && lat.equals(FieldInfo.degrees(location.getLatitude()))
-                && lon.equals(FieldInfo.degrees(location.getLongitude()))) {
+                && lon.equals(FieldInfo.degrees(location.getLongitude())) && acc.equals(accuracyText(location))) {
             return location;
         }
-        return FieldInfo.typed(la, lo);
+        return FieldInfo.typed(la, lo, ac);
     }
 
     /** Where the position in the fields comes from, or what is wrong with it; after {@code note}
      *  (null: none). */
     private void showLocation(String note) {
         String text;
+        boolean ok = true;
         try {
             Location l = locationOnScreen();
-            String p = l == null ? null : FieldInfo.coordinateProblem(l.getLatitude(), l.getLongitude());
-            if (p != null) {
-                text = p;
-            } else if (l == null) {
+            if (l == null) {
                 text = getString(R.string.location_none);
-            } else if (!l.hasAccuracy()) {
+            } else if (!FieldInfo.fromGps(l)) {
                 text = getString(R.string.location_typed);
             } else {
-                text = getString(R.string.location_saved, Math.round(l.getAccuracy()),
+                text = getString(R.string.location_saved,
                         new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(l.getTime())));
                 if (l.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
             }
         } catch (IllegalArgumentException e) {
             text = e.getMessage();
+            ok = false;
         }
         locationText.setText(note == null ? text : note + "\n" + text);
+        // A problem shows at once, in the warning colour and bold (also without colour).
+        locationText.setTextColor(ok ? bodyColor : ColorStateList.valueOf(getColor(R.color.warning)));
+        locationText.setTypeface(null, ok ? Typeface.NORMAL : Typeface.BOLD);
     }
 
     /** Get location: the GPS runs until the position is good enough (GpsFix); a second tap stops it
      *  and keeps the best position so far. */
     private void getLocation() {
         if (gps != null) {
+            gpsStopped = true;
             gps.stop();
             return;
         }
@@ -547,8 +610,10 @@ public final class MainActivity extends Activity {
             @Override
             public void onSearching(Location best, long elapsedMs) {
                 String text = getString(R.string.location_searching, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
-                // Its own line: the seconds before it would move it at each tick.
-                if (best != null) text += "\n" + getString(R.string.location_best, Math.round(best.getAccuracy()));
+                // From the first second, so the wait has a reason; its own line, as the seconds before
+                // it would move it at each tick.
+                text += "\n" + (best == null ? getString(R.string.location_best_none)
+                        : getString(R.string.location_best, Math.round(best.getAccuracy())));
                 locationText.setText(text);
             }
 
@@ -556,7 +621,8 @@ public final class MainActivity extends Activity {
             public void onDone(Location best) {
                 locationDone();
                 if (best == null) {
-                    showLocation(getString(R.string.location_failed, GpsFix.TIMEOUT_MS / 1000));
+                    showLocation(gpsStopped ? getString(R.string.location_cancelled)
+                            : getString(R.string.location_failed, GpsFix.TIMEOUT_MS / 1000));
                     return;
                 }
                 showPosition(best);
@@ -565,6 +631,7 @@ public final class MainActivity extends Activity {
                 saved.save(MainActivity.this);
             }
         });
+        gpsStopped = false;
         gps.start();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // a screen timeout would stop it
         locationButton.setText(R.string.location_stop);
@@ -636,7 +703,10 @@ public final class MainActivity extends Activity {
     }
 
     private void startSession() {
-        if (!saveSettings()) return;
+        if (!saveSettings()) {
+            showProblem();
+            return;
+        }
         showSettingsGroup(false);
         start(SESSION);
         scroll.post(() -> scroll.smoothScrollTo(0, 0)); // the status card shows the session
@@ -687,7 +757,6 @@ public final class MainActivity extends Activity {
             setFromExtra(intent, "windows", windows);
             setFromExtra(intent, "days", days);
             setFromExtra(intent, "heat_limit_c", heatLimitC);
-            setFromExtra(intent, "phone_name", phoneName);
             // The square has no field on this screen: save it, settingsOnScreen then loads it.
             SessionSettings saved = SessionSettings.load(this);
             saved.squarePercent = (int) Math.round(fromExtra(intent, "square_percent", saved.squarePercent));
@@ -716,7 +785,10 @@ public final class MainActivity extends Activity {
     private void start(int what) {
         requested = what;
         cameraDenied = false;
-        if (what == AIM && !saveSettings()) return; // the aim screen and its Start use the saved values
+        if (what == AIM && !saveSettings()) { // the aim screen and its Start use the saved values
+            showProblem();
+            return;
+        }
         List<String> missing = missingPermissions();
         if (!missing.isEmpty()) {
             requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
@@ -792,18 +864,15 @@ public final class MainActivity extends Activity {
             show(sessionStatus, getString(R.string.status_running, CaptureService.START_DELAY_MS / 1000));
             show(sessionProgress, "");
             show(sessionWarning, "");
-        } else { // nothing runs: no state line; the last session folds away, its warning stays
+        } else { // nothing runs: the last session folds away, its warning stays
             if (lastSession == null) readLastSession();
-            show(sessionState, "");
+            show(sessionState, getString(R.string.status_idle));
             show(sessionStatus, "");
             show(sessionProgress, "");
             show(sessionWarning, lastWarning);
         }
         show(lastSessionText, running ? "" : lastSession);
         showDetailsToggle();
-        // The phone name on top tells the phones of a team apart.
-        String titleText = getString(R.string.status_title, FieldInfo.load(this).phoneName);
-        if (!titleText.contentEquals(statusTitle.getText())) statusTitle.setText(titleText);
         if (running) lastSession = null; // read again when it has ended
         if (wasRunning && !running) countStorage();
         wasRunning = running;
@@ -821,6 +890,7 @@ public final class MainActivity extends Activity {
         setControlsEnabled(!running);
         if (!running) showScheduleSummary();
         showPhoneCheck(session);
+        if (problem != null && !running) problem = currentProblem(); // gone once it is corrected
         String message = cameraDenied ? getString(R.string.camera_permission_needed) : problem;
         show(startMessage, message == null ? "" : message);
         if (testsGroup.getVisibility() == View.VISIBLE) showTestStatus(running && !session);

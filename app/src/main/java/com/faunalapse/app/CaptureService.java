@@ -79,7 +79,7 @@ public final class CaptureService extends Service {
         return dir;
     }
 
-    /** Sessions: one folder per session (phone name, start time, photo or video) with the files and
+    /** Sessions: one folder per session (phone model and ID, start time, photo or video) with the files and
      *  session.jsonl. Documents/FaunaLapse in the shared storage, so the files survive an uninstall
      *  and are easy to find over USB. Android 11+ lets apps write there without a permission;
      *  Android 10 and older need the storage permission, else the app's own folder is used. */
@@ -204,8 +204,8 @@ public final class CaptureService extends Service {
         }
         // Held for the whole session (the phone stays awake between bursts); released when it ends.
         wakeLock.acquire(plan.end() - now + 10 * 60000L);
-        // Phone first: folders from several phones never get the same name on one computer.
-        String name = FieldInfo.load(this).phoneName + "_"
+        // Phone model and ID first: folders from several phones never get the same name on one computer.
+        String name = FieldInfo.folderPrefix(this) + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date(now))
                 + (settings.video ? "_video" : "_photo");
         File dir = new File(sessionsDir(this), name);

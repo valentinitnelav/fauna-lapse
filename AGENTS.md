@@ -37,7 +37,7 @@ plain language at first use, and write plain English with short sentences and no
   clips with breaks, on a fixed grid from each window start (no drift, same clock times every day).
 - If the phone cannot reach the asked photo step, the app says so and suggests video or a longer step.
 - File names use the time (`yyyyMMdd_HHmmss_SSS`), so they sort correctly across midnight; session
-  folders start with the phone name, so files from several phones never mix on one computer.
+  folders start with the phone model and ID, so files from several phones never mix on one computer.
 - Every setting gets a control on screen, a saved value, a reason for its default and a record line.
 
 ## Code origin and licence
@@ -77,7 +77,7 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
 ```
 
 Keep schedule and maths code in classes without Android code, and test it. On the phone: sessions in
-`/sdcard/Documents/FaunaLapse/<phone name>_<start time>_<photo or video>/`, tests in
+`/sdcard/Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/`, tests in
 `/sdcard/Android/data/com.faunalapse.app/files/phase0/`.
 
 ## Where knowledge lives (keep these files short)

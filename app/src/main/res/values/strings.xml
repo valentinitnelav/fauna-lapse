@@ -3,7 +3,8 @@
     <string name="app_name">FaunaLapse</string>
 
     <!-- Status card -->
-    <string name="status_title">Phone name: %1$s</string>
+    <string name="status_title">Status</string>
+    <string name="status_idle">No session running</string>
     <string name="status_session">Session running</string>
     <string name="status_paused">Session paused: the phone is too warm</string>
     <string name="status_test">Phone test running</string>
@@ -25,7 +26,6 @@
     <string name="storage_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
     <string name="details_idle">Last session, battery and clock</string>
     <string name="details_running">Battery and clock</string>
-    <string name="phone_id">Phone ID: %1$s. Android gives this ID to FaunaLapse on this phone; it cannot be changed, and every session record has it. The phone name above can be changed in card 2.</string>
     <string name="stop_session">Stop session</string>
     <string name="stop_question">Stop the session?</string>
     <string name="stop_question_text">The camera closes; the photos and videos so far are kept.</string>
@@ -43,7 +43,7 @@
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions.\n• Phone name: it starts each session folder name, so folders from several phones never mix on one computer. Letters a to z, digits, - or _. Default: the phone model and part of the phone\'s ID.\n• Get location: the GPS stays on until the position is within 10 m (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes.\n• Or type latitude and longitude from another GPS device, in decimal degrees (WGS 84, as GPS devices and web maps show them; south and west are negative). Empty both fields to remove the location.</string>
+    <string name="field_help">Saved in the record of each session; the values stay until you change them.\n• Phone model and phone ID: filled in by the app. The ID is Android\'s ID for FaunaLapse on this phone; nobody can change it, only a factory reset gives a new one. With the start time they make each session folder name unique, so folders from several phones never mix on one computer.\n• Plant: or what else you observe. Sample ID: for other targets.\n• Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Get location: the GPS stays on until the position is within 10 m (at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, in decimal degrees (WGS 84, as GPS devices and web maps show them; south and west are negative), and its accuracy if it shows one. Empty all three fields to remove the location.</string>
     <string name="field_site">Site</string>
     <string name="field_site_hint">for example Meadow 2</string>
     <string name="field_transect">Transect</string>
@@ -52,22 +52,32 @@
     <string name="field_plant_hint">common or Latin name</string>
     <string name="field_sample">Sample ID</string>
     <string name="field_session">Session ID</string>
-    <string name="field_phone">Phone name</string>
+    <string name="field_phone_model">Phone model</string>
+    <string name="field_phone_id">Phone ID</string>
+    <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
     <string name="field_longitude">Longitude</string>
     <string name="field_longitude_hint">decimal degrees, -180 to 180</string>
+    <string name="field_accuracy">Accuracy (m)</string>
+    <string name="field_accuracy_hint">± m, optional</string>
     <string name="location_get">Get location</string>
     <string name="location_stop">Stop and keep the best</string>
     <string name="location_none">No location: tap Get location, or type it from another GPS device.</string>
-    <string name="location_saved">From this phone\'s GPS: ± %1$d m, at %2$s.</string>
-    <string name="location_both">Location: write both latitude and longitude, or leave both empty.</string>
-    <string name="location_typed">Typed by hand; the accuracy is not known.</string>
+    <string name="location_saved">From this phone\'s GPS, at %1$s. A tap on these values asks before they can be changed.</string>
+    <string name="location_both">Location: write both latitude and longitude (the accuracy is optional), or leave all three empty.</string>
+    <string name="location_typed">Typed by hand.</string>
+    <string name="position_edit_title">Change the GPS values?</string>
+    <string name="position_edit_text">Latitude, longitude and accuracy come from this phone\'s GPS. Change them only for a better position, for example from another GPS device: the record then says they were typed by hand.</string>
+    <string name="position_edit_yes">Change</string>
+    <string name="position_edit_no">Keep</string>
     <string name="location_weak">Less exact than 10 m: try again under open sky if you need more.</string>
     <string name="location_searching">Searching for GPS satellites; keep the phone under open sky. Time: %1$d s of at most %2$d s.</string>
     <string name="location_best">Best so far: ± %1$d m.</string>
+    <string name="location_best_none">Best so far: no position yet.</string>
     <string name="location_failed">No GPS position in %1$d s. Try again outdoors, away from buildings and trees.</string>
+    <string name="location_cancelled">Search stopped before a position came.</string>
     <string name="location_stopped">The search stopped when the screen was left.</string>
     <string name="location_off">Location is off: turn it on, then tap Get location again. Turn it off again when the position is saved.</string>
     <string name="location_permission">FaunaLapse needs the precise location permission to save where the phone is. Tap Get location again to allow it.</string>
@@ -115,6 +125,7 @@
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
     <string name="defaults">Default values</string>
     <string name="number_needed">%1$s: write a number.</string>
+    <string name="problem_title">Correct this first</string>
 
     <!-- 4 Phone for the field -->
     <string name="card_phone">4 · Phone for the field</string>
