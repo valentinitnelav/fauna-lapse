@@ -71,6 +71,17 @@ public class SessionSettingsTest {
     }
 
     @Test
+    public void gpsGoalInWholeMetresFrom0To1000() {
+        assertEquals(Integer.valueOf(0), FieldInfo.gpsGoal("0"));     // search the full time
+        assertEquals(Integer.valueOf(10), FieldInfo.gpsGoal("10"));
+        assertEquals(Integer.valueOf(1000), FieldInfo.gpsGoal("1000"));
+        assertNull(FieldInfo.gpsGoal("1001"));
+        assertNull(FieldInfo.gpsGoal(""));
+        assertNull(FieldInfo.gpsGoal("2.5"));
+        assertNull(FieldInfo.gpsGoal("-1"));
+    }
+
+    @Test
     public void runLengthFromOneMinuteTo720Hours() {
         SessionSettings s = new SessionSettings();
         for (int min : new int[] {1, 45, 60, 90, 720 * 60}) {

@@ -16,9 +16,9 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
   warnings, phone checks, MB so far, Pause or Continue; folder, use, free space, memory card choice;
   Open the folder; Screen off; last session, battery, clock fold away); 1 Aim; 2 Field metadata
   (summary; on Change: phone model and ID, Camtrap DP setup fields, distance from a calibrated fixed
-  focus until typed, custom fields of 7 types, site photos, position typed or from Get location with
-  live satellites (GPS on until 10 m or 3 min), the Location switch); 3 Schedule (summary; settings on
-  Change); 4 Phone for the field. A problem stops Aim and Start with a dialog to its card.
+  focus until typed, custom fields of 7 types, site photos, position typed or from Get location (GPS
+  off at the user's uncertainty goal or after 3 min), Location switch); 3 Schedule (summary; settings
+  on Change); 4 Phone for the field. A problem stops Aim and Start with a dialog to its card.
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch or slider for its size
   (real and saved pixels live); focus and exposure follow it; focus fixed (Camera2, 20 cm, slider,
@@ -61,6 +61,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 | Stop after camera errors in a row; wake lock | 3; held for the whole session (plan end + 10 min) | `SessionRunner.MAX_ERRORS_IN_A_ROW`, `CaptureService.startSession` |
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Pause by the user ends by itself; custom text / notes / list | 10 min (or at the session end); 100 / 5000 characters / 2 to 30 choices | `SessionRunner.PAUSE_LIMIT_MS`, `FieldInfo` |
+| Get location: uncertainty goal / time limit | 10 m (user sets 0 to 1000; under 5 m a warning; 0 = full time) / 3 min | `FieldInfo.GPS_GOAL_M`, `GpsFix.TIMEOUT_MS` |
 | JPEG quality (saved square, Camera2 photo); camera while waiting | 90, 90; lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `PhotoSaver`, `Camera2Session`, `Camera1Session` |
 | Output | `Documents/FaunaLapse/<model>_<phone ID>_<start time>_<photo or video>/` on the phone or a memory card (user's choice; phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery). The app's own `Android/data/com.faunalapse.app/files/sessions/` (deleted with the app) on the phone with Android 10 and older without the storage permission, on a card with Android 7 to 10; tests in `Android/data/.../files/phase0/` | `Storage`, `CaptureService.outputDir` |
 
@@ -93,7 +94,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
 3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
    the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
-4. More test phones (three Android 7 and 8.1 phones at work, the Xiaomi): battery first, then the
-   speed test (`sensor_pixels` above `jpeg_largest`: enlarged photos; `all_camera1_parameters`).
-5. Lint warnings left on purpose: `allowBackup`, newer Gradle (update with the Android plugin).
-6. Parked by the owner (copying to a computer, Camtrap DP export, GBIF and more): `docs/PARKED.md`.
+4. More test phones (three Android 7 and 8.1 phones at work; a Redmi Note 9S, Android 12): battery
+   first, then the speed test (`sensor_pixels` above `jpeg_largest`: enlarged photos).
+5. First release (owner decides): licence, history without private data, signing key, Zenodo.
+   Parked by the owner: `docs/PARKED.md`. Lint warnings kept: `allowBackup`, newer Gradle.

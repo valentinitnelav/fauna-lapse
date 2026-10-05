@@ -190,6 +190,8 @@ public final class MainActivity extends Activity {
     private EditText latitude;
     private EditText longitude;
     private EditText accuracy;
+    private EditText gpsGoal;
+    private TextView gpsGoalNote;
     private boolean gpsFilled; // the position fields show this phone's GPS position: a tap asks first
     private TextView locationText;
     private Button locationButton;
@@ -373,13 +375,16 @@ public final class MainActivity extends Activity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (gps == null) showLocation(null); // GPS or typed by hand
+                showGpsGoal(); // and the position line: GPS or typed by hand, above the goal or not
             }
         };
         for (EditText f : new EditText[] {latitude, longitude, accuracy}) {
             f.addTextChangedListener(typed);
             f.setOnClickListener(v -> askToEditPosition((EditText) v)); // only while not focusable
         }
+        gpsGoal = findViewById(R.id.gps_goal);
+        gpsGoalNote = findViewById(R.id.gps_goal_note);
+        gpsGoal.addTextChangedListener(typed);
         locationText = findViewById(R.id.location_text);
         locationButton = findViewById(R.id.get_location);
         locationButton.setOnClickListener(v -> getLocation());
@@ -628,6 +633,7 @@ public final class MainActivity extends Activity {
         customFields.show(f.custom);
         sitePhotosAbout.setText(f.sitePhotosAbout);
         showSitePhotos();
+        gpsGoal.setText(String.valueOf(f.gpsGoalM));
         showPosition(f.location);
     }
 
@@ -845,6 +851,9 @@ public final class MainActivity extends Activity {
         f.distanceFromFocus = distanceFromFocus;
         f.custom = customFields.read();
         f.sitePhotosAbout = text(sitePhotosAbout);
+        Integer goal = FieldInfo.gpsGoal(text(gpsGoal));
+        if (goal == null) throw new IllegalArgumentException(getString(R.string.gps_goal_problem, FieldInfo.MAX_GPS_GOAL_M));
+        f.gpsGoalM = goal;
         f.location = locationOnScreen();
         String p = f.problem();
         if (p != null) throw new IllegalArgumentException(p);
@@ -891,7 +900,8 @@ public final class MainActivity extends Activity {
                 text = getString(R.string.location_saved,
                         new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date(l.getTime())),
                         n == null ? "" : getResources().getQuantityString(R.plurals.location_saved_satellites, n, n));
-                if (l.getAccuracy() > GpsFix.GOOD_M) text += " " + getString(R.string.location_weak);
+                Integer goal = FieldInfo.gpsGoal(text(gpsGoal));
+                if (goal != null && goal > 0 && l.getAccuracy() > goal) text += " " + getString(R.string.location_weak, goal);
             }
         } catch (IllegalArgumentException e) {
             text = e.getMessage();
@@ -903,12 +913,32 @@ public final class MainActivity extends Activity {
         locationText.setTypeface(null, ok ? Typeface.NORMAL : Typeface.BOLD);
     }
 
-    /** Get location: the GPS runs until the position is good enough (GpsFix); a second tap stops it
-     *  and keeps the best position so far. */
+    /** The note under the uncertainty goal: a problem, or a warning that the search will likely
+     *  run its full time; then the position line, whose note depends on the goal. */
+    private void showGpsGoal() {
+        Integer g = FieldInfo.gpsGoal(text(gpsGoal));
+        long min = GpsFix.TIMEOUT_MS / 60000;
+        String note = g == null ? getString(R.string.gps_goal_problem, FieldInfo.MAX_GPS_GOAL_M)
+                : g == 0 ? getString(R.string.gps_goal_zero, min)
+                : g < FieldInfo.LOW_GPS_GOAL_M ? getString(R.string.gps_goal_low, FieldInfo.LOW_GPS_GOAL_M, min)
+                : null;
+        gpsGoalNote.setText(note);
+        gpsGoalNote.setVisibility(note == null ? View.GONE : View.VISIBLE);
+        gpsGoalNote.setTypeface(null, g == null ? Typeface.BOLD : Typeface.NORMAL); // a problem: bold, as elsewhere
+        if (gps == null) showLocation(null);
+    }
+
+    /** Get location: the GPS runs until the position reaches the uncertainty goal (GpsFix); a second
+     *  tap stops it and keeps the best position so far. */
     private void getLocation() {
         if (gps != null) {
             gpsStopped = true;
             gps.stop();
+            return;
+        }
+        final Integer goal = FieldInfo.gpsGoal(text(gpsGoal));
+        if (goal == null) { // the note under the goal says why
+            gpsGoal.requestFocus();
             return;
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -922,10 +952,12 @@ public final class MainActivity extends Activity {
             openPage(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
             return;
         }
-        gps = new GpsFix(this, new GpsFix.Listener() {
+        gps = new GpsFix(this, goal, new GpsFix.Listener() {
             @Override
             public void onSearching(Location best, long elapsedMs, int heard, int used) {
-                String text = getString(R.string.location_searching, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
+                String text = goal > 0
+                        ? getString(R.string.location_searching, goal, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000)
+                        : getString(R.string.location_searching_full, elapsedMs / 1000, GpsFix.TIMEOUT_MS / 1000);
                 // From the first second, so the wait has a reason; own lines, as the seconds before
                 // them would move them at each tick.
                 text += "\n" + (heard <= 0 ? getString(R.string.location_satellites_none)
@@ -946,6 +978,7 @@ public final class MainActivity extends Activity {
                 showPosition(best);
                 FieldInfo saved = FieldInfo.load(MainActivity.this);
                 saved.location = best;
+                saved.gpsGoalM = goal;
                 saved.save(MainActivity.this);
             }
         });

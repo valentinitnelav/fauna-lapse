@@ -159,6 +159,12 @@
     <string name="field_uncertainty">Uncertainty (m)</string>
     <string name="field_uncertainty_hint">± m, optional</string>
     <string name="field_uncertainty_help" formatted="false">How far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
+    <string name="gps_goal">Uncertainty goal (m)</string>
+    <string name="gps_goal_hint">0 to 1000</string>
+    <string name="gps_goal_help">Get location stops as soon as the uncertainty is this value or less, and switches the GPS off. If the goal is not reached, it searches at most 3 min and keeps the best position. A smaller goal can make the search longer; 0 m always searches the full 3 min. The record keeps the goal with the position.</string>
+    <string name="gps_goal_low">Under %1$d m is often not reached: the search may then run the full %2$d min and keep the best position.</string>
+    <string name="gps_goal_zero">0 m: the search always runs the full %1$d min and keeps the best position.</string>
+    <string name="gps_goal_problem">Uncertainty goal: use a whole number from 0 to %1$d m.</string>
     <string name="location_get">Get location</string>
     <string name="location_stop">Stop and keep the best</string>
     <string name="location_none">No position: tap Get location, or type it from another GPS device.</string>
@@ -173,8 +179,9 @@
     <string name="position_edit_text">Latitude, longitude and uncertainty come from this phone\'s GPS. Change them only for a better position, for example from another GPS device: the record then says they were typed by hand.</string>
     <string name="position_edit_yes">Change</string>
     <string name="position_edit_no">Keep</string>
-    <string name="location_weak">The uncertainty is above 10 m: try again under open sky if you need it smaller.</string>
-    <string name="location_searching">Searching for GPS satellites; keep the phone under open sky. Time: %1$d s of at most %2$d s.</string>
+    <string name="location_weak">The uncertainty is above the goal of %1$d m: try again under open sky if you need it smaller.</string>
+    <string name="location_searching">Searching for GPS satellites until the uncertainty is ± %1$d m or less; keep the phone under open sky. Time: %2$d s of at most %3$d s.</string>
+    <string name="location_searching_full">Searching for GPS satellites for the full time (goal 0 m); keep the phone under open sky. Time: %1$d s of %2$d s.</string>
     <string name="location_satellites" tools:ignore="PluralsCandidate">Satellites: signal from %1$d, %2$d used for the position.</string>
     <string name="location_satellites_none">Satellites: no signal yet.</string>
     <string name="location_best">Best so far: uncertainty ± %1$d m.</string>

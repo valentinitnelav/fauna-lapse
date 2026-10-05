@@ -61,16 +61,22 @@ stands); anyone who wakes the phone could then see and stop the session without 
 
 **What was found:**
 - `dumpsys battery unplug` only tells the apps that the phone is unplugged: the phone still
-  charges, so the measured current is wrong.
-- Stopping the charging itself needs root (not on our phones), or a USB hub that can switch the
-  power of each port: the `uhubctl` tool (installed on the owner's computer) switches such hubs; its
-  README lists hubs known to work.
-- The laptop's own USB ports cannot switch the power. The small hub in use (1a40:0101) only switches
-  the data: with its port "off" for 6 s, the phone still reported USB power the whole time.
-- The app logs the battery itself (`battery` in `session_end`). A hub that switches the power off
-  and on again would therefore be enough: no cable data is needed during the test.
+  charges, so the measured current is wrong. Stopping the charging itself needs root.
+- A USB hub that switches the power of each port can do it: the `uhubctl` tool (installed on the
+  owner's computer; runs without sudo) switches it off and on. The laptop's own ports cannot
+  (`uhubctl -f`: "nops"), and the small hub in use (1a40:0101, "ganged") cuts only the data: the
+  phone kept USB power.
+- uhubctl's README lists hubs that switch per port, newer ones for example Rosonway RSH-A10,
+  RSH-518C and RSH-A37S, Plugable USBC-HUB7BC (not its rightmost port), D-Link DUB-2332 rev A1.
+  Some listed hubs still do not cut the power, so check first: phone on a port, port off with
+  uhubctl, the phone must report that it is not charging.
+- The app logs the battery itself (`battery` in `session_end`), so no cable data is needed during
+  the test: the hub switches the power off, and on again at the end.
+- Without a hub: adb over Wi-Fi (wireless debugging on Android 11+, `adb tcpip` on older phones):
+  the owner unplugs once for a series of tests. Wi-Fi must stay on, which costs a little energy
+  and differs from the field.
 
-**Why parked:** it needs such a hub. Until then, the owner unplugs the phone for battery tests.
+**Why parked:** it needs such a hub (owner deciding). Until then, the owner unplugs the phone.
 
 ## Camtrap DP export
 

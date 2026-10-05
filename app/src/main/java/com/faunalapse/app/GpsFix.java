@@ -12,17 +12,15 @@ import android.os.Looper;
 import android.os.SystemClock;
 
 /**
- * One GPS position for the session record. The GPS runs only until a position is good enough, the
- * user stops it, or the time is up; then it is switched off again to save energy. GPS only, no
- * network positions: in the field the phone is usually in airplane mode, and without network help
- * a first position can take a few minutes. While it searches, Android's satellite status tells how
- * many satellites (GPS, Galileo and others) send a signal and how many the position uses. Runs on
- * the main thread.
+ * One GPS position for the session record. The GPS runs only until a position reaches the user's
+ * uncertainty goal (FieldInfo.gpsGoalM), the user stops it, or the time is up; then it is switched
+ * off again to save energy. GPS only, no network positions: in the field the phone is usually in
+ * airplane mode, and without network help a first position can take a few minutes. While it
+ * searches, Android's satellite status tells how many satellites (GPS, Galileo and others) send a
+ * signal and how many the position uses. Runs on the main thread.
  */
 final class GpsFix implements LocationListener {
 
-    /** Good enough: within about 10 m (owner); 68 % of positions lie within the stated accuracy. */
-    static final float GOOD_M = 10;
     /** Give up after this long and keep the best position so far, if any. */
     static final long TIMEOUT_MS = 180000;
 
@@ -38,6 +36,7 @@ final class GpsFix implements LocationListener {
 
     private final LocationManager manager;
     private final Listener listener;
+    private final int goalM;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final long start = SystemClock.elapsedRealtime();
     private Location best;
@@ -72,8 +71,10 @@ final class GpsFix implements LocationListener {
         }
     };
 
-    GpsFix(Context context, Listener listener) {
+    /** {@code goalM}: stop at this uncertainty or less (68 % radius, in m); 0 searches the full time. */
+    GpsFix(Context context, int goalM, Listener listener) {
         this.manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        this.goalM = goalM;
         this.listener = listener;
     }
 
@@ -114,13 +115,12 @@ final class GpsFix implements LocationListener {
         if (best == null || l.getAccuracy() < best.getAccuracy()) {
             best = l;
             // Android's GPS usually adds the satellites it used; else the count from the status.
-            if (FieldInfo.satellites(l) == null && used >= 0) {
-                Bundle b = l.getExtras() == null ? new Bundle() : new Bundle(l.getExtras());
-                b.putInt(FieldInfo.SATELLITES, used);
-                l.setExtras(b);
-            }
+            Bundle b = l.getExtras() == null ? new Bundle() : new Bundle(l.getExtras());
+            if (FieldInfo.satellites(l) == null && used >= 0) b.putInt(FieldInfo.SATELLITES, used);
+            b.putInt(FieldInfo.GOAL, goalM); // for the record
+            l.setExtras(b);
         }
-        if (l.getAccuracy() <= GOOD_M) stop();
+        if (goalM > 0 && l.getAccuracy() <= goalM) stop();
     }
 
     // Android 7 to 10 call these too (they have no default there).

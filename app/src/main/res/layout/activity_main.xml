@@ -196,6 +196,16 @@
                 </LinearLayout>
                 <TextView style="@style/Hint.Help" android:text="@string/field_uncertainty_help" />
                 <TextView style="@style/Hint" android:layout_marginTop="4dp" android:text="@string/position_datum" />
+                <!-- When Get location stops (FieldInfo.gpsGoalM); the note warns of a goal phones rarely reach -->
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel.Help" android:labelFor="@id/gps_goal" android:text="@string/gps_goal" />
+                    <EditText android:id="@+id/gps_goal" style="@style/Field.Row" android:hint="@string/gps_goal_hint"
+                        android:maxLength="4" android:importantForAutofill="no" android:inputType="number"
+                        tools:targetApi="o" />
+                </LinearLayout>
+                <TextView style="@style/Hint.Help" android:text="@string/gps_goal_help" />
+                <TextView android:id="@+id/gps_goal_note" style="@style/Hint" android:layout_marginTop="4dp"
+                    android:textColor="@color/warning" android:visibility="gone" />
                 <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="8dp"
                     android:textSize="15sp" />
                 <Button android:id="@+id/get_location" style="@style/SecondaryButton" android:text="@string/location_get" />

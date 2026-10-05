@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/icon.svg" width="128" alt="FaunaLapse icon: a camera lens with a flower in it, ringed by a timer">
+</p>
+
 # FaunaLapse
 
 FaunaLapse turns old or cheap Android phones into time-lapse cameras that watch one spot, for example
@@ -46,8 +50,8 @@ start. Phase 0 tests on more phones (speed, power, heat) are running. See
   camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from your
   own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
   taken with the phone's camera app and kept apart in the session folder; one GPS position on a tap
-  (WGS 84; the GPS switches off again when the position is within 10 m), or latitude, longitude and
-  uncertainty typed from another GPS device.
+  (WGS 84; the GPS switches off again when the position reaches your uncertainty goal, 10 m unless
+  you change it), or latitude, longitude and uncertainty typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone or on a memory card (SD card), one folder per session

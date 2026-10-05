@@ -42,6 +42,14 @@ final class FieldInfo {
     static final double MAX_SETUP_M = 100;
     /** Location extras key: the satellites used for the position (as Android's GPS sets it). */
     static final String SATELLITES = "satellites";
+    /** Get location stops at this uncertainty or less, in whole m (the user's goal; default 10,
+     *  owner); 0 searches the full time. Phones often do not reach under 5 m; above 1000 m any
+     *  first position would do, so it is no goal. */
+    static final int GPS_GOAL_M = 10;
+    static final int LOW_GPS_GOAL_M = 5;
+    static final int MAX_GPS_GOAL_M = 1000;
+    /** Location extras key: the goal of the search that found the position. */
+    static final String GOAL = "goal_m";
 
     String setupBy = "";
     String site = "";
@@ -61,6 +69,8 @@ final class FieldInfo {
      *  or typed by hand from another device (provider TYPED, uncertainty only if given); null when
      *  there is none. Android's getAccuracy() is the uncertainty: a radius in m with a 68 % chance. */
     Location location;
+    /** The uncertainty goal of Get location, in m. */
+    int gpsGoalM = GPS_GOAL_M;
     /** Fields the user added (for example Observer or Weather), in the order added. */
     List<Custom> custom = new ArrayList<>();
 
@@ -145,6 +155,7 @@ final class FieldInfo {
         f.distance = p.getString("detection_distance_m", "");
         f.distanceFromFocus = p.getBoolean("distance_from_focus", true);
         f.sitePhotosAbout = p.getString("site_photos_about", "");
+        f.gpsGoalM = p.getInt("gps_goal_m", GPS_GOAL_M);
         try {
             JSONArray a = new JSONArray(p.getString("custom_fields", "[]"));
             for (int i = 0; i < a.length(); i++) {
@@ -170,11 +181,10 @@ final class FieldInfo {
                 l.setLongitude(lon);
                 l.setAccuracy(uncertainty == null ? 0 : uncertainty);
                 l.setTime(p.getLong("fix_time", 0));
-                if (p.contains(SATELLITES)) {
-                    Bundle b = new Bundle();
-                    b.putInt(SATELLITES, p.getInt(SATELLITES, 0));
-                    l.setExtras(b);
-                }
+                Bundle b = new Bundle();
+                if (p.contains(SATELLITES)) b.putInt(SATELLITES, p.getInt(SATELLITES, 0));
+                if (p.contains("location_goal_m")) b.putInt(GOAL, p.getInt("location_goal_m", 0));
+                l.setExtras(b);
                 f.location = l;
             }
         }
@@ -194,7 +204,8 @@ final class FieldInfo {
                 .putString("camera_height_m", cameraHeight)
                 .putString("detection_distance_m", distance)
                 .putBoolean("distance_from_focus", distanceFromFocus)
-                .putString("site_photos_about", sitePhotosAbout);
+                .putString("site_photos_about", sitePhotosAbout)
+                .putInt("gps_goal_m", gpsGoalM);
         JSONArray a = new JSONArray();
         for (Custom c : custom) {
             JSONObject o = new JSONObject();
@@ -206,7 +217,7 @@ final class FieldInfo {
         }
         e.putString("custom_fields", a.toString());
         e.remove("latitude").remove("longitude").remove("location_source").remove("accuracy_m").remove("fix_time")
-                .remove(SATELLITES);
+                .remove(SATELLITES).remove("location_goal_m");
         if (location != null) {
             e.putString("latitude", String.valueOf(location.getLatitude()))
                     .putString("longitude", String.valueOf(location.getLongitude()))
@@ -215,6 +226,8 @@ final class FieldInfo {
             if (fromGps(location)) e.putLong("fix_time", location.getTime());
             Integer n = satellites(location);
             if (n != null) e.putInt(SATELLITES, n);
+            Integer g = goal(location);
+            if (g != null) e.putInt("location_goal_m", g);
         }
         e.apply();
     }
@@ -311,6 +324,19 @@ final class FieldInfo {
         return b != null && b.containsKey(SATELLITES) ? b.getInt(SATELLITES) : null;
     }
 
+    /** The uncertainty goal of the search that found a GPS position, or null when not known. */
+    static Integer goal(Location l) {
+        Bundle b = l.getExtras();
+        return b != null && b.containsKey(GOAL) ? b.getInt(GOAL) : null;
+    }
+
+    /** A typed uncertainty goal in whole m, or null when it is not 0 to MAX_GPS_GOAL_M. */
+    static Integer gpsGoal(String text) {
+        if (!text.matches("\\d{1,4}")) return null;
+        int g = Integer.parseInt(text);
+        return g <= MAX_GPS_GOAL_M ? g : null;
+    }
+
     /** The start of each session folder name: the phone model and ID, for example
      *  SM-M127F_1A2B3C4D, so folders from several phones never mix on one computer. Letters, digits
      *  and - only in the model part: safe in folder names on every computer, and "_" splits the parts. */
@@ -380,6 +406,8 @@ final class FieldInfo {
                     ? Math.round(location.getAccuracy() * 10) / 10.0 : JSONObject.NULL);
             Integer n = satellites(location);
             SessionLog.put(l, "satellites_used", n == null ? JSONObject.NULL : n);
+            Integer g = goal(location);
+            SessionLog.put(l, "uncertainty_goal_m", g == null ? JSONObject.NULL : g); // of Get location
             SessionLog.put(l, "fix_time", fromGps(location) ? SessionLog.isoTime(location.getTime()) : JSONObject.NULL);
             SessionLog.put(j, "location", l);
         }
