@@ -49,6 +49,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 | Pack a photo session into a zip (`SessionZip`; 1280 px squares of about 145 KB) | about 19 ms per photo: write 3.3 (photos read 8 ahead on 4 threads; 15 when each was opened twice), check 0.8, delete 14 (in one call to Android's file index; one by one 16); 300 photos about 6 s, 5000 about 1.5 min. On the FAT32 memory card 23 ms per photo. Copy over USB *File transfer* to a Linux laptop (2026-10-06): the folder of 301 photos (43 MB) 13.8 s, its zip 1.5 s; the extracted zip equals the folder |
+| Pack 4019 photos of 2976 px (1.33 MB, 5.4 GB) on the FAT32 card (2026-10-06) | zips of 3,998,870,872 and 1,437,547,521 bytes, no Zip64; about 1.3 min per GB (write 20 MB/s, check about 80 MB/s, delete 7 ms per photo); the 4.0 GB zip copied over USB *File transfer* in 150 s (27 MB/s); all 4022 files (2 site photos) identical. App force-stopped 1 s after zip 1: the next Pack deleted the photos in it and made `_part2` |
 
 ### Sessions (Camera2 unless stated, screen off, 2026-10-03 to 06)
 
@@ -59,6 +60,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Photos in a daily window (21:07 to 21:09): step 0.5 s, 20 s bursts, 30 s breaks | bursts at 21:07:00, 21:07:50 and 21:08:40 as planned; camera stayed on in the short breaks; each burst 20 photos and 20 skipped photo times (a photo takes 0.62 s); the app warned once: step too short, use video or a step of at least 1.0 s |
 | Stop during a video clip | session ended within 1 s; the clip file was finished and playable (15 s), recorded with `stopped_early` |
 | Photos on a 32 GB SD card against the phone storage (step 1 s, 30 s bursts, 2 min run, 73 % square from 3000 px saved at 1280 px, about 285 KB; 2026-10-05) | 60 of 60 photos, 0 skipped on both; save time (cut, turn, JPEG, write) median 378 ms on the card and 322 ms on the phone, 90 % below 415 and 331 ms, slowest 1484 and 378 ms; photos started 3 ms late (median) on both. A card is fast enough for 1 photo per second |
+| Photos at the largest square (2976 of 3000 px), step 1 s, one 83 min burst, on the FAT32 card, charging (2026-10-06) | 4019 photos, 604 photo times skipped: cutting and saving one square takes 1.1 s on the card; 1.33 MB per photo (a desk), 3.9 GB per hour (4 GB after about 61 min); 0 errors, 25 to 29 °C |
 | Aim screen and a moved square (50 %, top right), Camera2 and Camera1 | view 1440x1080 (both interfaces, photos and video); focus and exposure areas on the square work in both; focus sharp in 1.4 to 1.9 s; saved squares show the same area as the screen, upright with the phone upright or turned left side up. Camera1 session at step 1 s: photo 0.95 to 1.6 s, 3 of 10 photo times skipped and the step warning shown |
 | Battery, 1 h off the charger, default settings, two runs each (2026-10-06, at night in a dim room; airplane mode, but Wi-Fi on for adb, which was disconnected during each hour; 63 % square saved at 1280 px) | Photos (a photo every 2 s for 60 s, 5 min breaks; the session ends after the last burst, at 55 min): 300 of 300 photos, 0 skipped, 3 ms late; camera open 194 and 189 mA, closed 39 and 52 mA: 65 and 73 mAh (1.4 to 1.6 % of the 5000 mAh battery per hour; the level fell by 0 and 1 %). Video (5 min clips at 5 fps, 5 min breaks): 6 of 6 clips, 1498 frames each, 0 to 3 ms late; open 256 and 262 mA, closed 55 mA: 154 and 157 mAh (3.1 to 3.4 % per hour; the level fell by 3 %); 136 MB per clip, the same in every clip. Battery 22 to 28 °C |
 
@@ -106,7 +108,8 @@ speed-test runs and sessions, on the charger.
 | Time-lapse video 1080p, 5 and 1 frames per s | works; 2.9 and 0.9 MB per 10 s |
 | Autofocus once | 1.9 to 2.1 s, sharp |
 | Pack a photo session into a zip (1280 px squares of about 120 KB) | about 13 ms per photo: write 4.3, check 0.5, delete 5.7 (in one call to Android's file index; one by one 17.6) |
-| Android's file index lost files (2026-10-06) | the last 120 of 301 photos of a 1 h session (from 00:39, screen off) were on the storage (adb saw them) but not in the index, so FaunaLapse could not see them (Android 11+ shows an app only its indexed files). Pack leaves such a session as it is (the record names the missing photos); copy it as it is |
+| Pack 4952 photos of 2976 px (0.93 MB, 4.4 GB) (2026-10-06) | zips of 3,999,632,472 and 369,738,616 bytes, no Zip64; 147 s (write 51 s, 86 MB/s; check 17 s; delete 73 s, one by one, as the index spelled the folder `documents`); all 4954 files identical. Force-stopped at 2.4 GB written: the folder stayed whole, the next Pack started over. With FaunaLapse in the background (Home, screen off), Android's low-memory killer closed it after 20 s (critical memory pressure while writing); in front with the screen off it finished |
+| Session files missing from a folder listing (2026-10-06) | Android 11 to 13 index a file an app writes as "pending" until a media scan (idle and charging, or on demand); the app still lists and opens its own pending files. But the index sometimes stores the folder spelled "documents/..." instead of "Documents/..." (the last 120 of 301 photos of a 1 h session; later all 4954 files of a session): a listing then misses those files, while each one still opens by its name, and a computer over USB sees them all. Pack takes the files the record names by their names |
 
 ### Sessions (Camera2, screen off, MIUI battery limits on)
 
@@ -114,7 +117,14 @@ speed-test runs and sessions, on the charger.
 |---|---|
 | Photos: step 2 s, 30 s bursts, 1 min breaks, 12 min run, 55 % square (1650 of 3000 real pixels) saved at 1280 px, fixed focus; screen off with the Screen off button | 8 bursts, 120 of 120 photos, 0 skipped, 0 errors (6 bursts with the screen off); photo 0.60 to 0.93 s (median 0.71), cut and save median 0.21 s, about 280 KB per photo; photos started 1 to 6 ms late; camera opened in 0.45 to 0.70 s, 4 s before each burst |
 | Video: 2 min clips of a 55 % square (5 fps), 1 min breaks, 15 min run; screen off with the power button; a pause after 33 s of clip 2, the square moved to the middle, Continue | 6 clips, 0 errors; 598 frames per 2 min clip, started 1 ms late; the paused clip went on until its planned end. Off-centre square: no hardware zoom (crop only in the centre), 792 real pixels saved at 768 px, 23 MB per 2 min; in the middle the camera zoomed (crop 2203x1652): 1438 real pixels saved at 1280 px, 55 MB per 2 min (1.6 GB per hour) |
+| Photos at the largest square (2976 of 3000 px), step 1 s, one 83 min burst, charging (2026-10-06) | 4952 photos, 0 skipped, cut and save 0.41 to 0.45 s, 0.93 MB per photo (a desk), 3.2 GB per hour (4 GB after about 76 min) |
 | Battery, 1 h off the charger, default settings (2026-10-06, as for the Samsung M12; 100 % square; FaunaLapse without battery limits) | Photos: 300 of 300 photos, 0 skipped, 4 ms late; camera open 272 mA, closed 18.5 mA: 65 mAh in 55 min (1.3 % of the 5020 mAh battery per hour; the level fell by 1 %). Video: 6 of 6 clips, 1498 frames each, 0 to 2 ms late, 111 MB per clip; open 268 mA, closed 19 mA: 145 mAh (2.9 % per hour), but the level fell by 6 % (also in a first run). Android's own counts since unplugging differ the same way (its power model 609 mAh, the level 914 to 965 mAh; learned capacity 5077 mAh): the level falls up to 2 times faster than the current says. Readings in the breaks 6 to 190 mA, mostly 10 to 30 mA (the phone reports microamperes). Battery 23 to 26 °C |
+
+## Xiaomi 11T Pro, Android 14 (MIUI), 2021
+
+| Test | Result |
+|---|---|
+| Photos at the largest square (2976 of 3000 px), step 1 s, 10 min, charging; then Pack with FaunaLapse in the background and the screen off (2026-10-06) | 600 of 600 photos, 0 skipped, cut and save 0.27 s, 1.29 MB per photo; Pack: 817 MB in 9 s (write 2.0, check 3.2, delete 3.5); all 601 files identical |
 
 ## Further battery tests
 

@@ -3,6 +3,7 @@ package com.faunalapse.app;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -80,8 +82,10 @@ final class SessionZip {
 
     // Limits, changed only by the tests.
     long partBytes = PART_BYTES;
+    int partFiles = PART_FILES;
     long minPartBytes = MIN_PART_BYTES;
     long reserveBytes = Guards.RESERVE_BYTES; // free space left for the phone, as in a session
+    FileFilter listed = f -> true;            // what a folder listing shows (Android may hide files)
 
     // Progress, read by the screen.
     final List<File> folders;
@@ -106,6 +110,8 @@ final class SessionZip {
 
     private final byte[] buf = new byte[BUFFER];
     private ExecutorService pool;
+    /** Files of the folder in hand that its listing missed (addRecordedFiles). */
+    private Set<File> unlisted = Collections.emptySet();
 
     SessionZip(List<File> folders) {
         this.folders = folders;
@@ -193,6 +199,9 @@ final class SessionZip {
     private void pack(File folder) throws IOException {
         File parent = folder.getParentFile();
         String name = folder.getName();
+        // A run that was killed while writing left an unfinished zip: it would take free space.
+        File[] unfinished = parent.listFiles(f -> f.getName().startsWith(name) && f.getName().endsWith(".zip.tmp"));
+        if (unfinished != null) for (File f : unfinished) f.delete();
         // Zips made before: a run that ended between a check and the deletes left their files.
         Map<String, Long> inZips = new HashMap<>();
         int n = 1;
@@ -210,7 +219,8 @@ final class SessionZip {
             changed.add(folder.getPath());
             return;
         }
-        checkRecord(folder, files, inZips.keySet());
+        unlisted = addRecordedFiles(folder, files, inZips.keySet());
+        for (File f : unlisted) totalBytes += f.length();
         List<File> left = new ArrayList<>();
         List<File> packedBefore = new ArrayList<>();
         for (File f : files) {
@@ -235,7 +245,7 @@ final class SessionZip {
             long limit = Math.min(partBytes, room);
             int end = i;
             long bytes = 0;
-            while (end < left.size() && end - i < PART_FILES) {
+            while (end < left.size() && end - i < partFiles) {
                 long next = left.get(end).length() + HEADER_BYTES;
                 if (end > i && bytes + next > limit) break;
                 bytes += next;
@@ -265,11 +275,14 @@ final class SessionZip {
         deleteEmptyFolders(folder);
     }
 
-    /** Android 11 and newer show an app only the files that their file index lists as the app's
-     *  own; when the index lost some (the Redmi Note 9S lost 120 photos of a session), the folder
-     *  looks complete but is not. The record names every saved photo and site photo: throws Hidden
-     *  unless all of them are in the folder or in a zip made before. */
-    private static void checkRecord(File folder, List<File> files, Set<String> inZips) throws IOException {
+    /** Android 11 and newer list for an app only the files their file index holds under the
+     *  folder's exact spelling: on the Redmi Note 9S the index once held a session as
+     *  "documents/..." instead of "Documents/...", so its folder looked empty, while each file still
+     *  opened by its name. The record names every saved photo and site photo: files missing from
+     *  the list are added by name (and returned). Throws Hidden when some are found neither in the
+     *  folder nor in a zip made before. */
+    private static Set<File> addRecordedFiles(File folder, List<File> files, Set<String> inZips)
+            throws IOException {
         String prefix = folder.getName() + "/";
         List<String> named = null;
         File record = new File(folder, RECORD);
@@ -277,6 +290,7 @@ final class SessionZip {
             try (InputStream in = new FileInputStream(record)) {
                 named = recordedFiles(in);
             }
+            named.add(RECORD);
         }
         // Or in a zip made before.
         for (int n = 1; named == null && part(folder.getParentFile(), folder.getName(), n).isFile(); n++) {
@@ -291,9 +305,20 @@ final class SessionZip {
         if (named == null) throw new Hidden(1); // every session has its record
         Set<String> seen = new HashSet<>(inZips);
         for (File f : files) seen.add(entryName(folder, f));
+        Set<File> added = new HashSet<>();
         int missing = 0;
-        for (String f : named) if (!seen.contains(prefix + f)) missing++;
+        for (String name : named) {
+            if (!seen.add(prefix + name)) continue;
+            File f = new File(folder, name);
+            if (f.isFile()) added.add(f);
+            else missing++;
+        }
         if (missing > 0) throw new Hidden(missing);
+        if (!added.isEmpty()) {
+            files.addAll(added);
+            Collections.sort(files); // name order, as the list
+        }
+        return added;
     }
 
     /** The files a record names: each saved photo or clip (not those with a save error), and the
@@ -425,8 +450,8 @@ final class SessionZip {
     }
 
     /** The files in a folder and its subfolders, in name order. */
-    private static void list(File dir, List<File> out) {
-        File[] inside = dir.listFiles();
+    private void list(File dir, List<File> out) {
+        File[] inside = dir.listFiles(listed);
         if (inside == null) return;
         Arrays.sort(inside);
         for (File f : inside) {
@@ -449,12 +474,14 @@ final class SessionZip {
             Set<File> dirs = new HashSet<>();
             for (File f : files) dirs.add(f.getParentFile());
             for (File dir : dirs) {
-                String[] names = dir.list();
-                if (names != null) for (String n : names) left.add(new File(dir, n).getPath());
+                File[] inside = dir.listFiles(listed);
+                if (inside != null) for (File g : inside) left.add(g.getPath());
             }
         }
         for (File f : files) {
-            if ((left != null && !left.contains(f.getPath())) || f.delete()) changed.add(f.getPath());
+            // A file the listing misses may still be there: it is checked by name.
+            boolean gone = left != null && !left.contains(f.getPath()) && !unlisted.contains(f);
+            if (gone || f.delete() || !f.exists()) changed.add(f.getPath());
             else notDeleted++;
         }
     }

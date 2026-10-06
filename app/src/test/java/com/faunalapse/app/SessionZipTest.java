@@ -189,6 +189,53 @@ public class SessionZipTest {
     }
 
     @Test
+    public void sessionsWithManyFilesGetMoreZips() throws IOException {
+        File dir = session(tmp.getRoot(), NAME);
+        List<String> before = folderContents(dir);
+        SessionZip z = zipper(dir);
+        z.partFiles = 2; // 5 files: zips of 2, 2 and 1
+        z.packAll();
+        assertEquals(1, z.packed);
+        File[] zips = {SessionZip.part(tmp.getRoot(), NAME, 1), SessionZip.part(tmp.getRoot(), NAME, 2),
+                SessionZip.part(tmp.getRoot(), NAME, 3)};
+        assertEquals(2, zipContents(zips[0]).size());
+        assertEquals(1, zipContents(zips[2]).size());
+        assertFalse(SessionZip.part(tmp.getRoot(), NAME, 4).exists());
+        assertEquals(before, zipContents(zips));
+    }
+
+    @Test
+    public void filesTheListingMissesArePackedByTheirRecordedNames() throws IOException {
+        File dir = session(tmp.getRoot(), NAME);
+        List<String> before = folderContents(dir);
+        SessionZip z = zipper(dir);
+        z.listed = File::isDirectory; // as on the Redmi Note 9S: folders, but none of the files
+        z.bulkDelete = files -> { }; // deletes nothing: each file goes by its name
+        z.packAll();
+        assertEquals(1, z.packed);
+        assertTrue(z.hidden.isEmpty());
+        assertEquals(0, z.notDeleted);
+        assertEquals(before, zipContents(SessionZip.part(tmp.getRoot(), NAME, 1)));
+        assertFalse(dir.exists());
+    }
+
+    @Test
+    public void anUnfinishedZipOfAKilledRunGoesFirst() throws IOException {
+        File dir = session(tmp.getRoot(), NAME);
+        List<String> before = folderContents(dir);
+        File unfinished = new File(tmp.getRoot(), NAME + ".zip.tmp");
+        File otherSession = new File(tmp.getRoot(), "1DFFC454_20261005_111111_photo.zip.tmp");
+        Files.write(unfinished.toPath(), new byte[1000]);
+        Files.write(otherSession.toPath(), new byte[1000]);
+        SessionZip z = zipper(dir);
+        z.packAll();
+        assertEquals(1, z.packed);
+        assertEquals(before, zipContents(SessionZip.part(tmp.getRoot(), NAME, 1)));
+        assertFalse(unfinished.exists());
+        assertTrue(otherSession.exists()); // goes when its own session is packed
+    }
+
+    @Test
     public void aStopKeepsTheFolderAsItWas() throws IOException {
         File dir = session(tmp.getRoot(), NAME);
         List<String> before = folderContents(dir);

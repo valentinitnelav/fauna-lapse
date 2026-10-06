@@ -47,8 +47,8 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
   keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
-- Pack (`SessionZip`; Start waits): stored zips next to the folder (4 GB at most, then `_part2`); files
-  go after their zip is synced and read back; a session with recorded files the app cannot see stays.
+- Pack (`SessionZip`; Start waits): stored zips by the folder (4 GB at most, then `_part2`); files go once
+  their zip is synced and read back; recorded files a listing misses go in by name (if one is gone: none).
 - `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 220 to 300 KB).
 
 ## Defaults
@@ -84,7 +84,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 | `SquareRecorder.java` | Video of the square: camera texture, GPU cut and turn, hardware H.264 encoder, MP4; encoder choice and bit rate |
 | `SessionLog.java` | `session.jsonl` lines, time formats, file names |
 | `PhoneCheck.java`, `HelpToggles.java`, `ScreenOff.java` | Phone settings for the field (read only; main screen and record); explanations behind the (i) of a label; Screen off: a device admin app with only the right to lock the screen (`lockNow`), granted once by the user |
-| `Camera1Backend.java`, `SpeedTest.java`, `Camera2StillTest.java`, `CameraFacts.java`, `Camera2Facts.java` | Phase 0 tests (they start 10 s after the tap) and shared Camera1 size helpers |
+| `Camera1Backend.java`, `SpeedTest.java`, `Camera2StillTest.java`, `CameraFacts.java`, `Camera2Facts.java` | Phase 0 tests (debug builds only; they start 10 s after the tap) and shared Camera1 size helpers |
 | `tools/phase0_speed_report.py` | PC: copy the newest speed test from a phone and summarise it |
 
 ## Open problems and next steps

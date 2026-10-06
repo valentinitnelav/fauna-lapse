@@ -258,7 +258,7 @@ public final class MainActivity extends Activity {
         packButton = findViewById(R.id.pack);
         packButton.setOnClickListener(v -> {
             if (SessionZip.running()) SessionZip.last.stop = true;
-            else pack();
+            else if (!CaptureService.running) pack(); // never a folder a session still writes to
             refresh();
         });
         screenOffButton = findViewById(R.id.screen_off);
@@ -309,6 +309,9 @@ public final class MainActivity extends Activity {
         startHint = findViewById(R.id.start_hint);
         testsToggle = findViewById(R.id.tests_toggle);
         testsGroup = findViewById(R.id.tests);
+        // The phone tests measure a new phone model's camera for the developers; sessions do not
+        // need them, so only debug builds (installed with adb) show them.
+        testsToggle.setVisibility(debugBuild() ? View.VISIBLE : View.GONE);
         testsToggle.setOnClickListener(v -> {
             boolean show = testsGroup.getVisibility() != View.VISIBLE;
             testsGroup.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -1374,9 +1377,12 @@ public final class MainActivity extends Activity {
     }
     // ---- Starting the service ---------------------------------------------------------------
 
+    private boolean debugBuild() {
+        return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+    }
+
     private void handleTestIntent(Intent intent) {
-        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-        if (!debuggable) return;
+        if (!debugBuild()) return;
         if (intent.hasExtra(EXTRA_CAMERA1)) SessionRunner.forceCamera1 = intent.getBooleanExtra(EXTRA_CAMERA1, false);
         if (intent.getBooleanExtra(EXTRA_AIM, false)) start(AIM);
         if (intent.getBooleanExtra(EXTRA_TAKE_PHOTO, false)) start(TEST_PHOTO);
