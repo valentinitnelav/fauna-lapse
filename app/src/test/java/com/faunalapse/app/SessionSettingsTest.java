@@ -96,11 +96,9 @@ public class SessionSettingsTest {
 
     @Test
     public void batteryCurrentInMilliamperes() {
-        assertEquals(350.0, BatteryMeter.milliamperes(-350), 0);        // Samsung M12: mA
-        assertEquals(350.0, BatteryMeter.milliamperes(-350000), 0);     // Android's documented µA
-        assertEquals(42.5, BatteryMeter.milliamperes(42500), 0);
-        assertNull(BatteryMeter.milliamperes(0));                       // not reported
-        assertNull(BatteryMeter.milliamperes(Integer.MIN_VALUE));
+        assertEquals(38.8, BatteryMeter.milliamperes(38.8, 350), 0);       // Samsung M12: mA
+        assertEquals(350.0, BatteryMeter.milliamperes(350000, 460000), 0); // Android's documented µA
+        assertEquals(5.0, BatteryMeter.milliamperes(5000, 460000), 0);     // µA in a break: 5 mA, not 5 A
     }
 
     @Test

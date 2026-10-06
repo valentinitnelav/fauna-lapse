@@ -23,7 +23,8 @@ final class BatteryMeter implements Runnable {
     private final long startMs = System.currentTimeMillis();
     private final CaptureService.Battery start;
     private volatile boolean cameraOpen;
-    private final double[] sumMa = new double[2]; // [0] camera closed, [1] open
+    private final double[] sumRaw = new double[2]; // [0] camera closed, [1] open; in the phone's unit
+    private int largestRaw;
     private final int[] samples = new int[2];
     private boolean charger;
     private boolean noCurrent;
@@ -54,25 +55,24 @@ final class BatteryMeter implements Runnable {
 
     private synchronized void sample() {
         if (CaptureService.Battery.read(context).charging) charger = true;
-        Double ma = milliamperes(manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW));
-        if (ma == null) {
-            noCurrent = true;
+        int raw = manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+        if (raw == 0 || raw == Integer.MIN_VALUE) {
+            noCurrent = true; // not reported
             return;
         }
         int i = cameraOpen ? 1 : 0;
-        sumMa[i] += ma;
+        sumRaw[i] += Math.abs((double) raw); // off the charger it only flows out; the sign differs by phone
         samples[i]++;
+        largestRaw = Math.max(largestRaw, Math.abs(raw));
     }
 
-    /** The current in mA (always positive), or null when the phone does not tell it. Android's
-     *  documentation says microamperes, but some phones give milliamperes (Samsung M12). A phone
-     *  that runs a session uses more than 10 mA, so larger numbers are microamperes. Off the
-     *  charger the current can only flow out of the battery, so its sign (which differs between
-     *  phones) is left out. */
-    static Double milliamperes(int raw) {
-        if (raw == 0 || raw == Integer.MIN_VALUE) return null;
-        double a = Math.abs((double) raw);
-        return a >= 10000 ? a / 1000 : a;
+    /** A reading in mA. Android's documentation says microamperes, but some phones give
+     *  milliamperes (Samsung M12), so the unit is decided once per session from the largest
+     *  reading: an open camera draws far more than 10 mA (about 200 mA), so 10000 or more means
+     *  microamperes. Each reading alone cannot tell: in the breaks a phone may draw less than
+     *  10 mA (a reading of 5000 is then 5 mA, not 5 A). */
+    static double milliamperes(double raw, int largestRaw) {
+        return largestRaw >= 10000 ? raw / 1000 : raw;
     }
 
     /** For the session_end record. */
@@ -108,7 +108,8 @@ final class BatteryMeter implements Runnable {
                 start.percent, end.percent, hours()));
         if (samples[1] > 0 && samples[0] > 0) {
             s.append(String.format(Locale.US, " (camera open %.0f mA, closed %.0f mA)",
-                    sumMa[1] / samples[1], sumMa[0] / samples[0]));
+                    milliamperes(sumRaw[1] / samples[1], largestRaw),
+                    milliamperes(sumRaw[0] / samples[0], largestRaw)));
         }
         return s.append('.').toString();
     }
@@ -118,6 +119,7 @@ final class BatteryMeter implements Runnable {
     }
 
     private Object mean(int i) {
-        return samples[i] == 0 ? JSONObject.NULL : Math.round(sumMa[i] / samples[i] * 10) / 10.0;
+        return samples[i] == 0 ? JSONObject.NULL
+                : Math.round(milliamperes(sumRaw[i] / samples[i], largestRaw) * 10) / 10.0;
     }
 }

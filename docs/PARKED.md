@@ -78,7 +78,8 @@ stands); anyone who wakes the phone could then see and stop the session without 
 
 **Why parked:** it needs such a hub (owner deciding). Until then: adb over Wi-Fi (Redmi: wireless
 debugging; Samsung: `adb tcpip 5555` over the cable first, until the phone restarts), with Wi-Fi on
-as a known bias in the results, or the owner unplugs the phone.
+as a known bias in the results, or the owner unplugs the phone. This works: the 1 h tests in
+`docs/PHONES.md` ran so, with adb disconnected during each hour and connected again afterwards.
 
 ## Packing each session into one file (zip)
 

@@ -38,7 +38,7 @@
     <string name="open_folder">Open the folder</string>
     <string name="screen_off">Screen off</string>
     <string name="screen_off_title">Allow the Screen off button?</string>
-    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nSome phones (for example Xiaomi) then show their own red warning with a general list of rights (erase all data and others): FaunaLapse asks only to lock the screen, as Android\'s page before it shows.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
+    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nSome phones then show their own red warning with a general list of rights (erase all data and others): FaunaLapse asks only to lock the screen, as Android\'s page before it shows.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
     <string name="screen_off_yes">Continue</string>
     <string name="screen_off_no">Not now</string>
     <string name="screen_off_reason">FaunaLapse uses this only for its Screen off button: it switches the screen off and locks the phone, as the power button does, so the phone need not be pressed where it stands. The session goes on.</string>
@@ -221,7 +221,7 @@
     <string name="video_fps_5">5</string>
     <string name="video_fps_10">10</string>
     <string name="video_fps_15">15</string>
-    <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast flying insects. Fewer frames give smaller files, but not in proportion: on the Samsung M12, 5 frames per s took about 55 % of the storage of 15, and 10 about 80 %.</string>
+    <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast flying insects. Fewer frames give smaller files, but not in proportion: on a test phone, 5 frames per s took about 55 % of the storage of 15, and 10 about 80 %.</string>
     <string name="break_label">Break between bursts or clips (min)</string>
     <string name="break_hint">Default 5 min: the camera rests about 83 % of the time with 60 s photo bursts, and half of the time with 5 min clips. It is switched off when the break is longer than 30 s. 0 = no break.</string>
     <string name="schedule_label">Record</string>
@@ -240,7 +240,7 @@
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
     <string name="screen_off_label">Screen off by itself after (min)</string>
-    <string name="screen_off_hint">In case Screen off is forgotten: during a session, FaunaLapse switches the screen off by itself this many minutes after the last touch on its main screen, as Screen off does (a screen left on uses much energy and warms the phone). 1 to 10 min; 0: never. Default 3 min: time to watch the first photos arrive. Until then the screen stays on, also on phones whose own screen timeout is shorter. Not during a pause. It needs the Screen off right (the first tap on Screen off asks for it).\n\nThe power button wakes the screen again. A double tap on the screen wakes it only on phones that offer this and have it turned on (it did not work on a Redmi Note 9S).</string>
+    <string name="screen_off_hint">During a session, if Screen off is forgotten: FaunaLapse switches the screen off this many minutes after the last touch (a screen left on uses energy and warms the phone). 1 to 10 min, or 0 for never. Default 3 min: time to watch the first photos arrive. Not during a pause. Needs the Screen off right (the first tap on Screen off asks for it). The power button wakes the screen; a double tap works only on some phones.</string>
     <string name="screen_off_note_right">Screen off is not allowed yet (the first tap on Screen off during a session asks): until then the phone\'s own screen timeout switches the screen off (now %1$s).</string>
     <string name="screen_off_note_never">Never: the screen goes off with Screen off, the power button or the phone\'s own screen timeout (now %1$s).</string>
     <string name="timeout_never">never</string>
@@ -257,11 +257,13 @@
     <string name="check_radios_button">Open settings</string>
     <string name="check_location">Location is on: other apps may use GPS. Turn it off for the field (after Get location).</string>
     <string name="check_location_button">Open settings</string>
+    <string name="check_stay_awake">Stay awake is on (in Developer options): while the phone charges, also from a power bank, its own screen timeout never switches the screen off. Turn it off for the field.</string>
+    <string name="check_stay_awake_button">Open settings</string>
     <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions.</string>
     <string name="check_battery_button">Allow</string>
     <string name="check_background">FaunaLapse is restricted in the background: the phone may stop a session.</string>
     <string name="check_background_button">Open settings</string>
-    <string name="check_ok">Airplane mode (flight mode) on; Wi-Fi, Bluetooth and location off; no battery limits for FaunaLapse: ready for the field.</string>
+    <string name="check_ok">Airplane mode (flight mode) on; Wi-Fi, Bluetooth, location and Stay awake off; no battery limits for FaunaLapse: ready for the field.</string>
     <string name="checklist_label">A phone used only as a camera</string>
     <string name="checklist_text">A phone that does nothing else saves energy and is less likely to stop the app in the field:\n• Reset it to factory settings; add no Google account and no SIM card.\n• Turn off automatic app and system updates.\n• Uninstall the apps you do not need, or disable them (in the phone\'s settings, under Apps).\n• Set the clock, then turn on airplane mode (flight mode): without network the clock is not corrected, and the session record uses it.\n• Some phones stop apps in the background with their own battery manager. Huawei: allow FaunaLapse to start and run in the background by hand (Battery, App launch). Xiaomi: set its battery saver to No restrictions. Samsung: add it to Never sleeping apps.\n• Run a test session with the screen off before the field day.</string>
 

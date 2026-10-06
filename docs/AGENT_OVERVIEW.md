@@ -49,7 +49,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
   keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
-- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 300 KB).
+- `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 220 to 300 KB).
 
 ## Defaults
 
@@ -89,8 +89,8 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 
 ## Open problems and next steps
 
-1. Battery per hour (for the README): 1 h photo and 1 h video sessions off the charger (the owner
-   unplugs; `battery` in `session_end`). Then long breaks: alarms instead of the wake lock.
+1. Battery: 1 h sessions in `docs/PHONES.md` (Redmi: the level falls up to 2 times faster than the
+   current says; run one from full to empty). Breaks: alarms, not the wake lock (Samsung 40-55 mA)?
 2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
 3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
    the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).

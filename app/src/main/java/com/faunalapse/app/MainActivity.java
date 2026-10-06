@@ -1621,6 +1621,10 @@ public final class MainActivity extends Activity {
             addCheck(getString(R.string.check_location), R.string.check_location_button,
                     new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
         }
+        if (c.stayAwake) {
+            addCheck(getString(R.string.check_stay_awake), R.string.check_stay_awake_button,
+                    new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
+        }
         Uri app = Uri.parse("package:" + getPackageName());
         if (c.batteryLimited) {
             addCheck(getString(R.string.check_battery), R.string.check_battery_button,

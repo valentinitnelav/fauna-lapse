@@ -11,9 +11,10 @@ import android.provider.Settings;
 import org.json.JSONObject;
 
 /**
- * Phone settings that matter when a phone is only a camera trap: radios off (airplane mode) and no
- * battery limits for FaunaLapse. Apps may only read them; the main screen opens the settings pages
- * and the session record keeps them. Read on the main thread: each value is a quick lookup.
+ * Phone settings that matter when a phone is only a camera trap: radios off (airplane mode), no
+ * battery limits for FaunaLapse and no Stay awake. Apps may only read them; the main screen opens
+ * the settings pages and the session record keeps them. Read on the main thread: each value is a
+ * quick lookup.
  */
 final class PhoneCheck {
 
@@ -24,6 +25,7 @@ final class PhoneCheck {
     final boolean batteryLimited;       // Android's battery optimisation applies to FaunaLapse
     final boolean backgroundRestricted; // the user restricted FaunaLapse in the background (Android 9+)
     final boolean batterySaver;
+    final boolean stayAwake;            // Developer options: the screen never sleeps by itself while charging
 
     private PhoneCheck(Context c) {
         ContentResolver r = c.getContentResolver();
@@ -33,6 +35,7 @@ final class PhoneCheck {
         int bluetooth = Settings.Global.getInt(r, Settings.Global.BLUETOOTH_ON, 0);
         bluetoothOn = bluetooth == 1 || (bluetooth == 2 && !airplaneMode); // 2: off while in airplane mode
         locationOn = locationOn(c);
+        stayAwake = Settings.Global.getInt(r, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) != 0;
         PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
         batteryLimited = !pm.isIgnoringBatteryOptimizations(c.getPackageName());
         batterySaver = pm.isPowerSaveMode();
@@ -55,7 +58,8 @@ final class PhoneCheck {
 
     /** True when nothing needs the user's attention before a field session. */
     boolean ready() {
-        return airplaneMode && !wifiOn && !bluetoothOn && !locationOn && !batteryLimited && !backgroundRestricted;
+        return airplaneMode && !wifiOn && !bluetoothOn && !locationOn && !stayAwake && !batteryLimited
+                && !backgroundRestricted;
     }
 
     /** For the session record. */
@@ -65,6 +69,7 @@ final class PhoneCheck {
         SessionLog.put(j, "wifi_on", wifiOn);
         SessionLog.put(j, "bluetooth_on", bluetoothOn);
         SessionLog.put(j, "location_on", locationOn);
+        SessionLog.put(j, "stay_awake_while_charging", stayAwake);
         SessionLog.put(j, "battery_optimisation_on", batteryLimited);
         SessionLog.put(j, "background_restricted", backgroundRestricted);
         SessionLog.put(j, "battery_saver_on", batterySaver);

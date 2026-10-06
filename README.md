@@ -46,8 +46,9 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
   (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
 - Screen off (a button, or by itself a few minutes after the last touch) and camera closed between
   bursts, to save power and avoid heat.
-- A phone check before Start: airplane mode, Wi-Fi, Bluetooth, location and battery limits, each
-  with a button to its settings page, so an old phone used only as a camera wastes no energy.
+- A phone check before Start: airplane mode, Wi-Fi, Bluetooth, location, battery limits and Stay
+  awake (a developer option that keeps the screen on while charging), each with a button to its
+  settings page, so an old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
 - During a session: the last saved photo on the main screen, and a pause to adjust the phone (with
@@ -147,3 +148,5 @@ is archived on Zenodo with a DOI.
 FaunaLapse is free and open-source software under the GNU Affero General Public License, version 3
 only (AGPL-3.0-only): anyone may use, study, change and share it, but whoever shares a changed
 version must share its source code under the same licence. See [LICENSE](LICENSE).
+
+For use under other terms (for example in a closed product), contact the author.

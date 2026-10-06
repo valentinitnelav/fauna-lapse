@@ -49,7 +49,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 
-### Sessions (app version 0.0.1-phase0, Camera2 unless stated, screen off, 2026-10-03 and 04)
+### Sessions (Camera2 unless stated, screen off, 2026-10-03 to 06)
 
 | Session | Result |
 |---|---|
@@ -59,6 +59,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Stop during a video clip | session ended within 1 s; the clip file was finished and playable (15 s), recorded with `stopped_early` |
 | Photos on a 32 GB SD card against the phone storage (step 1 s, 30 s bursts, 2 min run, 73 % square from 3000 px saved at 1280 px, about 285 KB; 2026-10-05) | 60 of 60 photos, 0 skipped on both; save time (cut, turn, JPEG, write) median 378 ms on the card and 322 ms on the phone, 90 % below 415 and 331 ms, slowest 1484 and 378 ms; photos started 3 ms late (median) on both. A card is fast enough for 1 photo per second |
 | Aim screen and a moved square (50 %, top right), Camera2 and Camera1 | view 1440x1080 (both interfaces, photos and video); focus and exposure areas on the square work in both; focus sharp in 1.4 to 1.9 s; saved squares show the same area as the screen, upright with the phone upright or turned left side up. Camera1 session at step 1 s: photo 0.95 to 1.6 s, 3 of 10 photo times skipped and the step warning shown |
+| Battery, 1 h off the charger, default settings, two runs each (2026-10-06, at night in a dim room; airplane mode, but Wi-Fi on for adb, which was disconnected during each hour; 63 % square saved at 1280 px) | Photos (a photo every 2 s for 60 s, 5 min breaks; the session ends after the last burst, at 55 min): 300 of 300 photos, 0 skipped, 3 ms late; camera open 194 and 189 mA, closed 39 and 52 mA: 65 and 73 mAh (1.4 to 1.6 % of the 5000 mAh battery per hour; the level fell by 0 and 1 %). Video (5 min clips at 5 fps, 5 min breaks): 6 of 6 clips, 1498 frames each, 0 to 3 ms late; open 256 and 262 mA, closed 55 mA: 154 and 157 mAh (3.1 to 3.4 % per hour; the level fell by 3 %); 136 MB per clip, the same in every clip. Battery 22 to 28 °C |
 
 ### What this means for 1 photo per second
 
@@ -110,3 +111,4 @@ speed-test runs and sessions, on the charger.
 |---|---|
 | Photos: step 2 s, 30 s bursts, 1 min breaks, 12 min run, 55 % square (1650 of 3000 real pixels) saved at 1280 px, fixed focus; screen off with the Screen off button | 8 bursts, 120 of 120 photos, 0 skipped, 0 errors (6 bursts with the screen off); photo 0.60 to 0.93 s (median 0.71), cut and save median 0.21 s, about 280 KB per photo; photos started 1 to 6 ms late; camera opened in 0.45 to 0.70 s, 4 s before each burst |
 | Video: 2 min clips of a 55 % square (5 fps), 1 min breaks, 15 min run; screen off with the power button; a pause after 33 s of clip 2, the square moved to the middle, Continue | 6 clips, 0 errors; 598 frames per 2 min clip, started 1 ms late; the paused clip went on until its planned end. Off-centre square: no hardware zoom (crop only in the centre), 792 real pixels saved at 768 px, 23 MB per 2 min; in the middle the camera zoomed (crop 2203x1652): 1438 real pixels saved at 1280 px, 55 MB per 2 min (1.6 GB per hour) |
+| Battery, 1 h off the charger, default settings (2026-10-06, as for the Samsung M12; 100 % square; FaunaLapse without battery limits) | Photos: 300 of 300 photos, 0 skipped, 4 ms late; camera open 272 mA, closed 18.5 mA: 65 mAh in 55 min (1.3 % of the 5020 mAh battery per hour; the level fell by 1 %). Video: 6 of 6 clips, 1498 frames each, 0 to 2 ms late, 111 MB per clip; open 268 mA, closed 19 mA: 145 mAh (2.9 % per hour), but the level fell by 6 % (also in a first run). Android's own counts since unplugging differ the same way (its power model 609 mAh, the level 914 to 965 mAh; learned capacity 5077 mAh): the level falls up to 2 times faster than the current says. Readings in the breaks 6 to 190 mA, mostly 10 to 30 mA (the phone reports microamperes). Battery 23 to 26 °C |
