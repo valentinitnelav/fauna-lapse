@@ -1,8 +1,7 @@
 # Agent overview: current state
 
-A short snapshot for coding agents (humans may read it too), read at the start of every session; at
-most 100 lines. Each entry says only what is true now and where it lives: replace or remove text when
-it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Last update: 2026-10-05.
+A short snapshot for coding agents, read at the start of every session (at most 100 lines): what is
+true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. Last update: 2026-10-06.
 
 ## What works now
 
@@ -14,11 +13,11 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
   aim screen to adjust, goes on by itself after 10 min). Tested on 2 phones.
 - **Main screen**: status card (state; while running: counts, last saved square or clip frame,
   warnings, phone checks, MB so far, Pause or Continue; folder, use, free space, memory card choice;
-  Open the folder; Screen off; last session, battery, clock fold away); 1 Aim; 2 Field metadata
-  (summary; on Change: phone model and ID, Camtrap DP setup fields, distance from a calibrated fixed
-  focus until typed, custom fields of 7 types, site photos, position typed or from Get location (GPS
-  off at the user's uncertainty goal or after 3 min), Location switch); 3 Schedule (summary; settings
-  on Change); 4 Phone for the field. A problem stops Aim and Start with a dialog to its card.
+  Open the folder; Pack the photo sessions into zips; Screen off; last session, battery, clock fold
+  away); 1 Aim; 2 Field metadata (summary; on Change: phone model and ID, Camtrap DP setup fields,
+  distance from a calibrated fixed focus until typed, custom fields of 7 types, site photos, position
+  typed or from Get location (GPS off at the user's uncertainty goal or after 3 min), Location
+  switch); 3 Schedule (summary; on Change); 4 Phone for the field. A problem: dialog to its card.
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch or slider for its size
   (real and saved pixels live); focus and exposure follow it; focus fixed (Camera2, 20 cm, slider,
@@ -26,7 +25,6 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 
 ## Key invariants
 
-- Product rules (Java 8, minSdk 24, no libraries, ROI square, schedule grid): `AGENTS.md`.
 - Schedule maths (windows may cross midnight; days count from the first window not over) lives in
   `CapturePlan`, square maths in `RoiMath`: no Android classes, unit tests in `app/src/test/`. Every
   answer comes from the clock time passed in, never from counters.
@@ -49,6 +47,8 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
   keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
+- Pack (`SessionZip`; Start waits): stored zips next to the folder (4 GB at most, then `_part2`); files
+  go after their zip is synced and read back; a session with recorded files the app cannot see stays.
 - `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 220 to 300 KB).
 
 ## Defaults
@@ -77,7 +77,7 @@ it changes, never add history. Rules and reasons: `AGENTS.md`; history: git. Las
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |
-| `Guards.java` | Heat pause, low battery and storage rules (unit tested) |
+| `Guards.java`, `SessionZip.java` | Heat pause, low battery and storage rules; photo sessions packed into checked zips (both unit tested) |
 | `SessionRunner.java` | Follows the plan: camera on and off, bursts and clips, saver thread, `session.jsonl`, screen status |
 | `SessionCamera.java` | Interface of a session camera; `Camera2Session.java` and `Camera1Session.java` implement it |
 | `RoiMath.java`, `PhotoSaver.java` | Square position, saved size, screen and focus-area maps, upright turn, video crop and texture corners (unit tested); cutting, turning and saving the photo square |

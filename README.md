@@ -100,11 +100,14 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
    again*; move the phone, the square or the focus, and tap *Continue session*. Nothing is recorded
    during the pause, and the session goes on by itself after 10 minutes. To stop early: tap *Stop
    session*, then *Stop*.
-6. **Afterwards:** connect the phone to a computer with a USB cable, choose *File transfer* on the
-   phone and copy the session folders from `Internal storage/Documents/FaunaLapse/` (or the same
-   folder on the SD card, if you chose it on the status card). Each folder
-   holds the photos (or videos) and `session.jsonl`, the record of every photo and event with the
-   field metadata and the battery use.
+6. **Afterwards:** tap *Pack* on the status card, best on the charger: each photo session becomes
+   one zip file, which copies much faster than thousands of photos (FaunaLapse checks every zip
+   before it deletes the session folder). Then connect the phone to a computer with a USB cable,
+   choose *File transfer* on the phone and copy the zips and video folders from
+   `Internal storage/Documents/FaunaLapse/` (or the same folder on the SD card, if you chose it on the
+   status card). Extract each zip to get its session folder back. Each folder holds the photos (or
+   videos) and `session.jsonl`, the record of every photo and event with the field metadata and the
+   battery use.
 
 Tips: a daily window may cross midnight (22:00-04:00), and 00:00-24:00 records all day, for example
 under the midnight sun. Memory cards differ in speed: before photos every 1 or 2 s on a card, run a

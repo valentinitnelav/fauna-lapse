@@ -65,9 +65,9 @@ Needs JDK 17+ and the Android SDK (platform 36), with its path in `local.propert
 ./gradlew lintDebug        # Android code checks: app/build/reports/lint-results-debug.txt
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 # Debug builds only: start a test without tapping (it starts 10 s later)
-adb shell am start -n com.faunalapse.app/.MainActivity --ez take_photo true
-adb shell am start -n com.faunalapse.app/.MainActivity --ez speed_test true
+adb shell am start -n com.faunalapse.app/.MainActivity --ez take_photo true    # or --ez speed_test true
 adb shell am start -n com.faunalapse.app/.MainActivity --ez aim true    # the aim screen
+adb shell am start -n com.faunalapse.app/.MainActivity --ez pack true   # pack the photo sessions at once
 # Add --ez camera1 true to any hook to use Camera1 on a Camera2 phone (until the app is closed)
 # Start a session; any setting can be given (names as in SessionSettings), the rest stays as saved
 adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \

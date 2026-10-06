@@ -47,6 +47,13 @@
                 <Button android:id="@+id/open_folder" style="@style/SecondaryButton" android:layout_width="0dp"
                     android:layout_weight="1" android:text="@string/open_folder" />
             </LinearLayout>
+            <!-- When nothing runs: photo sessions not packed yet, packing and its outcome (SessionZip) -->
+            <LinearLayout android:id="@+id/pack_group" style="@style/Group" android:visibility="gone">
+                <TextView style="@style/Label.Help" android:text="@string/pack_label" />
+                <TextView style="@style/Hint.Help" android:text="@string/pack_help" />
+                <TextView android:id="@+id/pack_status" style="@style/Body" android:textSize="15sp" />
+                <Button android:id="@+id/pack" style="@style/SecondaryButton" android:text="@string/pack_button" />
+            </LinearLayout>
             <!-- Pause during a session; while paused: the aim screen, and Continue -->
             <Button android:id="@+id/pause_session" style="@style/SecondaryButton" android:text="@string/pause_session" />
             <Button android:id="@+id/adjust_camera" style="@style/SecondaryButton" android:text="@string/adjust_camera" />

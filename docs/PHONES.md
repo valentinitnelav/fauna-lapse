@@ -48,6 +48,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Photo burst, processor use (step 2 s, 73 % square: 2190 real pixels saved at 1280; screen off; the phone's Power saving mode was on) | of one core: FaunaLapse 28 %, of which the square cut 20 % (0.43 to 0.46 s per photo on the saver thread); camera service 24 %, camera server 8 %; whole phone 111 %; photo 0.62 to 0.64 s. By the phone's power profile (one core at full speed 96 mA, camera 164 mA) the cut is about 5 % of a burst's energy |
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
+| Pack a photo session into a zip (`SessionZip`; 1280 px squares of about 145 KB) | about 19 ms per photo: write 3.3 (photos read 8 ahead on 4 threads; 15 when each was opened twice), check 0.8, delete 14 (in one call to Android's file index; one by one 16); 300 photos about 6 s, 5000 about 1.5 min. On the FAT32 memory card 23 ms per photo. Copy over USB *File transfer* to a Linux laptop (2026-10-06): the folder of 301 photos (43 MB) 13.8 s, its zip 1.5 s; the extracted zip equals the folder |
 
 ### Sessions (Camera2 unless stated, screen off, 2026-10-03 to 06)
 
@@ -104,6 +105,8 @@ speed-test runs and sessions, on the charger.
 | Video 15 fps 1080p / 720p / 480p | works; 11.8 / 8.3 / 1.5 MB per 10 s |
 | Time-lapse video 1080p, 5 and 1 frames per s | works; 2.9 and 0.9 MB per 10 s |
 | Autofocus once | 1.9 to 2.1 s, sharp |
+| Pack a photo session into a zip (1280 px squares of about 120 KB) | about 13 ms per photo: write 4.3, check 0.5, delete 5.7 (in one call to Android's file index; one by one 17.6) |
+| Android's file index lost files (2026-10-06) | the last 120 of 301 photos of a 1 h session (from 00:39, screen off) were on the storage (adb saw them) but not in the index, so FaunaLapse could not see them (Android 11+ shows an app only its indexed files). Pack leaves such a session as it is (the record names the missing photos); copy it as it is |
 
 ### Sessions (Camera2, screen off, MIUI battery limits on)
 

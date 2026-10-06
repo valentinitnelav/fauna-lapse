@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -15,11 +16,13 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -32,6 +35,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.format.Formatter;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,9 +64,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Main screen: a status card (what runs now, where the files go; the last session, battery and
@@ -77,6 +83,7 @@ public final class MainActivity extends Activity {
     private static final String EXTRA_TAKE_PHOTO = "take_photo";
     private static final String EXTRA_START_SESSION = "start_session";
     private static final String EXTRA_STOP_SESSION = "stop_session";
+    private static final String EXTRA_PACK = "pack"; // pack the photo sessions (SessionZip)
     private static final String EXTRA_AIM = "aim";
     private static final String EXTRA_CAMERA1 = "camera1";
     private static final int PERMISSION_REQUEST = 1;
@@ -119,6 +126,11 @@ public final class MainActivity extends Activity {
     private List<Storage.Place> places; // listed when the screen opens
     private boolean buildingPlaces; // the place buttons are being made: not a choice
     private long[][] storageUse; // per place: bytes and sessions in its FaunaLapse folder; null until counted
+    private long[] unpacked; // photo sessions not packed (SessionZip): number and bytes; null until counted
+    private View packGroup;
+    private TextView packStatus;
+    private Button packButton;
+    private boolean wasPacking;
     private boolean wasRunning;
     private boolean wasSession;
     private long lastTouchMs;        // elapsedRealtime of the last touch on this screen
@@ -241,6 +253,14 @@ public final class MainActivity extends Activity {
             showStorage();
         });
         findViewById(R.id.open_folder).setOnClickListener(v -> openFolder());
+        packGroup = findViewById(R.id.pack_group);
+        packStatus = findViewById(R.id.pack_status);
+        packButton = findViewById(R.id.pack);
+        packButton.setOnClickListener(v -> {
+            if (SessionZip.running()) SessionZip.last.stop = true;
+            else pack();
+            refresh();
+        });
         screenOffButton = findViewById(R.id.screen_off);
         screenOffButton.setOnClickListener(v -> screenOff());
         screenOffRight = findViewById(R.id.screen_off_right);
@@ -1025,30 +1045,136 @@ public final class MainActivity extends Activity {
         return r == Math.rint(r) ? String.valueOf((long) r) : String.valueOf(r);
     }
 
-    /** Counts what each FaunaLapse folder holds, on a second thread: many files take a moment. */
+    /** Counts what each FaunaLapse folder holds (session folders and zips), and the photo sessions
+     *  not packed yet, on a second thread: many files take a moment. */
     private void countStorage() {
         final List<Storage.Place> counted = places;
+        final List<File> dirs = sessionDirs();
+        final SessionZip run = SessionZip.last;
+        // Sessions the last packing left as they are (hidden files) do not count as waiting.
+        final List<String> hidden = run == null || !run.finished ? Collections.emptyList() : run.hidden;
         new Thread(() -> {
             long[][] use = new long[counted.size()][];
-            for (int i = 0; i < use.length; i++) {
-                File[] sessions = counted.get(i).dir.listFiles(File::isDirectory);
-                use[i] = new long[] {0, sessions == null ? 0 : sessions.length};
-                if (sessions != null) for (File f : sessions) use[i][0] += bytes(f);
+            long[] waiting = {0, 0};
+            for (int i = 0; i < dirs.size(); i++) {
+                File[] items = dirs.get(i).listFiles(f -> f.isDirectory() || f.getName().endsWith(".zip"));
+                long bytes = 0;
+                Set<String> sessions = new HashSet<>(); // a session may have more zips
+                if (items != null) {
+                    for (File f : items) {
+                        long b = SessionZip.bytes(f);
+                        bytes += b;
+                        sessions.add(SessionZip.sessionName(f));
+                        if (SessionZip.isPhotoSession(f) && !hidden.contains(f.getName())) {
+                            waiting[0]++;
+                            waiting[1] += b;
+                        }
+                    }
+                }
+                if (i < use.length) use[i] = new long[] {bytes, sessions.size()};
             }
             handler.post(() -> {
                 if (counted != places) return; // listed again meanwhile
                 storageUse = use;
+                unpacked = waiting;
                 showStorage();
             });
         }, "storage").start();
     }
 
-    private static long bytes(File f) {
-        File[] inside = f.listFiles();
-        if (inside == null) return f.length();
-        long sum = 0;
-        for (File g : inside) sum += bytes(g);
-        return sum;
+    /** The FaunaLapse folder of each place, then the app's own one if no place uses it. */
+    private List<File> sessionDirs() {
+        List<File> dirs = new ArrayList<>();
+        for (Storage.Place p : places) dirs.add(p.dir);
+        File own = Storage.appSessionsDir(this);
+        if (!dirs.contains(own)) dirs.add(own);
+        return dirs;
+    }
+
+    /** Packs the photo sessions of all places (SessionZip) on a second thread, with a wake lock so
+     *  it goes on with the screen off; Android 10 and older then update their file index, which a
+     *  computer sees over USB (as SessionRunner). */
+    private void pack() {
+        final SessionZip run = new SessionZip(SessionZip.photoSessions(sessionDirs()));
+        final Context app = getApplicationContext();
+        if (Build.VERSION.SDK_INT >= 30) run.bulkDelete = files -> deleteFromIndex(app, files);
+        SessionZip.last = run;
+        final PowerManager.WakeLock lock = ((PowerManager) getSystemService(POWER_SERVICE))
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FaunaLapse:pack");
+        lock.acquire(4 * 3600000L); // a safety net: released at the end
+        new Thread(() -> {
+            long start = SystemClock.elapsedRealtime();
+            run.packAll();
+            Log.i(CaptureService.TAG, "pack: " + run.packed + " of " + run.folders.size() + " sessions, "
+                    + run.totalBytes / 1000000 + " MB in " + (SystemClock.elapsedRealtime() - start) + " ms (write "
+                    + run.writeMs + ", check " + run.checkMs + ", delete " + run.deleteMs + ")"
+                    + (run.hidden.isEmpty() ? "" : ", hidden files: " + run.hidden + " " + run.hiddenFiles)
+                    + (run.stopped ? ", stopped" : "") + (run.failedFolder == null ? ""
+                    : ", failed at " + run.failedFolder.getName() + ": " + run.failure + " " + run.neededBytes)
+                    + (run.notDeleted > 0 ? ", not deleted: " + run.notDeleted : ""));
+            if (Build.VERSION.SDK_INT <= 29 && !run.changed.isEmpty()) {
+                MediaScannerConnection.scanFile(app, run.changed.toArray(new String[0]), null, null);
+            }
+            if (lock.isHeld()) lock.release();
+        }, "pack").start();
+    }
+
+    /** Deletes the files through Android's file index, which deletes them from the storage too: one
+     *  call per 500 files (SessionZip.BulkDelete). Only the app's own files match. DATA: the path,
+     *  deprecated for reading files, still the column to find them by. */
+    @SuppressWarnings("deprecation")
+    private static void deleteFromIndex(Context app, List<File> files) {
+        for (int i = 0; i < files.size(); i += 500) {
+            List<File> batch = files.subList(i, Math.min(files.size(), i + 500));
+            String[] paths = new String[batch.size()];
+            StringBuilder where = new StringBuilder(MediaStore.MediaColumns.DATA + " IN (");
+            for (int k = 0; k < paths.length; k++) {
+                paths[k] = batch.get(k).getPath();
+                where.append(k == 0 ? "?" : ",?");
+            }
+            app.getContentResolver().delete(MediaStore.Files.getContentUri("external"), where + ")", paths);
+        }
+    }
+
+    /** While nothing records: the photo sessions not packed yet, packing, and how it ended. */
+    private void showPack(boolean running, boolean packing) {
+        SessionZip run = SessionZip.last;
+        boolean waiting = unpacked != null && unpacked[0] > 0;
+        packGroup.setVisibility(!running && (packing || waiting || run != null) ? View.VISIBLE : View.GONE);
+        List<String> lines = new ArrayList<>();
+        if (packing) {
+            lines.add(getString(R.string.pack_progress, run.current + 1, run.folders.size(), run.percent()));
+        } else {
+            if (run != null) {
+                if (run.packed > 0) {
+                    lines.add(getResources().getQuantityString(R.plurals.pack_done, run.packed, run.packed));
+                }
+                if (run.stopped) {
+                    lines.add(getString(R.string.pack_stopped));
+                } else if (run.failedFolder != null) {
+                    lines.add(run.failure == null
+                            ? getString(R.string.pack_no_space, run.failedFolder.getName(), size(run.neededBytes))
+                            : getString(R.string.pack_failed, run.failedFolder.getName(), run.failure));
+                }
+                if (!run.hidden.isEmpty()) {
+                    lines.add(getResources().getQuantityString(R.plurals.pack_hidden, run.hiddenFiles,
+                            TextUtils.join(", ", run.hidden), run.hiddenFiles));
+                }
+                if (run.notDeleted > 0) {
+                    lines.add(getResources().getQuantityString(R.plurals.pack_not_deleted, run.notDeleted,
+                            run.notDeleted));
+                }
+            }
+            if (waiting) {
+                lines.add(getResources().getQuantityString(R.plurals.pack_waiting, (int) unpacked[0],
+                        (int) unpacked[0], size(unpacked[1])));
+            }
+        }
+        show(packStatus, TextUtils.join(" ", lines));
+        String button = getString(packing ? R.string.pack_stop : R.string.pack_button);
+        if (!button.contentEquals(packButton.getText())) packButton.setText(button);
+        packButton.setVisibility(packing || waiting ? View.VISIBLE : View.GONE);
+        packButton.setEnabled(!packing || !run.stop);
     }
 
     /** One button per place (shown only when there is a memory card). */
@@ -1256,6 +1382,7 @@ public final class MainActivity extends Activity {
         if (intent.getBooleanExtra(EXTRA_TAKE_PHOTO, false)) start(TEST_PHOTO);
         if (intent.getBooleanExtra(CaptureService.EXTRA_SPEED_TEST, false)) start(SPEED_TEST);
         if (intent.getBooleanExtra(EXTRA_STOP_SESSION, false)) stopSession();
+        if (intent.getBooleanExtra(EXTRA_PACK, false) && !CaptureService.running && !SessionZip.running()) pack();
         if (intent.getBooleanExtra(EXTRA_START_SESSION, false)) {
             // Optional values, for example: --es mode video --es clip_min 0.5 --es run_min 6
             String m = intent.getStringExtra("mode");
@@ -1317,7 +1444,7 @@ public final class MainActivity extends Activity {
             requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
             return;
         }
-        if (CaptureService.running) return;
+        if (CaptureService.running || SessionZip.running()) return;
         if (what == AIM) {
             startActivity(new Intent(this, AimActivity.class));
             return;
@@ -1403,7 +1530,9 @@ public final class MainActivity extends Activity {
         show(lastSessionText, running ? "" : lastSession);
         showDetailsToggle();
         if (running) lastSession = null; // read again when it has ended
-        if (wasRunning && !running) countStorage();
+        boolean packing = SessionZip.running();
+        if ((wasRunning && !running) || (wasPacking && !packing)) countStorage();
+        wasPacking = packing;
         // A session took the site photos and their text at its start: show what is left.
         if ((session && !wasRunning) || (wasSession && !running)) showField(FieldInfo.load(this));
         if (session && !wasSession) {
@@ -1435,7 +1564,8 @@ public final class MainActivity extends Activity {
         screenOffRight.setVisibility(!running && detailsOpen && ScreenOff.allowed(this) ? View.VISIBLE : View.GONE);
         startButton.setVisibility(running ? View.GONE : View.VISIBLE);
         startHint.setVisibility(running ? View.GONE : View.VISIBLE);
-        setControlsEnabled(!running);
+        setControlsEnabled(!running && !packing); // a session waits until packing ends
+        showPack(running, packing);
         if (!running) {
             showScheduleSummary();
             showFieldSummary();

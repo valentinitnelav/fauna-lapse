@@ -81,27 +81,6 @@ debugging; Samsung: `adb tcpip 5555` over the cable first, until the phone resta
 as a known bias in the results, or the owner unplugs the phone. This works: the 1 h tests in
 `docs/PHONES.md` ran so, with adb disconnected during each hour and connected again afterwards.
 
-## Packing each session into one file (zip)
-
-**Wish:** faster copies to a computer: one file per session instead of thousands of photos.
-
-**What was found:**
-- Over "File transfer" (MTP), each file costs extra time. Samsung M12 to a Linux laptop: 300 files
-  of 400 KB took 12 to 16 s, one file of the same 117 MB 5 s (2.5 to 3 times faster). A day of
-  photos (about 4800) would take 3 to 4 min per phone instead of about 1; Windows is often slower
-  with many files.
-- Android has zip built in (`java.util.zip`): no library, a few KB in the APK. JPEG and MP4 are
-  already compressed (1 to 3 % smaller), so the files are only stored, not compressed: faster and
-  less battery. Unzipping checks every file (CRC), so a broken copy shows.
-- Costs: free space as large as the session while packing, time and battery on the phone (on the
-  charger), and an unzip step on the computer. Writing into a zip during the session is not safe:
-  an empty battery or a crash may damage the whole file.
-
-**Option studied:** a "Pack for the computer" button per finished session (on the charger; the
-originals deleted only after the zip is checked). A card reader is fast without it.
-
-**Why parked:** not needed before the first release (owner).
-
 ## Emulated phones
 
 **Wish:** test other phones (for example Android 7) without having them.
