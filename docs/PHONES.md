@@ -112,3 +112,45 @@ speed-test runs and sessions, on the charger.
 | Photos: step 2 s, 30 s bursts, 1 min breaks, 12 min run, 55 % square (1650 of 3000 real pixels) saved at 1280 px, fixed focus; screen off with the Screen off button | 8 bursts, 120 of 120 photos, 0 skipped, 0 errors (6 bursts with the screen off); photo 0.60 to 0.93 s (median 0.71), cut and save median 0.21 s, about 280 KB per photo; photos started 1 to 6 ms late; camera opened in 0.45 to 0.70 s, 4 s before each burst |
 | Video: 2 min clips of a 55 % square (5 fps), 1 min breaks, 15 min run; screen off with the power button; a pause after 33 s of clip 2, the square moved to the middle, Continue | 6 clips, 0 errors; 598 frames per 2 min clip, started 1 ms late; the paused clip went on until its planned end. Off-centre square: no hardware zoom (crop only in the centre), 792 real pixels saved at 768 px, 23 MB per 2 min; in the middle the camera zoomed (crop 2203x1652): 1438 real pixels saved at 1280 px, 55 MB per 2 min (1.6 GB per hour) |
 | Battery, 1 h off the charger, default settings (2026-10-06, as for the Samsung M12; 100 % square; FaunaLapse without battery limits) | Photos: 300 of 300 photos, 0 skipped, 4 ms late; camera open 272 mA, closed 18.5 mA: 65 mAh in 55 min (1.3 % of the 5020 mAh battery per hour; the level fell by 1 %). Video: 6 of 6 clips, 1498 frames each, 0 to 2 ms late, 111 MB per clip; open 268 mA, closed 19 mA: 145 mAh (2.9 % per hour), but the level fell by 6 % (also in a first run). Android's own counts since unplugging differ the same way (its power model 609 mAh, the level 914 to 965 mAh; learned capacity 5077 mAh): the level falls up to 2 times faster than the current says. Readings in the breaks 6 to 190 mA, mostly 10 to 30 mA (the phone reports microamperes). Battery 23 to 26 °C |
+
+## Further battery tests
+
+### Used phones, test 2026-10-06
+
+1. Samsung Galaxy M12 (SM-M127F), Android 13, 2021
+2. Xiaomi Redmi Note 9S, Android 12 (MIUI 14), 2020
+
+Settings and conditions:
+
+- one hour of photos and one hour of video each, plus repeats;
+- photos every 2 s for 60 s with 5-minute breaks; 
+- video in 5-minute clips at 5 frames per second with 5-minute breaks;
+- Both phones were off the charger, in airplane mode with Wi-Fi on, with location off, at room temperature (overnight).;
+- `adb` disconnected during each test hour.
+
+| Per hour of session  | 1. Samsung Galaxy M12 | 2. Xiaomi Redmi Note 9S |
+|---|---|---|
+| Photos: camera open 11 of 55 min; two runs | 71 and 80 mA on average; ~1.5 % of the battery | 1 mA; ~1.4 % |
+| Video: camera open 31 of 55 min; two runs | 167 and 171 mA; ~3.3 % of the battery | 157 mA; ~3.1 %, but the level fell 6 % |
+| Camera open | 189 to 262 mA | 268 to 272 mA |
+| Camera closed (breaks) | 39 to 55 mA | 19 mA |
+
+**Rough estimates**: 
+
+A session stops itself when the battery reaches 15 % level. A full 5000 mAh battery would then last about 2 days of photo sessions or about 1 day of video with these settings, running without stop. Daily windows stretch this over more days. Heat, cold or an older battery in the field may shorten it.
+
+**Possible biases**: 
+
+- Wi-Fi was on, which costs a little within this test setup.
+- Some phones report the current in milliamperes (the Samsung) and others in microamperes (the Redmi), and the app guesses the unit and tries to adjust. The unit is decided once per session from the largest reading.
+- Xiaomi phone - in video mode, its battery level fell about twice as fast as the measured current says (6 % instead of about 3 % per hour). Android's own counters show the same gap since unplugging (609 mAh by its power model, about 940 mAh by the level). Android counts the battery at a full 5077 mAh, so it is not worn out. On the Samsung, the current and the level agree. Next proposed step - a long test from full battery down to the 15 % stop. But this will be specific to these phones' battery conditions.
+
+**Behaviour:** no bugs in the sessions
+
+- Photos: 1,320 in total, none skipped, none late by more than 13 ms, no errors.
+- Video: 24 clips, each with exactly 1498 frames, started 0 to 3 ms late.
+- Temperature: 22 to 28 °C, no heat pause.
+- Tested in room overnight with artificial light on: the automatic exposure handled it.
+- Length: a "1 h" run ends after 55 min, because the next burst would start at 60 min. This is how the schedule works, not a bug.
+
+
