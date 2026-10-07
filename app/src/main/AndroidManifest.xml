@@ -8,9 +8,11 @@
     <!-- Keeps the processor awake while the screen is off. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Foreground service: background work that Android keeps alive because it shows a
-         permanent notification. Android 9+ needs the first line, Android 14+ also the second. -->
+         permanent notification. Android 9+ needs the first line, Android 14+ also one per type:
+         camera (sessions, tests), data sync (packing sessions into zips). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Android 13+: needed to show that notification. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Lets the phone check ask once to run FaunaLapse without battery limits, so long sessions
@@ -60,6 +62,12 @@
             android:name=".CaptureService"
             android:exported="false"
             android:foregroundServiceType="camera" />
+
+        <!-- Pack (PackService): "data sync" is Android's type for local file work. -->
+        <service
+            android:name=".PackService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <!-- Site photos (SitePhotos): the phone's camera app writes each photo through this link.
              Not exported: a camera app may use only the one link FaunaLapse gives it. -->

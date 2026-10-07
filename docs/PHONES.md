@@ -49,7 +49,7 @@ Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two s
 | Exposure, Camera1 vs Camera2 photo of the same scene | Camera2 about one stop brighter (bright labels clip to white); Camera1 darker. Exposure must be measured on the ROI either way |
 | Battery temperature during 3 min of tests | 25 °C, no rise (phone on USB power) |
 | Pack a photo session into a zip (`SessionZip`; 1280 px squares of about 145 KB) | about 19 ms per photo: write 3.3 (photos read 8 ahead on 4 threads; 15 when each was opened twice), check 0.8, delete 14 (in one call to Android's file index; one by one 16); 300 photos about 6 s, 5000 about 1.5 min. On the FAT32 memory card 23 ms per photo. Copy over USB *File transfer* to a Linux laptop (2026-10-06): the folder of 301 photos (43 MB) 13.8 s, its zip 1.5 s; the extracted zip equals the folder |
-| Pack 4019 photos of 2976 px (1.33 MB, 5.4 GB) on the FAT32 card (2026-10-06) | zips of 3,998,870,872 and 1,437,547,521 bytes, no Zip64; about 1.3 min per GB (write 20 MB/s, check about 80 MB/s, delete 7 ms per photo); the 4.0 GB zip copied over USB *File transfer* in 150 s (27 MB/s); all 4022 files (2 site photos) identical. App force-stopped 1 s after zip 1: the next Pack deleted the photos in it and made `_part2` |
+| Pack 4019 photos of 2976 px (1.33 MB, 5.4 GB) on the FAT32 card (2026-10-06) | zips of 3,998,870,872 and 1,437,547,521 bytes, no Zip64; about 1.3 min per GB (write 20 MB/s, check about 80 MB/s, delete 7 ms per photo); the 4.0 GB zip copied over USB *File transfer* in 150 s (27 MB/s); all 4022 files (2 site photos) identical. App force-stopped 1 s after zip 1: the next Pack deleted the photos in it and made `_part2`. As a foreground service with Home pressed and the screen off: priority (`oom_score_adj`) 200 throughout, 0.94 GB in 110 s, all 1692 files identical |
 
 ### Sessions (Camera2 unless stated, screen off, 2026-10-03 to 06)
 
@@ -108,7 +108,7 @@ speed-test runs and sessions, on the charger.
 | Time-lapse video 1080p, 5 and 1 frames per s | works; 2.9 and 0.9 MB per 10 s |
 | Autofocus once | 1.9 to 2.1 s, sharp |
 | Pack a photo session into a zip (1280 px squares of about 120 KB) | about 13 ms per photo: write 4.3, check 0.5, delete 5.7 (in one call to Android's file index; one by one 17.6) |
-| Pack 4952 photos of 2976 px (0.93 MB, 4.4 GB) (2026-10-06) | zips of 3,999,632,472 and 369,738,616 bytes, no Zip64; 147 s (write 51 s, 86 MB/s; check 17 s; delete 73 s, one by one, as the index spelled the folder `documents`); all 4954 files identical. Force-stopped at 2.4 GB written: the folder stayed whole, the next Pack started over. With FaunaLapse in the background (Home, screen off), Android's low-memory killer closed it after 20 s (critical memory pressure while writing); in front with the screen off it finished |
+| Pack 4952 photos of 2976 px (0.93 MB, 4.4 GB) (2026-10-06) | zips of 3,999,632,472 and 369,738,616 bytes, no Zip64; 147 s (write 51 s, 86 MB/s; check 17 s; delete 73 s, one by one, as the index spelled the folder `documents`); all 4954 files identical. Force-stopped at 2.4 GB written: the folder stayed whole, the next Pack started over. With FaunaLapse in the background (Home, screen off), Android's low-memory killer closed it after 20 s (critical memory pressure while writing); in front with the screen off it finished. As a foreground service (Home, screen off): 1.3 GB in 31 s, all 1800 files identical; under the same pressure the killer closed other apps (priority 995 to 999), not FaunaLapse |
 | Session files missing from a folder listing (2026-10-06) | Android 11 to 13 index a file an app writes as "pending" until a media scan (idle and charging, or on demand); the app still lists and opens its own pending files. But the index sometimes stores the folder spelled "documents/..." instead of "Documents/..." (the last 120 of 301 photos of a 1 h session; later all 4954 files of a session): a listing then misses those files, while each one still opens by its name, and a computer over USB sees them all. Pack takes the files the record names by their names |
 
 ### Sessions (Camera2, screen off, MIUI battery limits on)
@@ -124,7 +124,7 @@ speed-test runs and sessions, on the charger.
 
 | Test | Result |
 |---|---|
-| Photos at the largest square (2976 of 3000 px), step 1 s, 10 min, charging; then Pack with FaunaLapse in the background and the screen off (2026-10-06) | 600 of 600 photos, 0 skipped, cut and save 0.27 s, 1.29 MB per photo; Pack: 817 MB in 9 s (write 2.0, check 3.2, delete 3.5); all 601 files identical |
+| Photos at the largest square (2976 of 3000 px), step 1 s, 10 min, charging; then Pack with FaunaLapse in the background and the screen off (2026-10-06) | 600 of 600 photos, 0 skipped, cut and save 0.27 s, 1.29 MB per photo; Pack: 817 MB in 9 s (write 2.0, check 3.2, delete 3.5); all 601 files identical. As a foreground service (Home, screen off): Android allowed it (type data sync), priority 50, 1.9 GB in 19 s, all 1801 files identical |
 
 ## Further battery tests
 

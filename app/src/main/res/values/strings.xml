@@ -50,7 +50,7 @@
         <item quantity="other">%d sessions</item>
     </plurals>
     <string name="pack_label">Pack photo sessions for the computer</string>
-    <string name="pack_help">A computer copies one large file much faster than thousands of photos (over a USB cable up to 9 times faster, most for small photos). Pack puts each finished photo session into one zip file, in the same folder. The photos are not compressed, so this is quick: about 1 to 2 minutes for 5000 photos of 1280 px, and up to 1.5 minutes per GB for larger photos (memory cards are the slowest). Keep the phone on the charger and FaunaLapse open; the screen may go off. If you leave FaunaLapse, Android may close it to free memory: then tap Pack again, nothing is lost. FaunaLapse reads each zip back and checks every file before it deletes the session folder. On the computer, extract the zip (Windows: right click, Extract All) to get the session folder back. A session larger than 4 GB, or one packed with little free space, gets more zip files (_part2 and on): extract them all into the same folder. Video sessions stay as they are: their few large files copy fast.</string>
+    <string name="pack_help">A computer copies one large file much faster than thousands of photos (over a USB cable up to 9 times faster, most for small photos). Pack puts each finished photo session into one zip file, in the same folder. The photos are not compressed, so this is quick: about 1 to 2 minutes for 5000 photos of 1280 px, and up to 1.5 minutes per GB for larger photos (memory cards are the slowest). Best with the phone on the charger. Packing goes on with the screen off or in another app (a notification shows it); if Android stops it anyway, tap Pack again: nothing is lost. FaunaLapse reads each zip back and checks every file before it deletes the session folder. On the computer, extract the zip (Windows: right click, Extract All) to get the session folder back. A session larger than 4 GB, or one packed with little free space, gets more zip files (_part2 and on): extract them all into the same folder. Video sessions stay as they are: their few large files copy fast.</string>
     <plurals name="pack_waiting">
         <item quantity="one">Not packed yet: %1$d photo session (%2$s).</item>
         <item quantity="other">Not packed yet: %1$d photo sessions (%2$s).</item>
@@ -354,12 +354,14 @@
     <string name="camera_permission_needed">FaunaLapse needs the camera permission to take photos. Tap the button again to allow it.</string>
 
     <!-- Notification -->
-    <string name="channel_name">Photo capture</string>
+    <string name="channel_name">Sessions, tests and packing</string>
     <string name="notification_title">FaunaLapse is running a camera test</string>
     <string name="notification_text">The camera closes again when the test ends.</string>
     <string name="notification_session_title">FaunaLapse session running</string>
     <string name="notification_session_text">Photos or video on the schedule. Tap to open the app.</string>
     <string name="notification_paused_title">FaunaLapse session paused</string>
     <string name="notification_paused_text">Nothing is recorded. It goes on by itself at %1$s.</string>
+    <string name="notification_pack_title">FaunaLapse is packing sessions</string>
+    <string name="notification_pack_text">Zip files for the computer. Tap to open the app.</string>
     <string name="notification_paused_end">Nothing is recorded. The session ends at %1$s.</string>
 </resources>

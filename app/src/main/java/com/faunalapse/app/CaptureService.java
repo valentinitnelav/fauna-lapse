@@ -242,9 +242,9 @@ public final class CaptureService extends Service {
         }
     }
 
-    /** The permanent notification; a tap opens the main screen (status, Pause and Stop). */
+    /** The permanent notification (also PackService); a tap opens the main screen. */
     @SuppressWarnings("deprecation") // Notification.Builder(Context) is the only choice before Android 8
-    private static Notification notification(Context context, String title, String text) {
+    static Notification notification(Context context, String title, String text) {
         Notification.Builder builder;
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager nm = context.getSystemService(NotificationManager.class);

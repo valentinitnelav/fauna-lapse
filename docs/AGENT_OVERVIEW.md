@@ -47,8 +47,8 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
   keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
-- Pack (`SessionZip`; Start waits): stored zips by the folder (4 GB at most, then `_part2`); files go once
-  their zip is synced and read back; recorded files a listing misses go in by name (if one is gone: none).
+- Pack (`SessionZip` in the foreground service `PackService`; Start waits): stored zips by the folder (4 GB
+  at most, then `_part2`); files go once their zip is synced and read back; files a listing misses go by name.
 - `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 220 to 300 KB).
 
 ## Defaults
@@ -77,7 +77,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |
-| `Guards.java`, `SessionZip.java` | Heat pause, low battery and storage rules; photo sessions packed into checked zips (both unit tested) |
+| `Guards.java`, `SessionZip.java`, `PackService.java` | Heat pause, low battery and storage rules; photo sessions packed into checked zips (both unit tested), in a foreground service of type data sync |
 | `SessionRunner.java` | Follows the plan: camera on and off, bursts and clips, saver thread, `session.jsonl`, screen status |
 | `SessionCamera.java` | Interface of a session camera; `Camera2Session.java` and `Camera1Session.java` implement it |
 | `RoiMath.java`, `PhotoSaver.java` | Square position, saved size, screen and focus-area maps, upright turn, video crop and texture corners (unit tested); cutting, turning and saving the photo square |

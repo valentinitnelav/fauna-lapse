@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -16,13 +15,11 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -35,7 +32,6 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.format.Formatter;
 import android.text.style.ImageSpan;
-import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
@@ -1094,49 +1090,9 @@ public final class MainActivity extends Activity {
         return dirs;
     }
 
-    /** Packs the photo sessions of all places (SessionZip) on a second thread, with a wake lock so
-     *  it goes on with the screen off; Android 10 and older then update their file index, which a
-     *  computer sees over USB (as SessionRunner). */
+    /** Packs the photo sessions of all places (SessionZip in PackService). */
     private void pack() {
-        final SessionZip run = new SessionZip(SessionZip.photoSessions(sessionDirs()));
-        final Context app = getApplicationContext();
-        if (Build.VERSION.SDK_INT >= 30) run.bulkDelete = files -> deleteFromIndex(app, files);
-        SessionZip.last = run;
-        final PowerManager.WakeLock lock = ((PowerManager) getSystemService(POWER_SERVICE))
-                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FaunaLapse:pack");
-        lock.acquire(4 * 3600000L); // a safety net: released at the end
-        new Thread(() -> {
-            long start = SystemClock.elapsedRealtime();
-            run.packAll();
-            Log.i(CaptureService.TAG, "pack: " + run.packed + " of " + run.folders.size() + " sessions, "
-                    + run.totalBytes / 1000000 + " MB in " + (SystemClock.elapsedRealtime() - start) + " ms (write "
-                    + run.writeMs + ", check " + run.checkMs + ", delete " + run.deleteMs + ")"
-                    + (run.hidden.isEmpty() ? "" : ", hidden files: " + run.hidden + " " + run.hiddenFiles)
-                    + (run.stopped ? ", stopped" : "") + (run.failedFolder == null ? ""
-                    : ", failed at " + run.failedFolder.getName() + ": " + run.failure + " " + run.neededBytes)
-                    + (run.notDeleted > 0 ? ", not deleted: " + run.notDeleted : ""));
-            if (Build.VERSION.SDK_INT <= 29 && !run.changed.isEmpty()) {
-                MediaScannerConnection.scanFile(app, run.changed.toArray(new String[0]), null, null);
-            }
-            if (lock.isHeld()) lock.release();
-        }, "pack").start();
-    }
-
-    /** Deletes the files through Android's file index, which deletes them from the storage too: one
-     *  call per 500 files (SessionZip.BulkDelete). Only the app's own files match. DATA: the path,
-     *  deprecated for reading files, still the column to find them by. */
-    @SuppressWarnings("deprecation")
-    private static void deleteFromIndex(Context app, List<File> files) {
-        for (int i = 0; i < files.size(); i += 500) {
-            List<File> batch = files.subList(i, Math.min(files.size(), i + 500));
-            String[] paths = new String[batch.size()];
-            StringBuilder where = new StringBuilder(MediaStore.MediaColumns.DATA + " IN (");
-            for (int k = 0; k < paths.length; k++) {
-                paths[k] = batch.get(k).getPath();
-                where.append(k == 0 ? "?" : ",?");
-            }
-            app.getContentResolver().delete(MediaStore.Files.getContentUri("external"), where + ")", paths);
-        }
+        PackService.start(this, sessionDirs());
     }
 
     /** While nothing records: the photo sessions not packed yet, packing, and how it ended. */
