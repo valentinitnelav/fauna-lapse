@@ -63,8 +63,10 @@ it: all FaunaLapse versions are pre-releases for now, and Obtainium skips those 
 ## 5. Uninstall
 
 1. Copy the sessions to a computer first (README, *Using it in the field*, step 6). Sessions in
-   `Documents/FaunaLapse` stay on the phone after the uninstall. Sessions in the app's own folder
-   (`Android/data/com.faunalapse.app/`: on a memory card with Android 7 to 10, or without the
+   `Documents/FaunaLapse` stay on the phone after the uninstall, but on Android 11 or newer a new
+   install of FaunaLapse no longer lists or packs them (Android lets an app see only the files it
+   made itself); the phone's file app and a computer still show them. Sessions in the app's own
+   folder (`Android/data/com.faunalapse.app/`: on a memory card with Android 7 to 10, or without the
    storage permission on Android 10 or older) are deleted with the app.
 2. If you allowed the *Screen off* button: in FaunaLapse, open *Last session, battery and clock* on
    the status card and tap *Remove*. Android does not uninstall an app that is still a "device admin

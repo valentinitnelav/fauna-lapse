@@ -85,12 +85,13 @@ as a known bias in the results, or the owner unplugs the phone. This works: the 
 
 **Wish:** test other phones (for example Android 7) without having them.
 
-**What was found:** the Android emulator and one system image need about 3 to 5 GB, and it runs at
-a usable speed only with the user in the `kvm` group (one `sudo` command and a new login). It finds
-crashes, Android 7 permission and storage problems and layout problems, but not camera speed,
-battery, heat or the battery managers of Xiaomi, Huawei and others.
+**What was found:** an emulator with one system image needs about 2 GB of downloads and runs at a
+usable speed only with the user in the `kvm` group. It finds crashes, permission, storage and layout
+problems, but not camera speed, battery, heat or the battery managers of Xiaomi, Huawei and others.
+An Android 16 emulator is set up on the owner's laptop (results in `docs/PHONES.md`).
 
-**Why parked:** the three real Android 7 and 8.1 phones come first (owner).
+**Why parked:** an Android 7 image waits until the three real Android 7 and 8.1 phones are tested
+(owner).
 
 ## Camtrap DP export
 
@@ -146,3 +147,21 @@ serial number); `ANDROID_ID` changes with a factory reset. A name written on the
 a custom field (for example Device ID) does the job.
 
 **Why parked:** not worth it (owner).
+
+## Older sessions after a new install
+
+**Wish:** after an uninstall and a new install, FaunaLapse lists and packs the sessions still in
+`Documents/FaunaLapse`.
+
+**What was found:** on Android 11 and newer an app sees only the shared files it made itself; an
+uninstall ends that link (Samsung M12: 4 zips on the SD card, the new install showed "0 sessions").
+Updates keep it. Ways back: (1) Android's folder picker (`ACTION_OPEN_DOCUMENT_TREE`, Android 5+, no
+library): the user picks `Documents/FaunaLapse` once and the app may read and delete in it; but it
+gives content addresses, not file paths, so counting and Pack would need a second code path, slow
+with thousands of files. (2) "All files access" (`MANAGE_EXTERNAL_STORAGE`): little code, but the
+app could read every file on the phone, Android warns strongly, and Google Play would refuse it.
+(3) Photo and video access (`READ_MEDIA_IMAGES`/`VIDEO`): misses `session.jsonl` and zips. If
+needed, (1) is the way.
+
+**Why parked:** rare (updates keep access; INSTALL.md warns against uninstalling) and nothing is
+lost: the file app and a computer still see the files (owner).
