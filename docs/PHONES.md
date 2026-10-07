@@ -138,12 +138,12 @@ Settings and conditions:
 - one hour of photos and one hour of video each, plus repeats;
 - photos every 2 s for 60 s with 5-minute breaks; 
 - video in 5-minute clips at 5 frames per second with 5-minute breaks;
-- Both phones were off the charger, in airplane mode with Wi-Fi on, with location off, at room temperature (overnight).;
+- Both phones were off the charger, in airplane mode with Wi-Fi on, with location off, at room temperature (overnight);
 - `adb` disconnected during each test hour.
 
 | Per hour of session  | 1. Samsung Galaxy M12 | 2. Xiaomi Redmi Note 9S |
 |---|---|---|
-| Photos: camera open 11 of 55 min; two runs | 71 and 80 mA on average; ~1.5 % of the battery | 1 mA; ~1.4 % |
+| Photos: camera open 11 of 55 min; two runs | 71 and 80 mA on average; ~1.5 % of the battery | 71 mA; ~1.3 % |
 | Video: camera open 31 of 55 min; two runs | 167 and 171 mA; ~3.3 % of the battery | 157 mA; ~3.1 %, but the level fell 6 % |
 | Camera open | 189 to 262 mA | 268 to 272 mA |
 | Camera closed (breaks) | 39 to 55 mA | 19 mA |
