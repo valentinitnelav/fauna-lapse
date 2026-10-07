@@ -6,38 +6,35 @@ abstract: >-
   into time-lapse cameras watching one spot, for example pollinators visiting a
   flower. It records short photo bursts or video clips on a daily schedule with the
   screen off, keeps only a user-chosen square region of interest, and closes the
-  camera between bursts to save energy and limit heat, so a phone can run for days
-  on a power bank. Every photo and event is logged together with field metadata
-  named after the Camtrap DP standard for camera traps, so visit rates can be
-  computed later. The application uses no artificial intelligence and runs on
-  Android 7.0 or newer.
+  camera between bursts to save energy and limit heat, so a phone can run for longer.
+  Every photo and video is logged together with field metadata.
 type: software
 license: AGPL-3.0-only
 repository-code: "https://github.com/valentinitnelav/fauna-lapse"
 version: "0.1.0-alpha.1"
-# TODO (owner): add the day of the GitHub release, for example:
-# date-released: "2026-10-20"
+date-released: "2026-10-07"
 keywords:
   - pollinators
   - pollination ecology
   - time-lapse
   - camera trap
-  - Camtrap DP
   - insect monitoring
   - pollinator monitoring
   - biodiversity monitoring
   - smartphone
   - Android
   - low-cost
-# TODO (owner): add co-authors if FaunaLapse should list the same people as FaunaPulse
-# (Maximilian Sittinger, Tiffany Knight); copy their entries from FaunaPulse's CITATION.cff.
 authors:
   - family-names: "Ștefan"
     given-names: "Valentin"
-    affiliation: "Helmholtz Centre for Environmental Research - UFZ & German Centre for Integrative Biodiversity Research Halle-Jena-Leipzig – iDiv e. V., Leipzig, Germany"
+    affiliation: "Helmholtz Centre for Environmental Research - UFZ; German Centre for Integrative Biodiversity Research Halle-Jena-Leipzig – iDiv e. V., Leipzig, Germany"
     orcid: "https://orcid.org/0000-0002-4757-8008"
-# After Zenodo has made the first DOI: add the concept DOI (all versions, never changes) and the
-# version DOI of each release, as FaunaPulse does:
+  - family-names: "Knight"
+    given-names: "Tiffany"
+    affiliation: "Helmholtz Centre for Environmental Research - UFZ; German Centre for Integrative Biodiversity Research Halle-Jena-Leipzig – iDiv e. V., Leipzig, Germany; Martin Luther University, Halle, Germany; National Tropical Botanical Garden, Kalāheo, US"
+    orcid: "https://orcid.org/0000-0003-0318-1567"    
+# Concept DOI: fixed for the lifetime of the project, always resolves to the newest
+# Zenodo version. The version DOI below changes with every release.
 # doi: 10.5281/zenodo.XXXXXXXX
 # identifiers:
 #   - type: doi

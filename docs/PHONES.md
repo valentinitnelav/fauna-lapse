@@ -126,6 +126,17 @@ speed-test runs and sessions, on the charger.
 |---|---|
 | Photos at the largest square (2976 of 3000 px), step 1 s, 10 min, charging; then Pack with FaunaLapse in the background and the screen off (2026-10-06) | 600 of 600 photos, 0 skipped, cut and save 0.27 s, 1.29 MB per photo; Pack: 817 MB in 9 s (write 2.0, check 3.2, delete 3.5); all 601 files identical. As a foreground service (Home, screen off): Android allowed it (type data sync), priority 50, 1.9 GB in 19 s, all 1801 files identical |
 
+## Android 16 emulator (Pixel 6 screen, x86_64 image, simulated camera)
+
+A virtual phone on the laptop, for screens and Android rules only: its simulated camera is slow, so
+no speed or energy numbers. Tested 2026-10-07 with the debug build.
+
+| Test | Result |
+|---|---|
+| Screens with the app drawn behind the system bars (Android 15 and newer) | main screen, aim screen and field metadata stay clear of the status bar and of the navigation bar, with 3 buttons and with gestures |
+| Photos: step 2 s, 20 s bursts, 1 min breaks, 3 min run, screen off | 30 of 30 photos, 0 skipped, 0 errors; camera off in each break; files in `Documents/FaunaLapse` |
+| Video: 1 min clips at 5 fps, 1 min breaks, 3 min run, screen off | 2 clips, 0 errors, 1280x1280 squares, upright and playable; 299 and 288 frames (the simulated camera) |
+
 ## Further battery tests
 
 ### Used phones, test 2026-10-06
