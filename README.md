@@ -2,32 +2,43 @@
   <img src="docs/icon.svg" width="128" alt="FaunaLapse icon: a camera lens with a flower in it, ringed by a timer">
 </p>
 
-# FaunaLapse
+<h1 align="center">FaunaLapse</h1>
 
-FaunaLapse turns old or cheap Android phones into time-lapse cameras that watch one spot, for example
+## Overview
+
+**FaunaLapse** turns old or affordable Android phones into time-lapse cameras that watch one spot, for example
 insects visiting a flower. It takes short bursts of photos or short video clips with the screen off,
-keeps only a square area that you choose, and closes the camera between bursts. This keeps the
-phone cool, so it can run for days on a power bank. Every photo is logged, so visit rates can be
-computed later.
+keeps only a square area that you choose on a preview, and closes the camera between bursts. This keeps the
+phone cool and saves battery.
 
 FaunaLapse has no artificial intelligence (AI). Its sister app,
 [FaunaPulse](https://github.com/valentinitnelav/fauna-pulse), detects insects with AI on newer phones.
 
 ## Status
 
-Early development: ready for test sessions, not yet for field studies. Scheduled photo and video
-sessions with the screen off work on the first test phone. Setting up a phone takes a few taps: aim
-the camera and place the square on a live camera view, check the schedule (saved on the phone),
-start. Phase 0 tests on more phones (speed, power, heat) are running. See
-[docs/PHONES.md](docs/PHONES.md) for the phones tested so far.
+<details>
+	<summary>Expand:</summary>
+
+Scheduled photo and video sessions with the screen off work on the first test phones. 
+
+Phase 0 tests on more phones (speed, power, heat) are running.
+See [docs/PHONES.md](docs/PHONES.md) for the phones tested so far.
+
+The code is written with the help of AI coding agents (Claude Code and others),
+guided and reviewed by the project owner.
+
+</details>
 
 ## Install
 
-FaunaLapse is not in the Google Play Store: download the APK (the install file) from the
+FaunaLapse is not yet in the Google Play Store: download the APK (the install file) from the
 [releases](https://github.com/valentinitnelav/fauna-lapse/releases) and install it as described in
 [docs/INSTALL.md](docs/INSTALL.md) (also updates and uninstalling).
 
 ## Planned features
+
+<details>
+	<summary>Expand:</summary>
 
 - Android 7.0 or newer; old phones are welcome.
 - Schedules: recording windows each day (for example 06:00 to 08:00 and 17:00 to 20:00, also across
@@ -54,7 +65,7 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
 - During a session: the last saved photo on the main screen, and a pause to adjust the phone (with
   the live camera view; nothing is recorded, and the session goes on by itself after 10 minutes).
 - Field metadata for each session: who set it up, site, transect, plant, habitat, sample and
-  session ID, camera height and distance to the target (named as in the Camtrap DP standard for
+  session ID, camera height and distance to the target (named as in the *Camtrap DP* standard for
   camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from your
   own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
   taken with the phone's camera app and kept apart in the session folder; one GPS position on a tap
@@ -69,7 +80,12 @@ FaunaLapse is not in the Google Play Store: download the APK (the install file) 
   free, opens the folder in Android's file app, and during a session shows what it saved so far and
   any phone setting that wastes energy (for example Wi-Fi left on).
 
+</details>
+
 ## Using it in the field
+
+<details>
+	<summary>Expand:</summary>
 
 1. **At home, once per phone:** install the app ([docs/INSTALL.md](docs/INSTALL.md)), open it and
    allow the camera (on Android 10 or older also the storage). Under *3 · Schedule* tap *Change
@@ -117,7 +133,12 @@ cleanly when the battery falls to 15 % without charging. Some phones stop apps i
 save power with their own battery manager (Huawei, Xiaomi, Samsung): the checklist under the (i) of
 *4 · Phone for the field* says where to allow FaunaLapse.
 
+</details>
+
 ## Build from source
+
+<details>
+	<summary>Expand:</summary>
 
 You need JDK 17 or newer and the Android SDK. Write the SDK path into a file `local.properties`
 (`sdk.dir=/path/to/Android/Sdk`), then:
@@ -126,25 +147,29 @@ You need JDK 17 or newer and the Android SDK. Write the SDK path into a file `lo
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+</details>
 
 ## Documentation
+
+<details>
+	<summary>Expand:</summary>
 
 - [docs/AGENT_OVERVIEW.md](docs/AGENT_OVERVIEW.md): current state, file map and next steps (written
   for coding agents, readable for humans).
 - [docs/INSTALL.md](docs/INSTALL.md): install, update and uninstall; release builds.
 - [docs/PHONES.md](docs/PHONES.md): test phones and measured results.
 - [AGENTS.md](AGENTS.md): rules and commands for contributors, human or AI coding agents.
-
-## How this project is made
-
-The code is written with the help of AI coding agents (Claude Code and others), guided and reviewed by
-the project owner.
+</details>
 
 ## Citation
 
 If you use FaunaLapse in your research, please cite it with the metadata in
 [CITATION.cff](CITATION.cff) (GitHub shows a "Cite this repository" button from it). Every release
 is archived on Zenodo with a DOI.
+
+Example:
+
+> Ștefan, V. & Knight, T. (2026). FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals. https://doi.org/...
 
 ## Licence
 

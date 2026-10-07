@@ -1,6 +1,6 @@
 # Installing FaunaLapse
 
-FaunaLapse is not in the Google Play Store. You install it from an APK file (the install file of an
+FaunaLapse is not yet in the Google Play Store. You install it from an APK file (the install file of an
 Android app), which you download from the project's GitHub page. It needs Android 7.0 or newer. One
 APK works on every phone: the app has no code for a particular processor.
 
