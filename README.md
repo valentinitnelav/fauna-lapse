@@ -93,7 +93,7 @@ FaunaLapse is not yet in the Google Play Store: download the APK (the install fi
    With several phones, set them all up this way before you go out. *2 · Field metadata* shows each
    phone's model and ID (write the ID on the phone if you like): the ID starts the session folder
    names, so the files do not mix on the computer. For a phone used only as a camera, follow
-   *4 · Phone for the field*: tap *Allow* for the battery limits, turn on airplane mode, and open
+   *4 · Phone for the field*: lift the battery limits (Open settings), turn on airplane mode, and open
    its (i) for the full checklist (factory reset, no account, unneeded apps off).
 2. **In the field:** fix the phone on a tripod or a clamp, facing the flower. For sessions longer
    than a few hours, connect a power bank.
@@ -158,6 +158,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
   for coding agents, readable for humans).
 - [docs/INSTALL.md](docs/INSTALL.md): install, update and uninstall; release builds.
 - [docs/PHONES.md](docs/PHONES.md): test phones and measured results.
+- [docs/PRIVACY.md](docs/PRIVACY.md): privacy policy (the app collects and sends nothing).
 - [AGENTS.md](AGENTS.md): rules and commands for contributors, human or AI coding agents.
 </details>
 

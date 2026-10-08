@@ -1688,7 +1688,6 @@ public final class MainActivity extends Activity {
      *  there. BatteryLife: Google Play allows the battery dialog only for some kinds of apps;
      *  FaunaLapse is not on Google Play, and its core work (long sessions with the screen off) is
      *  what the battery limits stop. */
-    @SuppressLint("BatteryLife")
     private void showPhoneCheck(boolean session) {
         PhoneCheck c = PhoneCheck.read(this);
         String state = session + c.toJson().toString();
@@ -1719,8 +1718,14 @@ public final class MainActivity extends Activity {
         }
         Uri app = Uri.parse("package:" + getPackageName());
         if (c.batteryLimited) {
-            addCheck(getString(R.string.check_battery), R.string.check_battery_button,
-                    new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, app));
+            // Android's settings page, not its direct "ignore battery optimisations" dialog: Google
+            // Play allows that dialog's permission only for a few kinds of apps. Android 12+ has the
+            // choice on the app's own page (Battery: Unrestricted); older ones in a list of apps.
+            boolean appPage = Build.VERSION.SDK_INT >= 31;
+            addCheck(getString(appPage ? R.string.check_battery : R.string.check_battery_list),
+                    R.string.check_battery_button, appPage
+                            ? new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app)
+                            : new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
         }
         if (c.backgroundRestricted) {
             addCheck(getString(R.string.check_background), R.string.check_background_button,
