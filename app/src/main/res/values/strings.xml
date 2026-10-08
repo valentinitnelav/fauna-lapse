@@ -283,7 +283,7 @@
     <string name="check_location_button">Open settings</string>
     <string name="check_stay_awake">Stay awake is on (in Developer options): while the phone charges, also from a power bank, its own screen timeout never switches the screen off. Turn it off for the field.</string>
     <string name="check_stay_awake_button">Open settings</string>
-    <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions. In the settings, tap Battery (or App battery usage, Battery saver) and choose Unrestricted (or No restrictions).</string>
+    <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions. On the page that opens, tap Battery (near the top) and choose Unrestricted (Xiaomi: No restrictions). Leave the other settings as they are.</string>
     <string name="check_battery_list">Battery limits apply to FaunaLapse: some phones then stop long sessions. In the list, show all apps, tap FaunaLapse and choose Don\'t optimize.</string>
     <string name="check_battery_button">Open settings</string>
     <string name="check_background">FaunaLapse is restricted in the background: the phone may stop a session.</string>
