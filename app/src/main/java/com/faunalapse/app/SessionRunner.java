@@ -414,7 +414,7 @@ final class SessionRunner implements Runnable {
         log.write(r);
         heatPaused = true;
         do {
-            status = String.format(Locale.US, "Paused since %s: the phone is too warm (%.1f °C). The camera"
+            status = String.format(Locale.US, "Heat pause since %s (battery %.1f °C). The camera"
                     + " stays off until the battery is below %.0f °C.", clock(start),
                     CaptureService.batteryTempC(context), resumeC);
             long left = plan.end() - System.currentTimeMillis();
@@ -546,8 +546,8 @@ final class SessionRunner implements Runnable {
         if (missed > 0 && warning.isEmpty() && taken > 0) {
             double photoS = captureMsSum / (double) taken / 1000;
             double suggested = Math.ceil(photoS * 2 + 0.4) / 2; // a little more, rounded up to 0.5 s
-            warning = String.format(Locale.US, "The photo step of %.1f s is too short for this phone: a photo"
-                    + " takes about %.1f s. Use video or a photo step of at least %.1f s.",
+            warning = String.format(Locale.US, "Photo step %.1f s is too short: this phone takes about %.1f s"
+                    + " per photo. Use a photo step of at least %.1f s, or video.",
                     settings.stepS, photoS, suggested);
             JSONObject w = SessionLog.record("warning");
             SessionLog.put(w, "warning", warning);

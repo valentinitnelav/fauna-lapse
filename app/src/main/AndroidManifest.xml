@@ -21,7 +21,9 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <!-- Android 10 and older: needed to save sessions in Documents/FaunaLapse (newer Android allows
-         it without a permission). -->
+         it without a permission). Both: Android 8 to 10 let an app write there only with read too. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
 

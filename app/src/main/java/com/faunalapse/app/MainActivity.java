@@ -1174,7 +1174,7 @@ public final class MainActivity extends Activity {
         }
         int c = places.indexOf(chosen);
         String path = Storage.shownPath(this, places, chosen.dir);
-        String free = size(chosen.dir.getUsableSpace());
+        String free = size(Storage.free(chosen.dir));
         String text;
         if (places.size() > 1) {
             text = getString(R.string.storage_where, path);
@@ -1197,9 +1197,9 @@ public final class MainActivity extends Activity {
             Storage.Place p = places.get(i);
             RadioButton b = (RadioButton) storagePlaces.getChildAt(i);
             String line = storageUse == null
-                    ? getString(R.string.storage_place_counting, p.name, size(p.dir.getUsableSpace()))
+                    ? getString(R.string.storage_place_counting, p.name, size(Storage.free(p.dir)))
                     : getString(R.string.storage_place, p.name, size(storageUse[i][0]), sessions(storageUse[i][1]),
-                            size(p.dir.getUsableSpace()));
+                            size(Storage.free(p.dir)));
             if (!line.contentEquals(b.getText())) b.setText(line);
             if (storageUse != null) {
                 total[0] += storageUse[i][0];
@@ -1452,10 +1452,9 @@ public final class MainActivity extends Activity {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             missing.add(Manifest.permission.CAMERA);
         }
-        if (Build.VERSION.SDK_INT <= 29 && !missing.isEmpty()
-                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT <= 29 && !missing.isEmpty() && !Storage.canShare(this)) {
             missing.add(Manifest.permission.WRITE_EXTERNAL_STORAGE); // optional, like notifications
+            missing.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
         if (Build.VERSION.SDK_INT >= 33 && !missing.isEmpty()
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)

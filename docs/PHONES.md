@@ -126,6 +126,43 @@ speed-test runs and sessions, on the charger.
 |---|---|
 | Photos at the largest square (2976 of 3000 px), step 1 s, 10 min, charging; then Pack with FaunaLapse in the background and the screen off (2026-10-06) | 600 of 600 photos, 0 skipped, cut and save 0.27 s, 1.29 MB per photo; Pack: 817 MB in 9 s (write 2.0, check 3.2, delete 3.5); all 601 files identical. As a foreground service (Home, screen off): Android allowed it (type data sync), priority 50, 1.9 GB in 19 s, all 1801 files identical |
 
+## Huawei P10 Lite (WAS-LX1A), Android 8.0 (EMUI), 2017
+
+Kirin 658, 4 GB RAM. Tested 2026-10-10 on the charger, indoors.
+
+- Camera2 "limited" (the app uses Camera2): freeform crop, manual focus, closest 5 cm; sensor
+  3968x2976, the same as the largest photo. Camera1 photo every 1.1 to 1.2 s at any size.
+- Speed test: Camera2 full photo 0.32 s, save 0.06 s, up to 2.3 per s. Video 15 fps asked: 30 fps
+  delivered.
+
+| Session (screen off) | Result |
+|---|---|
+| Photos, step 1 s, 30 s bursts, 1 min breaks, 6 min | 120 of 120, 0 skipped, photo 0.34 to 0.37 s, camera opened in 0.07 to 0.09 s |
+| Photos, step 1 s, one 20 min burst | 1200 of 1200, 0 skipped, 0 errors, up to 12 ms late, cut and save 0.43 s (median); battery 28 to 31 °C |
+| Video, 1 min clips at 5 fps, 1 min breaks | 3 clips of 299 frames, 0 to 1 ms late; square 1056 px (about 1080 real pixels across from the stream), 1.5 Mbit/s |
+
+EMUI did not stop FaunaLapse in 20 min with the screen off (the field checklist still asks for the
+App launch setting). The phone clock had reset to 1970 (no SIM, no Wi-Fi).
+
+## Blackview A60, Android 8.1 Go, 2019
+
+MediaTek MT6580, 32-bit, 1 GB RAM. Tested 2026-10-10 on the charger, indoors.
+
+- Camera2 "legacy" (only wraps Camera1): the app uses Camera1. Photo sizes up to 4864x2736 (16:9,
+  sold as "13 MP by interpolation"); the app takes this largest size, so the square has 2736 pixels of
+  which fewer are real (Android does not tell the sensor size; 3264x2448 4:3 may be the native one).
+  Preview and video stream at most 1280x720. Autofocus sharp in 0.7 to 1.1 s; no fixed focus.
+- Its "clean apps on lock" switch (`settings system hct_task_clean_auto`, on by default) force-stops
+  every app about 10 to 15 s after the screen goes off, also one with a foreground service; switched
+  off by adb for these tests. The Settings page for it is not found yet.
+
+| Session (screen off) | Result |
+|---|---|
+| Photos, step 2 s, 30 s bursts, 1 min breaks, 6 min | 60 of 60, 0 skipped; photo 1.36 to 1.54 s, cut and save 0.8 to 1.1 s |
+| Photos, step 1 s | one photo every 2 s (photo about 1.45 s) and the step warning |
+| Photos, step 2 s, one 20 min burst | 600 of 600, 0 skipped, 0 errors, up to 17 ms late; battery 25 to 27 °C |
+| Video, 1 min clips at 5 fps, 1 min breaks | 3 clips of 300 frames, 0 ms late; square 704 px (720 real), only 0.17 Mbit/s (soft detail) |
+
 ## Android 16 emulator (Pixel 6 screen, x86_64 image, simulated camera)
 
 A virtual phone on the laptop, for screens and Android rules only: its simulated camera is slow, so

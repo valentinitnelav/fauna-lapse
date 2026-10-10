@@ -1,7 +1,7 @@
 # Agent overview: current state
 
 A short snapshot for coding agents, read at the start of every session (at most 100 lines): what is
-true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. Last update: 2026-10-06.
+true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. Last update: 2026-10-10.
 
 ## What works now
 
@@ -10,7 +10,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
   both save only the ROI square, upright; camera off in long breaks; Camera2 or Camera1 per phone;
   every event in `session.jsonl`, battery use at the end (`BatteryMeter`); heat pause (camera off),
   clean stop on low battery without charging or too little storage; a pause by the user (camera off,
-  aim screen to adjust, goes on by itself after 10 min). Tested on 2 phones.
+  aim screen to adjust, goes on by itself after 10 min). Tested on 5 phones, Android 8.0 to 14.
 - **Main screen**: status card (state; while running: counts, last saved square or clip frame,
   warnings, phone checks, MB so far, Pause or Continue; folder, use, free space, memory card choice;
   Open the folder; Pack the photo sessions into zips; Screen off; last session, battery, clock fold
@@ -91,10 +91,10 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 
 1. Battery: 1 h sessions in `docs/PHONES.md` (Redmi: the level falls up to 2 times faster than the
    current says; run one from full to empty). Breaks: alarms, not the wake lock (Samsung 40-55 mA)?
-2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip).
+2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip). Parked: `docs/PARKED.md`.
 3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
    the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
-4. Three used Android 7 and 8.1 phones for future tests: battery first, then the speed test (`sensor_pixels`
-   above `jpeg_largest`: enlarged photos). Parked: `docs/PARKED.md`; lint kept: `allowBackup`, Gradle.
+4. Camera1 takes the largest photo: Blackview A60 a 16:9 size enlarged in software (4:3 may hold more
+   real pixels; changes video and aim: owner decides). HomTom HT50 untested. Lint kept: `allowBackup`, Gradle.
 5. First release `0.1.0-alpha.1`: the owner makes the signing key (`tools/create_release_key.sh`),
    links Zenodo to GitHub, approves the push. Before it: a field day and an outdoor GPS test.

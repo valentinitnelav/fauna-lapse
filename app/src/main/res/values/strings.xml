@@ -12,8 +12,8 @@
     <string name="adjust_camera">Aim the camera again</string>
     <string name="continue_session">Continue session</string>
     <string name="last_photo_none">The newest saved photo or clip frame appears here.</string>
-    <string name="last_photo">Last photo, %1$s (as saved). Tap to see it larger.</string>
-    <string name="last_clip">Last clip, started %1$s: its last frame. Tap to see it larger.</string>
+    <string name="last_photo">Last photo, %1$s (as saved). Tap to enlarge.</string>
+    <string name="last_clip">Last clip, started %1$s (last frame). Tap to enlarge.</string>
     <string name="status_test">Phone test running</string>
     <string name="last_session">Last session (%1$s): %2$s. Ended: %3$s.</string>
     <string name="last_session_warning">Last session: %1$s</string>
@@ -22,26 +22,26 @@
     <string name="battery_line">Battery %1$s, %2$s, %3$s °C.</string>
     <string name="charging">charging</string>
     <string name="not_charging">not charging</string>
-    <string name="phone_time">Phone time: %1$s. Check it before a field session: the session record uses it.</string>
-    <string name="storage_line">Files are saved in %1$s. FaunaLapse uses %2$s there (%3$s); %4$s free.</string>
+    <string name="phone_time">Phone time: %1$s. Check it: file names and the session record use it.</string>
+    <string name="storage_line">Files go to %1$s: FaunaLapse uses %2$s (%3$s); %4$s free.</string>
     <string name="storage_session">Saving in %1$s: %2$s so far; %3$s free.</string>
-    <string name="storage_counting">Files are saved in %1$s; %2$s free.</string>
-    <string name="storage_where">New sessions are saved in %1$s. Choose the place:</string>
+    <string name="storage_counting">Files go to %1$s; %2$s free.</string>
+    <string name="storage_where">New sessions go to %1$s. Choose the place:</string>
     <string name="storage_place">%1$s: FaunaLapse uses %2$s (%3$s); %4$s free</string>
     <string name="storage_place_counting">%1$s: %2$s free</string>
     <string name="storage_total">All places together: %1$s (%2$s).</string>
-    <string name="storage_card_speed">Photos every 2 s or faster on a memory card: cards differ in speed, so run a short test session first. If FaunaLapse then says that photo times were skipped, use video or the phone storage.</string>
+    <string name="storage_card_speed">Photos every 2 s or faster on a memory card: test a short session first (cards differ in speed). If FaunaLapse then reports skipped photo times, use video or the phone storage.</string>
     <string name="storage_phone">Phone</string>
     <string name="storage_phone_top">Internal storage</string>
-    <string name="storage_missing">The memory card chosen for the sessions is not in the phone: new sessions go to the phone until it is back.</string>
-    <string name="storage_card_app_folder">This is FaunaLapse\'s own folder on the card (Android 7 to 10 let apps write nowhere else there): Android deletes it when the app is uninstalled, so copy the sessions to a computer first.</string>
+    <string name="storage_missing">The chosen memory card is missing: new sessions go to the phone until it is back.</string>
+    <string name="storage_card_app_folder">This is FaunaLapse\'s own folder on the card (Android 7 to 10 allow no other folder there): uninstalling the app deletes it, so copy the sessions to a computer first.</string>
     <string name="open_folder">Open the folder</string>
     <string name="screen_off">Screen off</string>
     <string name="screen_off_title">Allow the Screen off button?</string>
-    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen. The session goes on with the screen off.\n\nSome phones then show their own red warning with a general list of rights (erase all data and others): FaunaLapse asks only to lock the screen, as Android\'s page before it shows.\n\nBefore you uninstall FaunaLapse, remove this right again (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or let the screen switch off by itself after the phone\'s screen timeout.</string>
+    <string name="screen_off_text">Android lets FaunaLapse switch the screen off only if you allow it once, on the next screen. FaunaLapse then becomes a \"device admin app\" with one right only: to lock the screen (Screen off button, or by itself after the set minutes). The session goes on.\n\nSome phones then show a red warning with a general list of rights (such as erase all data): FaunaLapse uses only the screen lock, as Android\'s page before it shows.\n\nRemove this right before you uninstall FaunaLapse (under Last session, battery and clock).\n\nWithout it: press the power button gently, so the phone does not move, or wait for the phone\'s screen timeout.</string>
     <string name="screen_off_yes">Continue</string>
     <string name="screen_off_no">Not now</string>
-    <string name="screen_off_reason">FaunaLapse uses this only for its Screen off button: it switches the screen off and locks the phone, as the power button does, so the phone need not be pressed where it stands. The session goes on.</string>
+    <string name="screen_off_reason">FaunaLapse uses this only to lock the screen during a session, as the power button does (Screen off button, or by itself after the set minutes), so nobody needs to press the phone and move it. The session goes on.</string>
     <string name="screen_off_allowed">FaunaLapse may switch the screen off (device admin app). Remove this right before you uninstall FaunaLapse.</string>
     <string name="screen_off_remove">Remove</string>
     <string name="open_folder_failed">No file app could open it. The files are in %1$s.</string>
@@ -50,12 +50,12 @@
         <item quantity="other">%d sessions</item>
     </plurals>
     <string name="pack_label">Pack photo sessions for the computer</string>
-    <string name="pack_help">A computer copies one large file much faster than thousands of photos (over a USB cable up to 9 times faster, most for small photos). Pack puts each finished photo session into one zip file, in the same folder. The photos are not compressed, so this is quick: about 1 to 2 minutes for 5000 photos of 1280 px, and up to 1.5 minutes per GB for larger photos (memory cards are the slowest). Best with the phone on the charger. Packing goes on with the screen off or in another app (a notification shows it); if Android stops it anyway, tap Pack again: nothing is lost. FaunaLapse reads each zip back and checks every file before it deletes the session folder. On the computer, extract the zip (Windows: right click, Extract All) to get the session folder back. A session larger than 4 GB, or one packed with little free space, gets more zip files (_part2 and on): extract them all into the same folder. Video sessions stay as they are: their few large files copy fast.</string>
+    <string name="pack_help">Pack puts each finished photo session into one zip file, next to its folder: a computer copies it up to 9 times faster than thousands of photos (over a USB cable). The photos are not compressed, so it is quick: 1 to 2 minutes for 5000 photos of 1280 px, up to 1.5 minutes per GB for larger photos (slowest on memory cards). Best with the phone on the charger. Packing goes on with the screen off (a notification shows it); if Android stops it, tap Pack again: nothing is lost. FaunaLapse checks every file in the zip, then deletes the session folder. On the computer, extract the zip (Windows: right click, Extract All) to get the folder back. Sessions over 4 GB or 65000 files, or packed with little free space, get more zips (_part2 and on): extract them all into one folder. Video sessions are not packed (few large files copy fast).</string>
     <plurals name="pack_waiting">
         <item quantity="one">Not packed yet: %1$d photo session (%2$s).</item>
         <item quantity="other">Not packed yet: %1$d photo sessions (%2$s).</item>
     </plurals>
-    <string name="pack_progress">Packing session %1$d of %2$d: %3$d %%. Start waits until packing ends.</string>
+    <string name="pack_progress">Packing session %1$d of %2$d: %3$d %%. Start is blocked until packing ends.</string>
     <string name="pack_button">Pack</string>
     <string name="pack_stop">Stop packing</string>
     <plurals name="pack_done">
@@ -64,16 +64,16 @@
     </plurals>
     <string name="pack_stopped">Packing stopped: the rest stays as it was. Tap Pack to go on.</string>
     <string name="pack_no_space">Not enough free space to pack %1$s: free %2$s more, or copy this folder as it is.</string>
-    <string name="pack_failed">Packing stopped at %1$s (%2$s). Its files not packed yet stay in the folder.</string>
+    <string name="pack_failed">Packing stopped at %1$s (%2$s). Files not packed yet stay in the folder.</string>
     <plurals name="pack_hidden">
-        <item quantity="one">Not packed: %1$s. Android hides %2$d file there from FaunaLapse, so a zip would miss it. Copy the folder as it is.</item>
-        <item quantity="other">Not packed: %1$s. Android hides %2$d files there from FaunaLapse, so a zip would miss them. Copy the folder as it is.</item>
+        <item quantity="one">Not packed: %1$s. Android hides %2$d file there from FaunaLapse: copy the folder as it is.</item>
+        <item quantity="other">Not packed: %1$s. Android hides %2$d files there from FaunaLapse: copy the folder as it is.</item>
     </plurals>
     <plurals name="pack_not_deleted">
         <item quantity="one">%d file is in its zip but could not be deleted from the folder: delete it by hand.</item>
         <item quantity="other">%d files are in their zip but could not be deleted from the folder: delete them by hand.</item>
     </plurals>
-    <string name="storage_app_folder">This is the app\'s own folder: Android deletes it when the app is uninstalled. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
+    <string name="storage_app_folder">This is the app\'s own folder: uninstalling the app deletes it. Allow the storage permission to save in Documents/FaunaLapse instead.</string>
     <string name="details_idle">Last session, battery and clock</string>
     <string name="details_running">Battery and clock</string>
     <string name="stop_session">Stop session</string>
@@ -87,13 +87,13 @@
     <string name="mode_photo">Photos</string>
     <string name="mode_video">Video</string>
     <string name="aim_button">Aim the camera</string>
-    <string name="aim_summary">Square: %1$d %% of the short side of the camera view, %2$s. Only the square is saved, in photos and video; focus and exposure follow it. %3$s</string>
+    <string name="aim_summary">Square: %1$d %% of the short side of the camera view, %2$s. Only the square is saved; focus and exposure follow it. %3$s</string>
     <string name="aim_square_middle">in the middle</string>
     <string name="aim_square_placed">where you placed it</string>
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in the record of each session. The values stay for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to the target are named as in Camtrap DP, a data standard for camera traps, so the records can be shared in it later.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions. Both IDs take letters and digits.\n• Distance to target: from the camera to the flower. Where the phone tells the lens distance, the fixed focus fills it in; type a measured value to replace it, or empty the field to take the focus distance again.\n• Add a field: your own fields, for example Observer, Weather or Air temperature: text, notes, a number, a date, a time, yes or no, or a choice from your own list. They stay until you remove them; the record lists them under \"custom\".\n• Get location: the GPS stays on until the uncertainty reaches your goal (10 m unless you change it; at most 3 min), then it switches off. Use it outdoors, under open sky; without network the first position can take a few minutes. A tap on the values it filled in asks before they can be changed.\n• Or type latitude and longitude from another GPS device, and its uncertainty if it shows one. Empty all three fields to remove the position.</string>
+    <string name="field_help">Saved in each session\'s record and kept for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to target are named as in Camtrap DP (a data standard for camera traps), so the records can be shared in it.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions.\n• Distance to target: where the phone tells the lens distance, the fixed focus fills it in. Type a measured value to replace it; empty the field to get the focus distance back.\n• Add a field: your own fields, for example Observer or Weather. They stay until you remove them; the record lists them under \"custom\".\n• Get location: use it under open sky. Without network the first position can take a few minutes.\n• Or type the position from another GPS device. Empty latitude, longitude and uncertainty to remove it.</string>
     <string name="field_open">Change field metadata</string>
     <string name="field_close">Close field metadata</string>
     <string name="field_summary_empty">Nothing filled in yet.</string>
@@ -123,10 +123,10 @@
     <string name="field_height_hint">above the ground</string>
     <string name="field_distance">Distance to target (m)</string>
     <string name="field_distance_hint">camera to flower</string>
-    <string name="distance_note">From the fixed focus (%1$s). The lens distance differs between phones: check it with a ruler now and then.</string>
+    <string name="distance_note">From the fixed focus (%1$s), which is not exact on every phone: check it with a ruler now and then.</string>
     <string name="field_phone_model">Phone model</string>
     <string name="field_phone_id">Phone ID</string>
-    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone; nobody can change it. It starts each session folder name, so files from several phones never mix. A factory reset gives a new one, and so does a FaunaLapse version signed by someone else (for example a test version). FaunaLapse cannot read an ID that survives a factory reset: Android allows that only to phone makers\' apps. For a lasting name, write it on the phone and add it as your own field, for example Device ID.</string>
+    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone (it cannot be changed). It starts each session folder name, so files from several phones never mix. A factory reset gives a new one; on Android 8 and newer, so does a FaunaLapse version signed by someone else (for example a test version). For a lasting name, write one on the phone and add it as your own field, for example Device ID.</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="custom_add_button">+ Add a field</string>
@@ -162,7 +162,7 @@
     <string name="custom_remove_yes">Remove</string>
     <string name="custom_remove_no">Keep</string>
     <string name="site_photos_label">Site photos</string>
-    <string name="site_photos_help">Photos of the surroundings, to document the site. They are taken at full size with the phone\'s camera app. At Start they move into the session folder, in its own folder site_photos, apart from the time-lapse photos; the record lists them with the text in About them. Take them before Start: during a session the camera is busy. Tap a photo to see it larger or to delete it.</string>
+    <string name="site_photos_help">Photos of the surroundings, at full size, with the phone\'s camera app. Take them before Start (during a session the camera is busy). At Start they move into the folder site_photos in the session folder; the record lists them with the text in About them. Tap a photo to enlarge or delete it.</string>
     <string name="site_photos_none">No site photos yet.</string>
     <plurals name="site_photos_count">
         <item quantity="one">%d site photo: it moves into the session folder at Start.</item>
@@ -176,7 +176,7 @@
     <string name="site_photo_close">Close</string>
     <string name="site_photo_unreadable">This photo cannot be shown.</string>
     <string name="position_label">Position</string>
-    <string name="position_datum">Coordinate system: WGS 84 (EPSG:4326), decimal degrees, as GPS devices and web maps use. Typed values must use it too.</string>
+    <string name="position_datum">Coordinate system: WGS 84 (EPSG:4326), decimal degrees (as on GPS devices and web maps), also for typed values.</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
     <string name="field_longitude">Longitude</string>
@@ -186,27 +186,27 @@
     <string name="field_uncertainty_help" formatted="false">How far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
     <string name="gps_goal">Uncertainty goal (m)</string>
     <string name="gps_goal_hint">0 to 1000</string>
-    <string name="gps_goal_help">Get location stops as soon as the uncertainty is this value or less, and switches the GPS off. If the goal is not reached, it searches at most 3 min and keeps the best position. A smaller goal can make the search longer; 0 m always searches the full 3 min. The record keeps the goal with the position.</string>
-    <string name="gps_goal_low">Under %1$d m is often not reached: the search may then run the full %2$d min and keep the best position.</string>
-    <string name="gps_goal_zero">0 m: the search always runs the full %1$d min and keeps the best position.</string>
+    <string name="gps_goal_help">Get location stops at this uncertainty or less and switches the GPS off; otherwise it stops after 3 min with the best position. A smaller goal can take longer; 0 m always takes the full 3 min. The record keeps the goal.</string>
+    <string name="gps_goal_low">Phones often cannot reach an uncertainty under %1$d m: the search may then run the full %2$d min.</string>
+    <string name="gps_goal_zero">0 m: the search always runs the full %1$d min.</string>
     <string name="gps_goal_problem">Uncertainty goal: use a whole number from 0 to %1$d m.</string>
     <string name="location_get">Get location</string>
     <string name="location_stop">Stop and keep the best</string>
     <string name="location_none">No position: tap Get location, or type it from another GPS device.</string>
-    <string name="location_saved">From this phone\'s GPS, at %1$s%2$s. A tap on these values asks before they can be changed.</string>
+    <string name="location_saved">From this phone\'s GPS, at %1$s%2$s. To change the position, tap a value, then tap Change.</string>
     <plurals name="location_saved_satellites">
         <item quantity="one">, with %d satellite</item>
         <item quantity="other">, with %d satellites</item>
     </plurals>
-    <string name="location_both">Position: write both latitude and longitude (the uncertainty is optional), or leave all three empty.</string>
+    <string name="location_both">Position: write latitude and longitude (uncertainty optional), or leave all three empty.</string>
     <string name="location_typed">Typed by hand.</string>
     <string name="position_edit_title">Change the GPS values?</string>
-    <string name="position_edit_text">Latitude, longitude and uncertainty come from this phone\'s GPS. Change them only for a better position, for example from another GPS device: the record then says they were typed by hand.</string>
+    <string name="position_edit_text">These values come from this phone\'s GPS. Change them only for a better position (for example from another GPS device); the record then says they were typed by hand.</string>
     <string name="position_edit_yes">Change</string>
     <string name="position_edit_no">Keep</string>
-    <string name="location_weak">The uncertainty is above the goal of %1$d m: try again under open sky if you need it smaller.</string>
-    <string name="location_searching">Searching for GPS satellites until the uncertainty is ± %1$d m or less; keep the phone under open sky. Time: %2$d s of at most %3$d s.</string>
-    <string name="location_searching_full">Searching for GPS satellites for the full time (goal 0 m); keep the phone under open sky. Time: %1$d s of %2$d s.</string>
+    <string name="location_weak">Uncertainty above the goal of %1$d m: try again under open sky for a smaller one.</string>
+    <string name="location_searching">Searching until the uncertainty is ± %1$d m or less; keep the phone under open sky. Time: %2$d s of at most %3$d s.</string>
+    <string name="location_searching_full">Searching for the full time (goal 0 m); keep the phone under open sky. Time: %1$d s of %2$d s.</string>
     <string name="location_satellites" tools:ignore="PluralsCandidate">Satellites: signal from %1$d, %2$d used for the position.</string>
     <string name="location_satellites_none">Satellites: no signal yet.</string>
     <string name="location_best">Best so far: uncertainty ± %1$d m.</string>
@@ -214,10 +214,10 @@
     <string name="location_failed">No GPS position in %1$d s. Try again outdoors, away from buildings and trees.</string>
     <string name="location_cancelled">Search stopped before a position came.</string>
     <string name="location_stopped">The search stopped when the screen was left.</string>
-    <string name="location_off">Location is off: turn it on, then tap Get location again. Turn it off again when the position is saved.</string>
+    <string name="location_off">Location is off: turn it on, then tap Get location again.</string>
     <string name="location_permission">FaunaLapse needs the precise location permission to save where the phone is. Tap Get location again to allow it.</string>
     <string name="location_switch_on">Location is on: Get location can use the GPS.</string>
-    <string name="location_switch_on_done">Location is still on: switch it off for the field, so no app uses the GPS. Android lets only you switch it.</string>
+    <string name="location_switch_on_done">Location is still on: switch it off for the session, so no app uses the GPS.</string>
     <string name="location_switch_off">Location is off. Switch it on for Get location, and off again afterwards.</string>
 
     <!-- 3 Schedule -->
@@ -238,16 +238,16 @@
     <string name="burst_label">Burst length (s)</string>
     <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
     <string name="saved_side_label">Saved square side (px)</string>
-    <string name="saved_side_hint">Photos and video: the square is shrunk to this size when saved. Any multiple of 32 from 224 to 4096, for example 320, 640, 1024 or 1280: detectors and video encoders work in blocks of 16 or 32 pixels, so these sizes need no padding. Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both). Old phones may save video smaller if their video encoder cannot take the size.</string>
+    <string name="saved_side_hint">Photos and video: the square is shrunk to this size when saved. A multiple of 32 from 224 to 4096 (detectors and video encoders work in blocks of 16 or 32 pixels). Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both). Old phones may save video smaller if their hardware cannot take the size.</string>
     <string name="clip_label">Clip length (min)</string>
     <string name="clip_hint">One video file per clip. Default 5 min.</string>
     <string name="video_fps_label">Frames per s</string>
     <string name="video_fps_5">5</string>
     <string name="video_fps_10">10</string>
     <string name="video_fps_15">15</string>
-    <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast flying insects. Fewer frames give smaller files, but not in proportion: on a test phone, 5 frames per s took about 55 % of the storage of 15, and 10 about 80 %.</string>
+    <string name="video_fps_hint">Default 5: enough to follow insects from frame to frame on a computer. Use 10 or 15 for fast insects. On a test phone, 5 frames per s used about 55 % of the storage of 15, and 10 about 80 %.</string>
     <string name="break_label">Break between bursts or clips (min)</string>
-    <string name="break_hint">Default 5 min: the camera rests about 83 % of the time with 60 s photo bursts, and half of the time with 5 min clips. It is switched off when the break is longer than 30 s. 0 = no break.</string>
+    <string name="break_hint">Default 5 min: the camera rests about 83 % of the time with 60 s bursts, half with 5 min clips. It is switched off in breaks over 30 s. 0 = no break.</string>
     <string name="schedule_label">Record</string>
     <string name="schedule_run">Hours from Start</string>
     <string name="schedule_daily">Daily windows</string>
@@ -256,15 +256,15 @@
     <string name="run_minutes">Run length, minutes</string>
     <string name="unit_h">h</string>
     <string name="unit_min">min</string>
-    <string name="run_hint">Default 1 h, a usual observation period. Up to 720 h (30 days) without a break at night, for example under the midnight sun.</string>
+    <string name="run_hint">Default 1 h, a usual observation period. At most 720 h (30 days), day and night.</string>
     <string name="windows_label">Daily windows</string>
-    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. A window may cross midnight (22:00-04:00), and 00:00-24:00 records all day (for example under the midnight sun). Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
+    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. 22:00-04:00 crosses midnight; 00:00-24:00 records all day. Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
     <string name="days_label">Days</string>
-    <string name="days_hint">Default 1. Counted from the first window that is not over yet: a phone started in the evening records from the next morning. For more days, keep the phone on a power supply.</string>
+    <string name="days_hint">Default 1. Counted from the first window not yet over: a phone started in the evening begins the next morning. For more days, use a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
-    <string name="heat_hint">The camera stays off until the battery is 3 °C cooler. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. At most 50 °C. The session also stops cleanly when the battery falls to 15 % without charging, or when the storage is nearly full.</string>
+    <string name="heat_hint">35 to 50 °C. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. The pause lasts until the battery is 3 °C cooler. The session also stops cleanly at 15 % without charging, or when the storage is nearly full.</string>
     <string name="screen_off_label">Screen off by itself after (min)</string>
-    <string name="screen_off_hint">During a session, if Screen off is forgotten: FaunaLapse switches the screen off this many minutes after the last touch (a screen left on uses energy and warms the phone). 1 to 10 min, or 0 for never. Default 3 min: time to watch the first photos arrive. Not during a pause. Needs the Screen off right (the first tap on Screen off asks for it). The power button wakes the screen; a double tap works only on some phones.</string>
+    <string name="screen_off_hint">During a session, if you forget Screen off: the screen goes off this many minutes after the last touch (a screen left on uses energy and warms the phone). 1 to 10 min, 0 = never. Default 3 min: time to see the first photos. Not while the session is paused by hand. Needs the Screen off right (the first tap on Screen off asks). The power button wakes the screen.</string>
     <string name="screen_off_note_right">Screen off is not allowed yet (the first tap on Screen off during a session asks): until then the phone\'s own screen timeout switches the screen off (now %1$s).</string>
     <string name="screen_off_note_never">Never: the screen goes off with Screen off, the power button or the phone\'s own screen timeout (now %1$s).</string>
     <string name="timeout_never">never</string>
@@ -281,16 +281,16 @@
     <string name="check_radios_button">Open settings</string>
     <string name="check_location">Location is on: other apps may use GPS. Turn it off for the field (after Get location).</string>
     <string name="check_location_button">Open settings</string>
-    <string name="check_stay_awake">Stay awake is on (in Developer options): while the phone charges, also from a power bank, its own screen timeout never switches the screen off. Turn it off for the field.</string>
+    <string name="check_stay_awake">Stay awake is on (Developer options): while the phone charges (also from a power bank), the phone\'s own screen timeout is ignored. Turn it off for the field.</string>
     <string name="check_stay_awake_button">Open settings</string>
-    <string name="check_battery">Battery limits apply to FaunaLapse: some phones then stop long sessions. On the page that opens, tap Battery (near the top) and choose Unrestricted (Xiaomi: No restrictions). Leave the other settings as they are.</string>
-    <string name="check_battery_list">Battery limits apply to FaunaLapse: some phones then stop long sessions. In the list, show all apps, tap FaunaLapse and choose Don\'t optimize.</string>
+    <string name="check_battery">Battery limits are on for FaunaLapse: they may stop long sessions. On the page that opens, tap Battery (near the top), then Unrestricted (Xiaomi: No restrictions). Change nothing else.</string>
+    <string name="check_battery_list">Battery limits are on for FaunaLapse: they may stop long sessions. In the list, show all apps, tap FaunaLapse and choose Don\'t optimize.</string>
     <string name="check_battery_button">Open settings</string>
     <string name="check_background">FaunaLapse is restricted in the background: the phone may stop a session.</string>
     <string name="check_background_button">Open settings</string>
-    <string name="check_ok">Airplane mode (flight mode) on; Wi-Fi, Bluetooth, location and Stay awake off; no battery limits for FaunaLapse: ready for the field.</string>
+    <string name="check_ok">Ready for the field: airplane mode on; Wi-Fi, Bluetooth, location and Stay awake off; no battery or background limits for FaunaLapse.</string>
     <string name="checklist_label">A phone used only as a camera</string>
-    <string name="checklist_text">A phone that does nothing else saves energy and is less likely to stop the app in the field:\n• Reset it to factory settings; add no Google account and no SIM card.\n• Turn off automatic app and system updates.\n• Uninstall the apps you do not need, or disable them (in the phone\'s settings, under Apps).\n• Set the clock, then turn on airplane mode (flight mode): without network the clock is not corrected, and the session record uses it.\n• Some phones stop apps in the background with their own battery manager. Huawei: allow FaunaLapse to start and run in the background by hand (Battery, App launch). Xiaomi: set its battery saver to No restrictions. Samsung: add it to Never sleeping apps.\n• Run a test session with the screen off before the field day.</string>
+    <string name="checklist_text">Such a phone saves energy and is less likely to stop the app:\n• Reset it to factory settings; no Google account, no SIM card.\n• Turn off automatic app and system updates.\n• Uninstall or disable the apps you do not need (Settings, Apps).\n• Set the exact time, then turn on airplane mode (flight mode): without network the clock is not corrected, and file names and the session record use it.\n• Some phones stop apps with their own battery manager. Huawei: allow FaunaLapse by hand to start and run in the background (Battery, App launch). Xiaomi: set battery saver to No restrictions. Samsung: add FaunaLapse to Never sleeping apps.\n• Before the field day, test a session with the screen off.</string>
 
     <!-- Start -->
     <string name="start_session">Start session</string>
@@ -300,12 +300,12 @@
     <string name="square_label">Square side</string>
     <string name="aim_opening">Opening the camera…</string>
     <string name="aim_photo_info">%1$d %% of the short side of the view: %2$d px across in the photo (%3$s), saved at %4$d px.</string>
-    <string name="aim_not_enlarged">This is fewer than the saved side of %1$d px: saved smaller, never enlarged. A larger square gives more pixels on the insect.</string>
+    <string name="aim_not_enlarged">Fewer real pixels than the saved square side (%1$d px): never enlarged. For more pixels on the insect, move the phone closer.</string>
     <string name="aim_video_info" tools:ignore="PluralsCandidate">%1$d %% of the short side of the view: %2$d px across in the camera stream (%3$s), saved at %4$d px, %5$d frames per s.</string>
-    <string name="aim_zoom_anywhere">Camera2: the camera zooms onto the square in hardware, so a small square keeps its real detail.</string>
-    <string name="aim_zoom_centred">Camera2: the camera can zoom only towards the middle, so a square near the middle keeps more detail.</string>
-    <string name="aim_zoom_middle_more">In the middle (tap Middle), this phone can zoom onto the square: %1$d px.</string>
-    <string name="aim_zoom_none">Camera1: no hardware zoom, so the square has only its share of the stream\'s pixels.</string>
+    <string name="aim_zoom_anywhere">The camera zooms onto the square, so a small square keeps its full detail.</string>
+    <string name="aim_zoom_centred">The camera zooms only towards the middle, so a square near the middle keeps more detail.</string>
+    <string name="aim_zoom_middle_more">In the middle (tap Middle): %1$d px across.</string>
+    <string name="aim_zoom_none">No hardware zoom: the square gets only its share of the stream\'s pixels.</string>
     <string name="aim_camera_failed">The camera did not open: %1$s</string>
     <string name="aim_focus">Focus again</string>
     <string name="aim_done">Done</string>
@@ -325,22 +325,22 @@
     <string name="focus_distance">Lens set to %1$s.</string>
     <string name="focus_position">Lens position: %1$d of 100, from near to far (this phone does not tell the distance).</string>
     <string name="focus_position_short">lens position %1$d of 100</string>
-    <string name="focus_hint_auto">Auto: the camera focuses on the square at the start of each burst, then the lens stays. In a dense flower patch it may focus on another flower; Fixed avoids this.</string>
-    <string name="focus_hint_auto_video">Auto: the camera focuses on the square at the start of each clip, then the lens stays. In a dense flower patch it may focus on another flower; Fixed avoids this.</string>
-    <string name="focus_hint_fixed">Fixed (default, starts at about 20 cm, a usual distance from phone to flower): the lens stays at this distance for the whole session and never focuses by itself, so bursts start faster, and wind, a passing insect or another flower cannot pull the focus away. Tap Focus again to focus once and fix the focus there, then adjust with the slider while you watch the view. Keep the phone where it is.</string>
-    <string name="focus_not_possible">This phone cannot fix the focus: it focuses automatically on the square at the start of each burst or clip. In a dense flower patch, make the square cover mostly the target flower, so the camera focuses on it.</string>
-    <string name="summary_focus_auto">Focus: automatic at the start of each burst or clip.</string>
+    <string name="focus_hint_auto">Auto: the camera focuses on the square once before each burst. In a dense flower patch it may focus on another flower; Fixed (if shown) avoids this.</string>
+    <string name="focus_hint_auto_video">Auto: the camera focuses on the square once before each clip. In a dense flower patch it may focus on another flower; Fixed (if shown) avoids this.</string>
+    <string name="focus_hint_fixed">Fixed (default: about 20 cm, a usual phone-to-flower distance): the lens does not move during the session, so bursts and clips start faster, and wind, insects or other flowers cannot pull the focus away. Tap Focus again to focus once and fix it there; adjust with the slider while you watch the view. Then keep the phone still.</string>
+    <string name="focus_not_possible">This phone cannot fix the focus: it focuses on the square once before each burst or clip. In a dense flower patch, let the target flower fill most of the square.</string>
+    <string name="summary_focus_auto">Focus: automatic before each burst or clip.</string>
     <string name="summary_focus_fixed">Focus: fixed at %1$s; check it on the aim screen.</string>
     <string name="summary_focus_fixed_position">Focus: fixed at one lens position, set on the aim screen.</string>
     <string name="summary_focus_unchecked">Focus: fixed at %1$s if this phone allows it; Aim the camera checks it.</string>
-    <string name="summary_focus_cannot_fix">Focus: automatic at the start of each burst or clip, because this phone cannot fix the focus.</string>
+    <string name="summary_focus_cannot_fix">Focus: automatic before each burst or clip (this phone cannot fix it).</string>
     <string name="aim_focus_result">Focus: %1$s</string>
     <string name="two_paragraphs" translatable="false">%1$s\n\n%2$s</string>
     <string name="aim_touch_inside">Touch inside the square to move it.</string>
     <string name="aim_more_below">More below</string>
     <string name="help_show">Show the explanation</string>
     <string name="help_hide">Hide the explanation</string>
-    <string name="aim_hint">Move the square onto the flower: put a finger inside it (or on its edge) and drag. A touch elsewhere does not move it. To make it larger or smaller, pinch with two fingers anywhere on the camera view, or use the slider; Middle puts it back in the middle. The small triangle marks the top of the saved photos and videos: it moves to the side when you hold the phone sideways, and stays at the top while the phone is upright or lies flat. Fix the phone in its place, then tap Start session here: the session uses this position.</string>
+    <string name="aim_hint">Drag the square onto the flower (one finger inside it or on its edge). Pinch anywhere on the view, or use the slider, to change its size; Middle moves it back to the middle. The triangle marks the top of the saved photos and videos (it moves to a side when the phone is sideways). Fix the phone firmly in place: the session uses this square.</string>
 
     <!-- Phone tests (phase 0, debug builds only) -->
     <string name="tests_show">Show the developer tests</string>

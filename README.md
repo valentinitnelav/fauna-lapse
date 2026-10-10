@@ -11,18 +11,31 @@ insects visiting a flower. It takes short bursts of photos or short video clips 
 keeps only a square area that you choose on a preview, and closes the camera between bursts. This keeps the
 phone cool and saves battery.
 
-FaunaLapse has no artificial intelligence (AI). Its sister app,
-[FaunaPulse](https://github.com/valentinitnelav/fauna-pulse), detects insects with AI on newer phones.
+FaunaLapse has no artificial intelligence (AI). Check its sister app,
+[FaunaPulse](https://github.com/valentinitnelav/fauna-pulse),
+which can detect & track insects in real time with AI on newer phones.
 
 ## Status
 
 <details>
 	<summary>Expand:</summary>
 
-Scheduled photo and video sessions with the screen off work on the first test phones. 
+On the phones below the app installs and test time-lapse sessions ran to the end,
+mostly with the screen off (indoors, from minutes to about 1.5 hours).
+Not yet used in a field studies / tests outdoors.
 
-Phase 0 tests on more phones (speed, power, heat) are running.
-See [docs/PHONES.md](docs/PHONES.md) for the phones tested so far.
+Details and measurements per phone: [docs/PHONES.md](docs/PHONES.md).
+
+| Phone | Android | Checked |
+|---|---|---|
+| Huawei P10 Lite (2017) | 8.0 | photos, video |
+| Blackview A60 (2019) | 8.1 (Go edition) | photos, video |
+| Xiaomi Redmi Note 9S (2020) | 12 | photos, video, battery use |
+| Samsung Galaxy M12 (2021) | 13 | photos, video, battery use |
+| Xiaomi 11T Pro (2021) | 14 | photos |
+| Emulator (a virtual phone on a computer) | 16 | screens, photos, video |
+
+Note on LLM usage:
 
 The code is written with the help of AI coding agents (Claude Code and others),
 guided and reviewed by the project owner.

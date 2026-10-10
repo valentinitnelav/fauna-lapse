@@ -1,6 +1,7 @@
 package com.faunalapse.app;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -51,9 +52,7 @@ final class Storage {
         List<Place> places = new ArrayList<>();
         File phoneRoot = Environment.getExternalStorageDirectory();
         File shared = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "FaunaLapse");
-        boolean canShare = Build.VERSION.SDK_INT >= 30 || context.checkSelfPermission(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        boolean useShared = canShare && (shared.isDirectory() || shared.mkdirs());
+        boolean useShared = canShare(context) && (shared.isDirectory() || shared.mkdirs());
         places.add(new Place(PHONE, context.getString(R.string.storage_phone), phoneRoot,
                 useShared ? shared : appDir(context.getExternalFilesDir(null), context), !useShared));
         // The app's folder on each storage; [0] is the phone's, null when a storage is not ready.
@@ -74,6 +73,16 @@ final class Storage {
                     !cardUseShared));
         }
         return places;
+    }
+
+    /** True when the app may write in the shared Documents folder. Android 8 to 10 grant only the
+     *  permissions asked for, and give write access to shared folders only with read granted too. */
+    static boolean canShare(Context context) {
+        return Build.VERSION.SDK_INT >= 30
+                || context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED
+                && context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private static File appDir(File own, Context context) {
@@ -108,6 +117,15 @@ final class Storage {
     /** The app's own sessions folder on the phone: no permission needed, deleted with the app. */
     static File appSessionsDir(Context context) {
         return appDir(context.getExternalFilesDir(null), context);
+    }
+
+    /** Free bytes where the folder is. Measured on the nearest folder that exists: Android answers 0
+     *  for a folder not made yet (the app's own sessions folder before the first session). */
+    @SuppressLint("UsableSpace")
+    static long free(File dir) {
+        File f = dir;
+        while (f != null && !f.exists()) f = f.getParentFile();
+        return f == null ? 0 : f.getUsableSpace();
     }
 
     /** A folder as file manager apps show it: "Internal storage/Documents/FaunaLapse",
