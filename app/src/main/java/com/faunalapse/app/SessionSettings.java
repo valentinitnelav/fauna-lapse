@@ -19,20 +19,20 @@ final class SessionSettings {
     double stepS = 2;            // a 3 s step caught about 90 % of visits (Edwards et al. 2015)
     double burstS = 60;          // longer than a typical visit (about 11 s)
     double clipMin = 5;
-    double breakMin = 5;         // camera off about 83 % of the time with photo bursts, half with clips (owner)
+    double breakMin = 5;         // camera off about 83 % of the time with photo bursts, half with clips (maintainer)
     boolean daily = false;
-    int runMin = 60;             // one hour, a usual observation period (owner, 2026-10-04)
+    int runMin = 60;             // one hour, a usual observation period (maintainer, 2026-10-04)
     String windows = "05:00-21:00"; // early morning and evening visits count (Toivonen and Humberg 2026)
     int days = 1;
     int squarePercent = 100;     // square side as a share of the short side of the photo
     double squareX = 0.5;        // square centre as shares of the photo width and height (RoiMath
     double squareY = 0.5;        // "photo"); placed on the aim screen, default the middle
-    boolean focusFixed = true;   // autofocus may pick another flower in a dense patch (owner, 2026-10-04)
-    double focusDiopters = 5;    // 1 / distance in m: 20 cm, a usual distance from phone to flower (owner)
-    int savedSidePx = 1280;      // photos and video; input size of many insect detectors (owner, 2026-10-04)
-    int videoFps = 5;            // enough to track insects on the PC, with smaller files (owner, 2026-10-04)
-    double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (owner, 2026-10-03)
-    int screenOffMin = 3;        // after the last touch, if Screen off is forgotten; 0: never (owner, 2026-10-05)
+    boolean focusFixed = true;   // autofocus may pick another flower in a dense patch (maintainer, 2026-10-04)
+    double focusDiopters = 5;    // 1 / distance in m: 20 cm, a usual distance from phone to flower (maintainer)
+    int savedSidePx = 1280;      // photos and video; input size of many insect detectors (maintainer, 2026-10-04)
+    int videoFps = 5;            // enough to track insects on the PC, with smaller files (maintainer, 2026-10-04)
+    double heatLimitC = 45;      // phones still work; most stop charging near 45 °C (maintainer, 2026-10-03)
+    int screenOffMin = 3;        // after the last touch, if Screen off is forgotten; 0: never (maintainer, 2026-10-05)
 
     /** Saved square side limits: the smallest common classifier input; a sanity bound (squares are
      *  never enlarged beyond their real pixels anyway). */

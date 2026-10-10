@@ -56,7 +56,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 | Default | Value | Where |
 |---|---|---|
 | Session settings (mode photo, step 2 s, burst 60 s, clip 5 min, break 5 min, run 1 h, windows 05:00-21:00, 1 day, square 100 % of the short side in the middle, focus fixed at 20 cm, saved side 1280 px, video 5 fps, screen off by itself 3 min after the last touch on the main screen, with the Screen off right) | reasons on the screen | `SessionSettings` fields, `strings.xml` hints |
-| Video frame rate and bit rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps); Camera2 sends every n-th frame to the recorder (repeating group), with Camera1 `FrameRates.Picker` keeps frames on the time grid; real time stamps; bit rate asked = the phone's best preset in bits per pixel, encoder's own rate control (best detail, owner's choice; Samsung 3.9 Mbit/s at 1280 px); key frame every 2 s | `FrameRates`, `Camera2Session.startClip`, `SquareRecorder` |
+| Video frame rate and bit rate | camera at the lowest fixed rate that is a multiple of it (Samsung: 15 for 5 fps); Camera2 sends every n-th frame to the recorder (repeating group), with Camera1 `FrameRates.Picker` keeps frames on the time grid; real time stamps; bit rate asked = the phone's best preset in bits per pixel, encoder's own rate control (best detail, maintainer's choice; Samsung 3.9 Mbit/s at 1280 px); key frame every 2 s | `FrameRates`, `Camera2Session.startClip`, `SquareRecorder` |
 | Wake lead / autofocus lead / keep camera on if off for less than / shortest clip | 5 s / 3 s / 30 s / 3 s | `SessionRunner` constants |
 | Stop after camera errors in a row; wake lock | 3; held for the whole session (plan end + 10 min) | `SessionRunner.MAX_ERRORS_IN_A_ROW`, `CaptureService.startSession` |
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
@@ -83,7 +83,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 | `RoiMath.java`, `PhotoSaver.java` | Square position, saved size, screen and focus-area maps, upright turn, video crop and texture corners (unit tested); cutting, turning and saving the photo square |
 | `SquareRecorder.java` | Video of the square: camera texture, GPU cut and turn, hardware H.264 encoder, MP4; encoder choice and bit rate |
 | `SessionLog.java` | `session.jsonl` lines, time formats, file names |
-| `PhoneCheck.java`, `HelpToggles.java`, `ScreenOff.java` | Phone settings for the field (read only; main screen and record); explanations behind the (i) of a label; Screen off: a device admin app with only the right to lock the screen (`lockNow`), granted once by the user |
+| `PhoneCheck.java`, `HelpToggles.java`, `ScreenOff.java` | Phone settings for the field (read only; main screen and record; a clock before 2026-10-01 or before the app's install counts as wrong); explanations behind the (i) of a label; Screen off: a device admin app with only the right to lock the screen (`lockNow`), granted once by the user |
 | `Camera1Backend.java`, `SpeedTest.java`, `Camera2StillTest.java`, `CameraFacts.java`, `Camera2Facts.java` | Phase 0 tests (debug builds only; they start 10 s after the tap) and shared Camera1 size helpers |
 | `tools/phase0_speed_report.py` | PC: copy the newest speed test from a phone and summarise it |
 
@@ -93,8 +93,8 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
    current says; run one from full to empty). Breaks: alarms, not the wake lock (Samsung 40-55 mA)?
 2. Camera2 photos are about one stop brighter than Camera1 (bright parts clip). Parked: `docs/PARKED.md`.
 3. Camera1 video has no hardware zoom (a centred zoom could help small squares). Photos stay cut by
-   the app (owner): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
-4. Camera1 takes the largest photo: Blackview A60 a 16:9 size enlarged in software (4:3 may hold more
-   real pixels; changes video and aim: owner decides). HomTom HT50 untested. Lint kept: `allowBackup`, Gradle.
-5. First release `0.1.0-alpha.1`: the owner makes the signing key (`tools/create_release_key.sh`),
+   the app (maintainer): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
+4. Photo size: the largest square, not the most pixels (`RoiMath.largerSquare`); the sensor's real
+   pixels stay unknown (Blackview A60 4:3 is still enlarged). HomTom HT50 untested. Lint kept: `allowBackup`, Gradle.
+5. First release `0.1.0-alpha.1`: the maintainer makes the signing key (`tools/create_release_key.sh`),
    links Zenodo to GitHub, approves the push. Before it: a field day and an outdoor GPS test.

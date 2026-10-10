@@ -2,6 +2,8 @@ package com.faunalapse.app;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -20,6 +22,16 @@ public class RoiMathTest {
         // Pushed past the top right corner: it stops at the edges.
         assertArrayEquals(new int[] {2500, 0, 4000, 1500}, RoiMath.square(4000, 3000, 0.5, 0.9, 0.1));
         assertArrayEquals(new int[] {0, 0, 3000, 3000}, RoiMath.square(4000, 3000, 1.0, 0.0, 0.5));
+    }
+
+    @Test
+    public void photoSizeHoldsTheLargestSquare() {
+        // Blackview A60: the 16:9 size has more pixels but a smaller square than the 4:3 one.
+        assertTrue(RoiMath.largerSquare(4160, 3120, 4864, 2736));
+        assertFalse(RoiMath.largerSquare(4864, 2736, 4160, 3120));
+        // The same square: more pixels win.
+        assertTrue(RoiMath.largerSquare(4000, 3000, 3000, 3000));
+        assertFalse(RoiMath.largerSquare(4000, 3000, 4000, 3000));
     }
 
     @Test

@@ -78,7 +78,7 @@ final class Camera1Backend {
             camera.setErrorCallback((error, cam) -> finish("camera error " + error));
 
             Camera.Parameters p = camera.getParameters();
-            Camera.Size picture = largest(p.getSupportedPictureSizes());
+            Camera.Size picture = photoSize(p.getSupportedPictureSizes());
             p.setPictureSize(picture.width, picture.height);
             // Smallest preview with the same shape as the photo: some phones crop the photo to
             // the preview shape, and a small preview means less work for the camera chip.
@@ -242,6 +242,33 @@ final class Camera1Backend {
             if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) return i;
         }
         return 0; // no back camera: use the first one
+    }
+
+    /** The photo size with the largest square ({@link RoiMath#largerSquare}). */
+    static Camera.Size photoSize(List<Camera.Size> sizes) {
+        Camera.Size best = sizes.get(0);
+        for (Camera.Size s : sizes) {
+            if (RoiMath.largerSquare(s.width, s.height, best.width, best.height)) best = s;
+        }
+        return best;
+    }
+
+    /** For video the square is cut from the preview frames: the photo shape whose preview (up to
+     *  1920 wide) holds the largest square (Blackview A60: 16:9 with 1280x720, not 4:3 with 800x600). */
+    static Camera.Size videoShape(List<Camera.Size> pictures, List<Camera.Size> previews) {
+        Camera.Size best = null;
+        Camera.Size bestPreview = null;
+        for (Camera.Size s : pictures) {
+            Camera.Size v = largestWithSameShape(previews, s, 1920);
+            if (!sameShape(v, s)) continue;
+            int side = Math.min(v.width, v.height);
+            int bestSide = best == null ? 0 : Math.min(bestPreview.width, bestPreview.height);
+            if (side > bestSide || side == bestSide && RoiMath.largerSquare(s.width, s.height, best.width, best.height)) {
+                best = s;
+                bestPreview = v;
+            }
+        }
+        return best != null ? best : photoSize(pictures);
     }
 
     static Camera.Size largest(List<Camera.Size> sizes) {

@@ -1689,7 +1689,8 @@ public final class MainActivity extends Activity {
      *  what the battery limits stop. */
     private void showPhoneCheck(boolean session) {
         PhoneCheck c = PhoneCheck.read(this);
-        String state = session + c.toJson().toString();
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        String state = session + today + c.toJson();
         if (state.equals(phoneState)) return;
         phoneState = state;
         phoneChecks.removeAllViews();
@@ -1698,6 +1699,10 @@ public final class MainActivity extends Activity {
         if (c.ready()) {
             if (!session) addCheck(getString(R.string.check_ok), 0, null);
             return;
+        }
+        if (c.clockWrong) {
+            addCheck(getString(R.string.check_clock, today), R.string.check_clock_button,
+                    new Intent(Settings.ACTION_DATE_SETTINGS));
         }
         List<String> radios = new ArrayList<>();
         if (!c.airplaneMode) radios.add(getString(R.string.radio_mobile));

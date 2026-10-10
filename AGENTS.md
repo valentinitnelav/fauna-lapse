@@ -12,10 +12,10 @@ closes the camera between bursts and logs every event, so visit rates can be com
 app: FaunaPulse (https://github.com/valentinitnelav/fauna-pulse, Flutter, with AI); its ideas are
 re-written in Java, never copied.
 
-The owner is a pollination ecologist (R, Python), not a mobile developer: explain mobile terms in
+The maintainer is a pollination ecologist (R, Python), not a mobile developer: explain mobile terms in
 plain language at first use, and write plain English with short sentences and no idioms.
 
-## Hard constraints (change only with the owner's approval)
+## Hard constraints (change only with the maintainer's approval)
 
 - Android only for now (iOS as a separate app, if ever). No AI. No network access; GPS only on tap.
 - Java 8 language level; no Kotlin, no C/C++ (the image work runs in the camera hardware, so native
@@ -73,7 +73,7 @@ adb shell am start -n com.faunalapse.app/.MainActivity --ez pack true   # pack t
 adb shell am start -n com.faunalapse.app/.MainActivity --ez start_session true \
     --es mode photo --es step_s 1 --es burst_s 10 --es break_min 1 --es schedule run --es run_min 4
 adb shell am start -n com.faunalapse.app/.MainActivity --ez stop_session true
-# Guards, with the owner's OK: dumpsys battery set temp 460 | unplug | set level 10; then reset
+# Guards, with the maintainer's OK: dumpsys battery set temp 460 | unplug | set level 10; then reset
 ```
 
 Keep schedule and maths code in classes without Android code, and test it. On the phone: sessions in
@@ -92,7 +92,7 @@ Keep schedule and maths code in classes without Android code, and test it. On th
 
 ## Git
 
-- Do not commit or push unless the owner asks. Never push to `main`, never force push, no
+- Do not commit or push unless the maintainer asks. Never push to `main`, never force push, no
   destructive Git operations without explicit approval. Code changes go on the branch `develop`.
 - Suggest a commit message after code changes: a first line of at most about 70 characters, an empty
   line, then what changed and why (this is the project history). No `Co-Authored-By` or other agent
@@ -112,9 +112,9 @@ Keep schedule and maths code in classes without Android code, and test it. On th
 
 ## Working with test phones
 
-- Ask the owner before running anything on a connected phone. It must be unlocked and on a charger,
+- Ask the maintainer before running anything on a connected phone. It must be unlocked and on a charger,
   and nobody should use it during the check.
-- Update with `adb install -r`; do not uninstall without the owner's agreement (it deletes the saved
+- Update with `adb install -r`; do not uninstall without the maintainer's agreement (it deletes the saved
   settings). Read only the app's own log lines and folders on the phone.
-- A new default in the code does not change a value already saved on a phone: tell the owner which
+- A new default in the code does not change a value already saved on a phone: tell the maintainer which
   setting to change by hand.

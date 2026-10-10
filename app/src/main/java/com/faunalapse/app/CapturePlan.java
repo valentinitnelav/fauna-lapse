@@ -17,7 +17,7 @@ import java.util.TimeZone;
  * break, burst, break, and so on. A burst is cut at the period end. Every answer is computed from the
  * clock time passed in, never from counters, so a late wake-up or a clock change heals itself.
  *
- * Idea from FaunaPulse (SchedulePlan and TimeLapsePlan by the same owner), rewritten in Java.
+ * Idea from FaunaPulse (SchedulePlan and TimeLapsePlan by the same author), rewritten in Java.
  */
 final class CapturePlan {
 

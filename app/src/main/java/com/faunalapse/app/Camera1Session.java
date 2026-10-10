@@ -67,14 +67,15 @@ final class Camera1Session implements SessionCamera {
         put("camera_api", "camera1");
         put("camera_id", cameraId);
         put("sensor_orientation", info.orientation);
-        Camera.Size picture = Camera1Backend.largest(p.getSupportedPictureSizes());
+        List<Camera.Size> previews = p.getSupportedPreviewSizes();
+        Camera.Size picture = video ? Camera1Backend.videoShape(p.getSupportedPictureSizes(), previews)
+                : Camera1Backend.photoSize(p.getSupportedPictureSizes());
         photoSize = picture;
         focusOnSquare = canFocus && p.getMaxNumFocusAreas() > 0;
         exposureOnSquare = p.getMaxNumMeteringAreas() > 0;
         put("photo_size", picture.width + "x" + picture.height);
         put("focus_on_square", focusOnSquare);
         put("exposure_on_square", exposureOnSquare);
-        List<Camera.Size> previews = p.getSupportedPreviewSizes();
         if (video) {
             List<int[]> ranges = p.getSupportedPreviewFpsRange();
             int[][] perS = new int[ranges.size()][];

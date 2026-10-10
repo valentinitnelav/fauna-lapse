@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
  */
 public final class AimActivity extends Activity implements TextureView.SurfaceTextureListener {
 
-    /** Share of the screen height the camera view may take (owner): the controls below get the
+    /** Share of the screen height the camera view may take (maintainer): the controls below get the
      *  rest. A smaller view still shows the whole camera field, only smaller. */
     private static final double VIEW_SHARE = 0.4;
 

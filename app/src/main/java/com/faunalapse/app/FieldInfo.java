@@ -43,7 +43,7 @@ final class FieldInfo {
     /** Location extras key: the satellites used for the position (as Android's GPS sets it). */
     static final String SATELLITES = "satellites";
     /** Get location stops at this uncertainty or less, in whole m (the user's goal; default 10,
-     *  owner); 0 searches the full time. Phones often do not reach under 5 m; above 1000 m any
+     *  maintainer); 0 searches the full time. Phones often do not reach under 5 m; above 1000 m any
      *  first position would do, so it is no goal. */
     static final int GPS_GOAL_M = 10;
     static final int LOW_GPS_GOAL_M = 5;

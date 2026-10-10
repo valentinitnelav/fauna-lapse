@@ -123,14 +123,14 @@ final class SpeedTest implements Runnable {
 
     private void stillTests() {
         List<Camera.Size> all = camera.getParameters().getSupportedPictureSizes();
-        Camera.Size largest = Camera1Backend.largest(all);
-        double full = (double) largest.width * largest.height;
-        // The largest size and those closest to 1/2, 1/4 and 1/10 of its pixels, same shape.
+        Camera.Size photo = Camera1Backend.photoSize(all);
+        double full = (double) photo.width * photo.height;
+        // The session's photo size and those closest to 1/2, 1/4 and 1/10 of its pixels, same shape.
         List<Camera.Size> picked = new ArrayList<>();
         for (double share : new double[] {1, 0.5, 0.25, 0.1}) {
             Camera.Size best = null;
             for (Camera.Size s : all) {
-                if (Camera1Backend.sameShape(s, largest) && (best == null
+                if (Camera1Backend.sameShape(s, photo) && (best == null
                         || Math.abs(s.width * s.height - share * full)
                         < Math.abs(best.width * best.height - share * full))) {
                     best = s;
@@ -194,7 +194,7 @@ final class SpeedTest implements Runnable {
     private void previewTests() {
         Camera.Parameters p = camera.getParameters();
         List<Camera.Size> sizes = p.getSupportedPreviewSizes();
-        Camera.Size photo = Camera1Backend.largest(p.getSupportedPictureSizes());
+        Camera.Size photo = Camera1Backend.photoSize(p.getSupportedPictureSizes());
         Camera.Size sameShape = null;
         for (Camera.Size s : sizes) {
             if (Camera1Backend.sameShape(s, photo)

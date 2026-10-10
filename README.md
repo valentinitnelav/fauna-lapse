@@ -38,7 +38,7 @@ Details and measurements per phone: [docs/PHONES.md](docs/PHONES.md).
 Note on LLM usage:
 
 The code is written with the help of AI coding agents (Claude Code and others),
-guided and reviewed by the project owner.
+guided and reviewed by the maintainer.
 
 </details>
 
@@ -70,9 +70,10 @@ FaunaLapse is not yet in the Google Play Store: download the APK (the install fi
   (often the oldest ones) focus automatically at the start of each burst or clip, and the app says so.
 - Screen off (a button, or by itself a few minutes after the last touch) and camera closed between
   bursts, to save power and avoid heat.
-- A phone check before Start: airplane mode, Wi-Fi, Bluetooth, location, battery limits and Stay
-  awake (a developer option that keeps the screen on while charging), each with a button to its
-  settings page, so an old phone used only as a camera wastes no energy.
+- A phone check before Start: a phone clock that looks wrong (it often resets when the battery runs
+  empty), airplane mode, Wi-Fi, Bluetooth, location, battery limits and Stay awake (a developer
+  option that keeps the screen on while charging), each with a button to its settings page, so an
+  old phone used only as a camera wastes no energy.
 - A pause while the phone is too warm, and a clean stop when the battery runs low or the storage
   is nearly full.
 - During a session: the last saved photo on the main screen, and a pause to adjust the phone (with

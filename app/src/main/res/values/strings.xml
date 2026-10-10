@@ -274,6 +274,8 @@
 
     <!-- 4 Phone for the field -->
     <string name="card_phone">4 · Phone for the field</string>
+    <string name="check_clock">Phone date %1$s looks wrong. Set the date and time: file names and the session record use it.</string>
+    <string name="check_clock_button">Open settings</string>
     <string name="check_radios">On: %1$s. For the field, turn on airplane mode (flight mode) and keep Wi-Fi and Bluetooth off: radios use energy.</string>
     <string name="radio_mobile">mobile network</string>
     <string name="radio_wifi">Wi-Fi</string>

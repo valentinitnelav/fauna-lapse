@@ -95,7 +95,7 @@ speed-test runs and sessions, on the charger.
 - MIUI: installs over USB need *Install via USB* in Developer options and a tap on the phone each
   time. Allowing the Screen off button shows MIUI's own red "Danger" page with rights FaunaLapse
   does not ask for (Android's page before it lists only "Lock the screen"). A double tap did not
-  wake the screen (owner), although Android's own double-tap setting reads "on".
+  wake the screen (tried by hand), although Android's own double-tap setting reads "on".
 
 ### Results
 
@@ -148,10 +148,13 @@ App launch setting). The phone clock had reset to 1970 (no SIM, no Wi-Fi).
 
 MediaTek MT6580, 32-bit, 1 GB RAM. Tested 2026-10-10 on the charger, indoors.
 
-- Camera2 "legacy" (only wraps Camera1): the app uses Camera1. Photo sizes up to 4864x2736 (16:9,
-  sold as "13 MP by interpolation"); the app takes this largest size, so the square has 2736 pixels of
-  which fewer are real (Android does not tell the sensor size; 3264x2448 4:3 may be the native one).
-  Preview and video stream at most 1280x720. Autofocus sharp in 0.7 to 1.1 s; no fixed focus.
+- Camera2 "legacy" (only wraps Camera1): the app uses Camera1. Sold as "13 MP by interpolation".
+  The size with the most pixels, 4864x2736 (16:9), is the 4:3 photo with top and bottom cut off and
+  enlarged: it covers the same width as 4160x3120 with 17 % more pixels across. So photos use
+  4160x3120 (square up to 3120 px; Android does not tell how many of them are real). Photo time
+  0.97 s at 3264x2448, 1.2 s at 4160x3120 and at 4864x2736 (speed test, camera kept open).
+- Preview and video stream at most 1280x720 (16:9; 4:3 only up to 800x600), so video keeps the 16:9
+  shape. Autofocus sharp in 0.7 to 1.1 s; no fixed focus.
 - Its "clean apps on lock" switch (`settings system hct_task_clean_auto`, on by default) force-stops
   every app about 10 to 15 s after the screen goes off, also one with a foreground service; switched
   off by adb for these tests. The Settings page for it is not found yet.
@@ -162,6 +165,7 @@ MediaTek MT6580, 32-bit, 1 GB RAM. Tested 2026-10-10 on the charger, indoors.
 | Photos, step 1 s | one photo every 2 s (photo about 1.45 s) and the step warning |
 | Photos, step 2 s, one 20 min burst | 600 of 600, 0 skipped, 0 errors, up to 17 ms late; battery 25 to 27 °C |
 | Video, 1 min clips at 5 fps, 1 min breaks | 3 clips of 300 frames, 0 ms late; square 704 px (720 real), only 0.17 Mbit/s (soft detail) |
+| Photos at 4160x3120, step 2 s, 20 s bursts, 2 min | 20 of 20, 0 skipped; photo 1.45 to 1.7 s (as with 4864x2736) |
 
 ## Android 16 emulator (Pixel 6 screen, x86_64 image, simulated camera)
 

@@ -177,7 +177,7 @@ final class Camera2Session implements SessionCamera {
             put("focus_distance_calibration", calibration(c));
         }
 
-        Size shape = largest(photoSizes(map));
+        Size shape = photoSize(photoSizes(map));
         photoSize = shape;
         put("photo_size", shape.getWidth() + "x" + shape.getHeight());
         put("focus_on_square", focusOnSquare);
@@ -638,10 +638,11 @@ final class Camera2Session implements SessionCamera {
         return sizes.toArray(new Size[0]);
     }
 
-    private static Size largest(Size[] sizes) {
+    /** The photo size with the largest square ({@link RoiMath#largerSquare}). */
+    private static Size photoSize(Size[] sizes) {
         Size best = sizes[0];
         for (Size s : sizes) {
-            if ((long) s.getWidth() * s.getHeight() > (long) best.getWidth() * best.getHeight()) best = s;
+            if (RoiMath.largerSquare(s.getWidth(), s.getHeight(), best.getWidth(), best.getHeight())) best = s;
         }
         return best;
     }

@@ -29,6 +29,14 @@ final class RoiMath {
         return new int[] {left, top, left + side, top + side};
     }
 
+    /** True when a w1 x h1 photo holds a larger square than a w2 x h2 one (a longer short side), or
+     *  the same square with more pixels. The size with the most pixels may be only the 4:3 photo
+     *  with top and bottom cut off and enlarged (Blackview A60: 4864x2736 against 4160x3120). */
+    static boolean largerSquare(int w1, int h1, int w2, int h2) {
+        int s1 = Math.min(w1, h1), s2 = Math.min(w2, h2);
+        return s1 != s2 ? s1 > s2 : (long) w1 * h1 > (long) w2 * h2;
+    }
+
     /** Side to save: the target, but never more than the real pixels inside the square (never
      *  enlarge), rounded down to a multiple of {@link #SIDE_STEP}. */
     static int savedSide(int realSide, int target) {

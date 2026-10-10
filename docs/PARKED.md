@@ -1,6 +1,6 @@
 # Parked ideas
 
-Ideas the owner put aside for now, with what was found, so the work is not lost. Read the entry
+Ideas put aside for now, with what was found, so the work is not lost. Read the entry
 before reopening an idea; when one is built or dropped, remove it here.
 
 ## Copying sessions to a computer
@@ -25,7 +25,7 @@ pulling them from the computer, and tells which sessions were copied completely.
 with adb, checks every file's size, copies again only what is missing and never deletes on the
 phone (optionally with checksums); copying over Wi-Fi from the app.
 
-**Why parked:** users should not need Developer options (owner).
+**Why parked:** users should not need Developer options (maintainer).
 
 ## Heat drift of a fixed focus
 
@@ -44,7 +44,7 @@ the set distance; a sharpness value per photo in the record.
 
 **Wish:** set up one phone and copy its settings to the others: a settings file, later a QR code.
 
-**Why parked:** not needed before the first release (owner).
+**Why parked:** not needed before the first release (maintainer).
 
 ## FaunaLapse on the lock screen during a session
 
@@ -57,13 +57,13 @@ stands); anyone who wakes the phone could then see and stop the session without 
 
 ## Battery tests without unplugging by hand
 
-**Wish:** measure battery use per hour without the owner unplugging the phone each time.
+**Wish:** measure battery use per hour without unplugging the phone by hand each time.
 
 **What was found:**
 - `dumpsys battery unplug` only tells the apps that the phone is unplugged: the phone still
   charges, so the measured current is wrong. Stopping the charging itself needs root.
 - A USB hub that switches the power of each port can do it: the `uhubctl` tool (installed on the
-  owner's computer; runs without sudo) switches it off and on. The laptop's own ports cannot
+  development computer; runs without sudo) switches it off and on. The laptop's own ports cannot
   (`uhubctl -f`: "nops"), and the small hub in use (1a40:0101, "ganged") cuts only the data: the
   phone kept USB power.
 - uhubctl's README lists hubs that switch per port, newer ones for example Rosonway RSH-A10,
@@ -73,12 +73,12 @@ stands); anyone who wakes the phone could then see and stop the session without 
 - The app logs the battery itself (`battery` in `session_end`), so no cable data is needed during
   the test: the hub switches the power off, and on again at the end.
 - Without a hub: adb over Wi-Fi (wireless debugging on Android 11+, `adb tcpip` on older phones):
-  the owner unplugs once for a series of tests. Wi-Fi must stay on, which costs a little energy
+  the phone is unplugged once for a series of tests. Wi-Fi must stay on, which costs a little energy
   and differs from the field.
 
-**Why parked:** it needs such a hub (owner deciding). Until then: adb over Wi-Fi (Redmi: wireless
+**Why parked:** it needs such a hub (maintainer to decide). Until then: adb over Wi-Fi (Redmi: wireless
 debugging; Samsung: `adb tcpip 5555` over the cable first, until the phone restarts), with Wi-Fi on
-as a known bias in the results, or the owner unplugs the phone. This works: the 1 h tests in
+as a known bias in the results, or the phone is unplugged by hand. This works: the 1 h tests in
 `docs/PHONES.md` ran so, with adb disconnected during each hour and connected again afterwards.
 
 ## Emulated phones
@@ -88,10 +88,10 @@ as a known bias in the results, or the owner unplugs the phone. This works: the 
 **What was found:** an emulator with one system image needs about 2 GB of downloads and runs at a
 usable speed only with the user in the `kvm` group. It finds crashes, permission, storage and layout
 problems, but not camera speed, battery, heat or the battery managers of Xiaomi, Huawei and others.
-An Android 16 emulator is set up on the owner's laptop (results in `docs/PHONES.md`).
+An Android 16 emulator is set up on the development laptop (results in `docs/PHONES.md`).
 
 **Why parked:** an Android 7 image waits until the three real Android 7 and 8.1 phones are tested
-(owner).
+(maintainer).
 
 ## Camtrap DP export
 
@@ -116,7 +116,7 @@ TDWG, https://camtrap-dp.tdwg.org/), to share and publish the data.
 only; a Python or R script on the computer builds one package per study from `session.jsonl`
 (recommended: the standard is still changing, and the app stays small).
 
-**Why parked:** not a priority now (owner). Build the script when the first studies need it.
+**Why parked:** not a priority now (maintainer). Build the script when the first studies need it.
 
 ## Publishing to GBIF
 
@@ -126,7 +126,7 @@ only; a Python or R script on the computer builds one package per study from `se
 Camtrap DP package. Time-lapse photos become occurrences only after detection (by AI or a person)
 and identification checked by a taxonomist.
 
-**Why parked:** nothing to publish before the photos are analysed (owner).
+**Why parked:** nothing to publish before the photos are analysed (maintainer).
 
 ## Waking the screen with a tap
 
@@ -138,7 +138,7 @@ Motions and gestures; off on the test phone); on the Redmi Note 9S a double tap 
 keeps the touch screen listening (a little energy), and rain or insects might wake the screen. A
 black screen kept on would take taps, but costs energy.
 
-**Why parked:** the power button, pressed gently, or the phone's own setting is enough (owner).
+**Why parked:** the power button, pressed gently, or the phone's own setting is enough (maintainer).
 
 ## A phone ID that survives a factory reset
 
@@ -146,7 +146,7 @@ black screen kept on would take taps, but costs energy.
 serial number); `ANDROID_ID` changes with a factory reset. A name written on the phone and typed as
 a custom field (for example Device ID) does the job.
 
-**Why parked:** not worth it (owner).
+**Why parked:** not worth it (maintainer).
 
 ## Older sessions after a new install
 
@@ -164,4 +164,4 @@ app could read every file on the phone, Android warns strongly, and Google Play 
 needed, (1) is the way.
 
 **Why parked:** rare (updates keep access; INSTALL.md warns against uninstalling) and nothing is
-lost: the file app and a computer still see the files (owner).
+lost: the file app and a computer still see the files (maintainer).

@@ -76,7 +76,7 @@ final class Camera2StillTest {
             String id = backCameraId(manager);
             StreamConfigurationMap map = manager.getCameraCharacteristics(id)
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Size size = largest(Camera2Session.photoSizes(map));
+            Size size = photoSize(Camera2Session.photoSizes(map));
             SpeedTest.put(r, "size", size.getWidth() + "x" + size.getHeight());
             Size previewSize = smallestWithShape(map.getOutputSizes(SurfaceTexture.class), size);
 
@@ -245,10 +245,11 @@ final class Camera2StillTest {
         throw new IllegalStateException("no back camera");
     }
 
-    private static Size largest(Size[] sizes) {
+    /** The photo size with the largest square ({@link RoiMath#largerSquare}). */
+    private static Size photoSize(Size[] sizes) {
         Size best = sizes[0];
         for (Size s : sizes) {
-            if ((long) s.getWidth() * s.getHeight() > (long) best.getWidth() * best.getHeight()) best = s;
+            if (RoiMath.largerSquare(s.getWidth(), s.getHeight(), best.getWidth(), best.getHeight())) best = s;
         }
         return best;
     }

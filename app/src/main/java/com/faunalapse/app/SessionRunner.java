@@ -51,7 +51,7 @@ final class SessionRunner implements Runnable {
     private static final long PAUSE_CHECK_MS = 30000;
     /** Longest single wait, so a changed phone clock is noticed within a minute. */
     private static final long MAX_SLEEP_MS = 60000;
-    /** A pause by the user ends by itself after this long (owner): time to adjust the phone without
+    /** A pause by the user ends by itself after this long (maintainer): time to adjust the phone without
      *  hurry, while a forgotten pause costs little. */
     static final long PAUSE_LIMIT_MS = 10 * 60000L;
     /** How a burst or clip ended. */
