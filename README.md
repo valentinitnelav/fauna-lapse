@@ -83,8 +83,8 @@ FaunaLapse is not yet in the Google Play Store: download the APK (the install fi
   camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from your
   own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
   taken with the phone's camera app and kept apart in the session folder; one GPS position on a tap
-  (WGS 84; the GPS switches off again when the position reaches your uncertainty goal, 10 m unless
-  you change it), or latitude, longitude and uncertainty typed from another GPS device.
+  (WGS 84; the GPS switches off again when the position's uncertainty reaches your *Stop at* value,
+  10 m unless you change it), or latitude, longitude and uncertainty typed from another GPS device.
 - A session log of every photo and event, ready for analysis in R or Python, with the battery use
   of the session.
 - Files in `Documents/FaunaLapse` on the phone or on a memory card (SD card), one folder per session
@@ -117,7 +117,8 @@ FaunaLapse is not yet in the Google Play Store: download the APK (the install fi
    until the flower is sharp. Tap *Done*, then *Change field metadata* in *2 · Field metadata*: fill
    in the site, plant and setup, take site photos if you like, and for the position tap *Get
    location* outdoors (Location must be on: *Open settings* beside it switches it on and, afterwards,
-   off) or type latitude and longitude from another GPS device. Then tap *Start session*.
+   off) or type latitude and longitude from another GPS device, and tap *Done*. Then tap *Start
+   session*.
 4. Tap *Screen off* on the status card: the screen switches off as with the power button, but
    without pressing the phone where it stands. The first time, Android asks you to allow it
    (FaunaLapse becomes a "device admin app" with the single right to lock the screen; remove it

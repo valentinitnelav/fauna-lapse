@@ -20,7 +20,7 @@ phone until you copy or share it yourself.
   the session folder names, so files from several phones do not mix on one computer. On Android 8
   and newer each app gets its own value, so other apps cannot match it; a factory reset changes it.
 - **Position:** only when you tap *Get location*, the app turns on the GPS for one position and then
-  turns it off (after reaching your accuracy goal, or after 3 minutes). It never tracks you. You can
+  turns it off (after reaching your *Stop at* value, or after 3 minutes). It never tracks you. You can
   also type a position or leave it empty.
 - **Backup:** FaunaLapse does not allow Android's cloud backup, so nothing goes to a Google account.
 - **Deleting:** uninstalling FaunaLapse deletes its settings and its own folder
@@ -46,6 +46,11 @@ battery limits. It does not ask for that exemption itself.
 
 FaunaLapse never sends data to the developer or to anyone else. Files leave the phone only when you
 copy them (for example over USB) or share them with another app yourself.
+
+*Support FaunaLapse* on the main screen opens other apps: *Share* opens Android's share window with
+a link to FaunaLapse; *Report a problem* opens a GitHub page (or a web form) in your browser, with the
+FaunaLapse version, the phone model and the Android version filled in. You see all of it before you
+send it; what you send is then handled by GitHub (or the form service) under its own privacy policy.
 
 ## Children
 

@@ -209,6 +209,7 @@ public final class CaptureService extends Service {
         // The field metadata as it is now; the site photos and their text belong to this session
         // (SessionRunner moves the photos), so the next session starts without them.
         FieldInfo f = FieldInfo.load(this);
+        if (f.distanceFromFocus) f.distance = FieldInfo.focusDistance(this); // the aim screen may have moved it
         JSONObject field = f.toJson(this);
         f.sitePhotosAbout = "";
         f.save(this);

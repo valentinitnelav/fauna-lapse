@@ -57,6 +57,19 @@
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
+        <!-- Cards 2 and 3 of the main screen, on their own screens; the keyboard shrinks the form,
+             so Done stays above it. -->
+        <activity
+            android:name=".FieldActivity"
+            android:exported="false"
+            android:label="@string/card_field"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ScheduleActivity"
+            android:exported="false"
+            android:label="@string/card_schedule"
+            android:windowSoftInputMode="adjustResize" />
+
         <service
             android:name=".CaptureService"
             android:exported="false"

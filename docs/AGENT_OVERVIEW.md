@@ -14,10 +14,10 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 - **Main screen**: status card (state; while running: counts, last saved square or clip frame,
   warnings, phone checks, MB so far, Pause or Continue; folder, use, free space, memory card choice;
   Open the folder; Pack the photo sessions into zips; Screen off; last session, battery, clock fold
-  away); 1 Aim; 2 Field metadata (summary; on Change: phone model and ID, Camtrap DP setup fields,
-  distance from a calibrated fixed focus until typed, custom fields of 7 types, site photos, position
-  typed or from Get location (GPS off at the user's uncertainty goal or after 3 min), Location
-  switch); 3 Schedule (summary; on Change); 4 Phone for the field. A problem: dialog to its card.
+  away); 1 Aim; 2 Field metadata and 3 Schedule: summaries; Change opens FieldActivity (phone, setup,
+  custom fields of 7 types, distance from a calibrated fixed focus until typed; position typed or from
+  Get location, GPS off at Stop at or after 3 min; site photos) or ScheduleActivity, saved on Done or
+  Back (a wrong value asks first); 4 Phone; Start; Support. A saved problem: a dialog opens its screen.
 - **Aim screen**: camera view (at most 40 % of the screen height) in the session's camera setup; the
   square moves only from a finger inside it or within 24 dp of its edge; pinch or slider for its size
   (real and saved pixels live); focus and exposure follow it; focus fixed (Camera2, 20 cm, slider,
@@ -61,7 +61,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 | Stop after camera errors in a row; wake lock | 3; held for the whole session (plan end + 10 min) | `SessionRunner.MAX_ERRORS_IN_A_ROW`, `CaptureService.startSession` |
 | Heat pause / resume; low battery stop; storage reserve; heat checks | 45 °C (a setting, 35 to 50) / 3 °C lower; 15 % when not charging; 200 MB; every 10 s in a burst, 30 s in a pause | `SessionSettings.heatLimitC`, `Guards`, `SessionRunner` |
 | Pause by the user ends by itself; custom text / notes / list | 10 min (or at the session end); 100 / 5000 characters / 2 to 30 choices | `SessionRunner.PAUSE_LIMIT_MS`, `FieldInfo` |
-| Get location: uncertainty goal / time limit | 10 m (user sets 0 to 1000; under 5 m a warning; 0 = full time) / 3 min | `FieldInfo.GPS_GOAL_M`, `GpsFix.TIMEOUT_MS` |
+| Get location: Stop at (uncertainty goal) / time limit | 10 m (user sets 0 to 1000; under 5 m a warning; 0 = full time) / 3 min | `FieldInfo.GPS_GOAL_M`, `GpsFix.TIMEOUT_MS` |
 | JPEG quality (saved square, Camera2 photo); camera while waiting | 90, 90; lowest frame-rate range, focus mode `auto` (lens moves only when asked) | `PhotoSaver`, `Camera2Session`, `Camera1Session` |
 | Output | `Documents/FaunaLapse/<phone ID>_<start time>_<photo or video>/` on the phone or a memory card (user's choice; phone ID: 8 characters of `ANDROID_ID`; survives an uninstall; not in the Gallery). The app's own `Android/data/com.faunalapse.app/files/sessions/` (deleted with the app) on the phone with Android 10 and older without the storage permission, on a card with Android 7 to 10; tests in `Android/data/.../files/phase0/` | `Storage`, `CaptureService.outputDir` |
 
@@ -69,11 +69,11 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 
 | File | Job |
 |---|---|
-| `MainActivity.java` | Main screen (status card with the last photo, Pause and Stop; the four cards; Start) and phase 0 test buttons; permissions; phone turn at Start and Continue; adb hooks in debug builds |
+| `MainActivity.java`, `Support.java` | Main screen (status card with the last photo, Pause and Stop; the four cards; Start; Support: share, cite, report a problem on GitHub or a web form, `Support.FORM_URL`) and phase 0 test buttons; permissions; phone turn at Start and Continue; adb hooks in debug builds |
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java`, `Storage.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl`. The places for sessions (phone, memory cards), the chosen one, paths as file apps show them |
-| `SessionSettings.java` | Camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
-| `FieldInfo.java`, `CustomFields.java`, `GpsFix.java`, `SitePhotos.java` | Field metadata (saved apart from the settings; phone model and ID); the user's own fields on card 2; one GPS position (satellites live), then the GPS off; site photos with the camera app |
+| `ScheduleActivity.java`, `SessionSettings.java` | Schedule screen (card 3); camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
+| `FieldActivity.java`, `FieldInfo.java`, `CustomFields.java`, `GpsFix.java`, `SitePhotos.java` | Field metadata screen (card 2) and values (saved apart from the settings; phone model and ID); the user's own fields; one GPS position (satellites live), then the GPS off; site photos with the camera app |
 | `BatteryMeter.java` | Battery current every 10 s (camera open or closed), level at start and end; `battery` in `session_end` |
 | `CapturePlan.java` | Schedule maths: periods, bursts, photo times, window parsing (unit tested) |
 | `FrameRates.java` | Video below the camera's slowest rate: fixed camera rate, frames kept on a time grid (unit tested) |

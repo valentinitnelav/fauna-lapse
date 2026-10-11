@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Schedule screen (card 3 of the main screen, ScheduleActivity): when and how often. Only the
+     settings for the mode chosen on card 1 (photos or video) and for the chosen schedule show.
+     Done stays at the bottom (Back does the same). importantForAutofill="no": these are settings,
+     not personal data (Android 8+). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/schedule_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout style="@style/Card" android:layout_marginTop="0dp">
+                <TextView android:id="@+id/mode_note" style="@style/Hint" />
+
+                <LinearLayout android:id="@+id/photo_settings" style="@style/Group">
+                    <TextView style="@style/Label.Help" android:labelFor="@id/step_s" android:text="@string/step_label" />
+                    <EditText android:id="@+id/step_s" style="@style/Field" android:importantForAutofill="no"
+                        android:inputType="numberDecimal" tools:targetApi="o" />
+                    <TextView style="@style/Hint.Help" android:text="@string/step_hint" />
+
+                    <TextView style="@style/Label.Help" android:labelFor="@id/burst_s" android:text="@string/burst_label" />
+                    <EditText android:id="@+id/burst_s" style="@style/Field" android:importantForAutofill="no"
+                        android:inputType="numberDecimal" tools:targetApi="o" />
+                    <TextView style="@style/Hint.Help" android:text="@string/burst_hint" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/video_settings" style="@style/Group">
+                    <TextView style="@style/Label.Help" android:labelFor="@id/clip_min" android:text="@string/clip_label" />
+                    <EditText android:id="@+id/clip_min" style="@style/Field" android:importantForAutofill="no"
+                        android:inputType="numberDecimal" tools:targetApi="o" />
+                    <TextView style="@style/Hint.Help" android:text="@string/clip_hint" />
+
+                    <TextView style="@style/Label.Help" android:text="@string/video_fps_label" />
+                    <RadioGroup android:id="@+id/video_fps" style="@style/Segments">
+                        <RadioButton android:id="@+id/video_fps_5" style="@style/Segment" android:text="@string/video_fps_5" />
+                        <RadioButton android:id="@+id/video_fps_10" style="@style/Segment.Next" android:text="@string/video_fps_10" />
+                        <RadioButton android:id="@+id/video_fps_15" style="@style/Segment.Next" android:text="@string/video_fps_15" />
+                    </RadioGroup>
+                    <TextView style="@style/Hint.Help" android:text="@string/video_fps_hint" />
+                </LinearLayout>
+
+                <TextView style="@style/Label.Help" android:labelFor="@id/break_min" android:text="@string/break_label" />
+                <EditText android:id="@+id/break_min" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="numberDecimal" tools:targetApi="o" />
+                <TextView style="@style/Hint.Help" android:text="@string/break_hint" />
+
+                <TextView style="@style/Label" android:text="@string/schedule_label" />
+                <RadioGroup android:id="@+id/schedule" style="@style/Segments">
+                    <RadioButton android:id="@+id/schedule_run" style="@style/Segment" android:text="@string/schedule_run" />
+                    <RadioButton android:id="@+id/schedule_daily" style="@style/Segment.Next" android:text="@string/schedule_daily" />
+                </RadioGroup>
+
+                <LinearLayout android:id="@+id/run_settings" style="@style/Group">
+                    <TextView style="@style/Label.Help" android:text="@string/run_label" />
+                    <LinearLayout style="@style/FieldRow" android:layout_marginTop="0dp">
+                        <EditText android:id="@+id/run_h" style="@style/Field.Row" android:importantForAutofill="no"
+                            android:inputType="number" android:contentDescription="@string/run_hours" tools:targetApi="o" />
+                        <TextView style="@style/Body" android:layout_width="wrap_content" android:layout_marginTop="0dp"
+                            android:layout_marginStart="8dp" android:layout_marginEnd="16dp" android:text="@string/unit_h" />
+                        <EditText android:id="@+id/run_m" style="@style/Field.Row" android:importantForAutofill="no"
+                            android:inputType="number" android:contentDescription="@string/run_minutes" tools:targetApi="o" />
+                        <TextView style="@style/Body" android:layout_width="wrap_content" android:layout_marginTop="0dp"
+                            android:layout_marginStart="8dp" android:text="@string/unit_min" />
+                    </LinearLayout>
+                    <TextView style="@style/Hint.Help" android:text="@string/run_hint" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/daily_settings" style="@style/Group">
+                    <TextView style="@style/Label.Help" android:labelFor="@id/windows" android:text="@string/windows_label" />
+                    <EditText android:id="@+id/windows" style="@style/Field" android:importantForAutofill="no"
+                        android:inputType="text" tools:targetApi="o" />
+                    <TextView style="@style/Hint.Help" android:text="@string/windows_hint" />
+
+                    <TextView style="@style/Label.Help" android:labelFor="@id/days" android:text="@string/days_label" />
+                    <EditText android:id="@+id/days" style="@style/Field" android:importantForAutofill="no"
+                        android:inputType="number" tools:targetApi="o" />
+                    <TextView style="@style/Hint.Help" android:text="@string/days_hint" />
+                </LinearLayout>
+
+                <TextView style="@style/Label.Help" android:labelFor="@id/saved_side" android:text="@string/saved_side_label" />
+                <EditText android:id="@+id/saved_side" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="number" tools:targetApi="o" />
+                <TextView style="@style/Hint.Help" android:text="@string/saved_side_hint" />
+
+                <TextView style="@style/Label.Help" android:labelFor="@id/heat_limit_c" android:text="@string/heat_label" />
+                <EditText android:id="@+id/heat_limit_c" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="numberDecimal" tools:targetApi="o" />
+                <TextView style="@style/Hint.Help" android:text="@string/heat_hint" />
+
+                <!-- Screen off by itself (MainActivity.autoScreenOff); the note says what acts instead -->
+                <TextView style="@style/Label.Help" android:labelFor="@id/screen_off_min" android:text="@string/screen_off_label" />
+                <EditText android:id="@+id/screen_off_min" style="@style/Field" android:importantForAutofill="no"
+                    android:inputType="number" android:maxLength="2" tools:targetApi="o" />
+                <TextView style="@style/Hint.Help" android:text="@string/screen_off_hint" />
+                <TextView android:id="@+id/screen_off_note" style="@style/Hint" android:layout_marginTop="4dp"
+                    android:visibility="gone" />
+
+                <Button android:id="@+id/defaults" style="@style/SecondaryButton" android:layout_marginTop="16dp"
+                    android:text="@string/defaults" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Always visible -->
+    <Button android:id="@+id/done" style="@style/DoneButton" />
+</LinearLayout>

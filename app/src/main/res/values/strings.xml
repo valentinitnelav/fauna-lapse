@@ -93,9 +93,9 @@
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in each session\'s record and kept for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to target are named as in Camtrap DP (a data standard for camera traps), so the records can be shared in it.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions.\n• Distance to target: where the phone tells the lens distance, the fixed focus fills it in. Type a measured value to replace it; empty the field to get the focus distance back.\n• Add a field: your own fields, for example Observer or Weather. They stay until you remove them; the record lists them under \"custom\".\n• Get location: use it under open sky. Without network the first position can take a few minutes.\n• Or type the position from another GPS device. Empty latitude, longitude and uncertainty to remove it.</string>
+    <string name="field_help">Saved in each session\'s record and kept for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to target are named as in Camtrap DP (a data standard for camera traps), so the records can be shared in it.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions.\n• Distance to target: where the phone tells the lens distance, the fixed focus fills it in. Type a measured value to replace it; empty the field to get the focus distance back.\n• Add a field: your own fields, for example Observer or Weather. They stay until you remove them; the record lists them under \"custom\".</string>
     <string name="field_open">Change field metadata</string>
-    <string name="field_close">Close field metadata</string>
+    <string name="field_setup_title">Site and setup</string>
     <string name="field_summary_empty">Nothing filled in yet.</string>
     <string name="field_summary_line" translatable="false">%1$s: %2$s</string>
     <string name="field_summary_position">Position: %1$s, %2$s%3$s (%4$s)</string>
@@ -176,6 +176,7 @@
     <string name="site_photo_close">Close</string>
     <string name="site_photo_unreadable">This photo cannot be shown.</string>
     <string name="position_label">Position</string>
+    <string name="position_help">Where the phone stands, saved in each session\'s record.\n• Get location: use it under open sky. Without network the first position can take a few minutes.\n• Or type the position from another GPS device. Empty latitude, longitude and uncertainty to remove it.</string>
     <string name="position_datum">Coordinate system: WGS 84 (EPSG:4326), decimal degrees (as on GPS devices and web maps), also for typed values.</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
@@ -183,13 +184,13 @@
     <string name="field_longitude_hint">decimal degrees, -180 to 180</string>
     <string name="field_uncertainty">Uncertainty (m)</string>
     <string name="field_uncertainty_hint">± m, optional</string>
-    <string name="field_uncertainty_help" formatted="false">How far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
-    <string name="gps_goal">Uncertainty goal (m)</string>
+    <string name="field_uncertainty_help" formatted="false">Part of the position: how far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
+    <string name="gps_goal">Stop at (± m)</string>
     <string name="gps_goal_hint">0 to 1000</string>
-    <string name="gps_goal_help">Get location stops at this uncertainty or less and switches the GPS off; otherwise it stops after 3 min with the best position. A smaller goal can take longer; 0 m always takes the full 3 min. The record keeps the goal.</string>
+    <string name="gps_goal_help">Only for Get location: the search stops as soon as the uncertainty is this small or smaller, and the GPS goes off; otherwise it stops after 3 min with the best position. A smaller value can take longer; 0 m always takes the full 3 min. It is not the uncertainty of the position (the field above); the record keeps both.</string>
     <string name="gps_goal_low">Phones often cannot reach an uncertainty under %1$d m: the search may then run the full %2$d min.</string>
     <string name="gps_goal_zero">0 m: the search always runs the full %1$d min.</string>
-    <string name="gps_goal_problem">Uncertainty goal: use a whole number from 0 to %1$d m.</string>
+    <string name="gps_goal_problem">Stop at: use a whole number from 0 to %1$d m.</string>
     <string name="location_get">Get location</string>
     <string name="location_stop">Stop and keep the best</string>
     <string name="location_none">No position: tap Get location, or type it from another GPS device.</string>
@@ -204,7 +205,7 @@
     <string name="position_edit_text">These values come from this phone\'s GPS. Change them only for a better position (for example from another GPS device); the record then says they were typed by hand.</string>
     <string name="position_edit_yes">Change</string>
     <string name="position_edit_no">Keep</string>
-    <string name="location_weak">Uncertainty above the goal of %1$d m: try again under open sky for a smaller one.</string>
+    <string name="location_weak">Uncertainty above %1$d m (Stop at): try again under open sky for a smaller one.</string>
     <string name="location_searching">Searching until the uncertainty is ± %1$d m or less; keep the phone under open sky. Time: %2$d s of at most %3$d s.</string>
     <string name="location_searching_full">Searching for the full time (goal 0 m); keep the phone under open sky. Time: %1$d s of %2$d s.</string>
     <string name="location_satellites" tools:ignore="PluralsCandidate">Satellites: signal from %1$d, %2$d used for the position.</string>
@@ -223,7 +224,6 @@
     <!-- 3 Schedule -->
     <string name="card_schedule">3 · Schedule</string>
     <string name="change_open">Change settings</string>
-    <string name="change_close">Close settings</string>
     <string name="summary_photo">Photos: one every %1$s s for %2$s s, then %3$s min off.</string>
     <string name="summary_photo_no_break">Photos: one every %1$s s, without breaks.</string>
     <string name="summary_video" tools:ignore="PluralsCandidate">Video, %1$d frames per s: clips of %2$s min, then %3$s min off.</string>
@@ -269,8 +269,15 @@
     <string name="screen_off_note_never">Never: the screen goes off with Screen off, the power button or the phone\'s own screen timeout (now %1$s).</string>
     <string name="timeout_never">never</string>
     <string name="defaults">Default values</string>
+    <string name="schedule_for_photos">For photos. Card 1 chooses photos or video.</string>
+    <string name="schedule_for_video">For video. Card 1 chooses photos or video.</string>
     <string name="number_needed">%1$s: write a number.</string>
     <string name="problem_title">Correct this first</string>
+    <!-- Field metadata and schedule screens -->
+    <string name="done">Done</string>
+    <string name="leave_note">Or leave without saving: the values saved before stay.</string>
+    <string name="leave_correct">Correct</string>
+    <string name="leave_anyway">Leave</string>
 
     <!-- 4 Phone for the field -->
     <string name="card_phone">4 · Phone for the field</string>
@@ -298,6 +305,25 @@
     <string name="start_session">Start session</string>
     <string name="start_hint">After Start, tap Screen off on the status card (or press the power button gently): the session goes on with the screen off.</string>
 
+    <!-- Support FaunaLapse -->
+    <string name="support_title">Support FaunaLapse</string>
+    <string name="support_text">FaunaLapse is free and open source. You can help: share it, cite it in your publications, and report problems.</string>
+    <string name="support_share">Share</string>
+    <string name="support_share_text">FaunaLapse: a free, open-source Android app that turns old phones into time-lapse cameras for insects and other animals. %1$s</string>
+    <string name="support_cite">How to cite</string>
+    <string name="support_citation" translatable="false">Ștefan, V. &amp; Knight, T. (2026). FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals (version %1$s). %2$s</string>
+    <string name="support_cite_note">Cite the version you used. The FaunaLapse page on GitHub always shows the newest citation.</string>
+    <string name="support_copy">Copy</string>
+    <string name="support_copied">Citation copied.</string>
+    <string name="support_report">Report a problem</string>
+    <string name="support_report_text">The report opens in your browser (it needs internet). This phone\'s details are filled in, and you see everything before you send it:\n%1$s\n\n• Web form: no account needed.\n• GitHub: needs a free GitHub account; reports there are public.\n\nWithout internet on this phone, use another device: %2$s</string>
+    <string name="support_report_text_github">The report opens on GitHub in your browser (it needs internet and a free GitHub account; reports there are public). This phone\'s details are filled in, and you see everything before you send it:\n%1$s\n\nWithout internet on this phone, use another device: %2$s</string>
+    <string name="support_report_form">Web form</string>
+    <string name="support_report_github">GitHub</string>
+    <string name="support_details" translatable="false">FaunaLapse %1$s, %2$s %3$s, Android %4$s</string>
+    <string name="support_issue_body" translatable="false">**What happened?**\n\n\n**What did you expect?**\n\n\n**How to make it happen again (if you know)**\n\n\n---\n%1$s</string>
+    <string name="support_no_app">No app could open it. The address: %1$s</string>
+
     <!-- Aim screen -->
     <string name="square_label">Square side</string>
     <string name="aim_opening">Opening the camera…</string>
@@ -310,7 +336,6 @@
     <string name="aim_zoom_none">No hardware zoom: the square gets only its share of the stream\'s pixels.</string>
     <string name="aim_camera_failed">The camera did not open: %1$s</string>
     <string name="aim_focus">Focus again</string>
-    <string name="aim_done">Done</string>
     <string name="aim_middle">Middle</string>
     <string name="aim_start">Start session here</string>
     <string name="aim_paused">Session paused: nothing is recorded. It goes on by itself at %1$s.</string>

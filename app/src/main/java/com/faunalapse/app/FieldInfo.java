@@ -283,6 +283,13 @@ final class FieldInfo {
         return Math.round(100 / s.focusDiopters) / 100.0;
     }
 
+    /** While the distance follows the fixed focus: the focus distance in m as the field shows it,
+     *  from the saved settings ("" where there is none, see focusDistanceM). */
+    static String focusDistance(Context context) {
+        Double m = focusDistanceM(SessionSettings.load(context), Camera2Session.fixedFocusCalibration(context));
+        return m == null ? "" : MainActivity.number(m);
+    }
+
     /** What is wrong with the name of a new custom field, or null. Names are unique (in any case):
      *  they become keys in the record. */
     static String nameProblem(String name, List<Custom> existing) {

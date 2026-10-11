@@ -163,4 +163,12 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:backgroundTint">@color/secondary_button</item>
     </style>
+
+    <!-- Done under the field metadata and schedule screens: always visible, as on the aim screen. -->
+    <style name="DoneButton" parent="SecondaryButton">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:text">@string/done</item>
+    </style>
 </resources>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Field metadata screen (card 2 of the main screen, FieldActivity): who, where and what
+     (FieldInfo) in three cards: setup, position, site photos. Done stays at the bottom (Back does
+     the same). Explanations open with the (i) of their label (HelpToggles). LabelFor: each field
+     has its label, and the grey hint inside gives an example. importantForAutofill="no": field
+     notes, not the user's personal data (Android 8+). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/field_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:ignore="LabelFor">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- The phone (from Android, not typed), the setup and the user's own fields -->
+            <LinearLayout style="@style/Card" android:layout_marginTop="0dp">
+                <TextView style="@style/CardTitle.Help" android:text="@string/field_setup_title" />
+                <TextView style="@style/Hint.Help" android:text="@string/field_help" />
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:text="@string/field_phone_model" />
+                    <TextView android:id="@+id/phone_model" style="@style/FieldValue" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel.Help" android:text="@string/field_phone_id" />
+                    <TextView android:id="@+id/phone_id" style="@style/FieldValue" />
+                </LinearLayout>
+                <TextView style="@style/Hint.Help" android:text="@string/field_phone_id_help" />
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/setup_by" android:text="@string/field_setup_by" />
+                    <EditText android:id="@+id/setup_by" style="@style/Field.Row" android:hint="@string/field_setup_by_hint"
+                        android:importantForAutofill="no" android:inputType="textCapWords" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/site" android:text="@string/field_site" />
+                    <EditText android:id="@+id/site" style="@style/Field.Row" android:hint="@string/field_site_hint"
+                        android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/transect" android:text="@string/field_transect" />
+                    <EditText android:id="@+id/transect" style="@style/Field.Row" android:hint="@string/field_transect_hint"
+                        android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/plant" android:text="@string/field_plant" />
+                    <EditText android:id="@+id/plant" style="@style/Field.Row" android:hint="@string/field_plant_hint"
+                        android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/habitat" android:text="@string/field_habitat" />
+                    <EditText android:id="@+id/habitat" style="@style/Field.Row" android:hint="@string/field_habitat_hint"
+                        android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/sample_id" android:text="@string/field_sample" />
+                    <EditText android:id="@+id/sample_id" style="@style/Field.Row" android:hint="@string/field_optional"
+                        android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/session_id" android:text="@string/field_session" />
+                    <EditText android:id="@+id/session_id" style="@style/Field.Row" android:hint="@string/field_optional"
+                        android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/camera_height" android:text="@string/field_height" />
+                    <EditText android:id="@+id/camera_height" style="@style/Field.Row" android:hint="@string/field_height_hint"
+                        android:maxLength="6" android:importantForAutofill="no" android:inputType="numberDecimal"
+                        tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/distance" android:text="@string/field_distance" />
+                    <EditText android:id="@+id/distance" style="@style/Field.Row" android:hint="@string/field_distance_hint"
+                        android:maxLength="6" android:importantForAutofill="no" android:inputType="numberDecimal"
+                        tools:targetApi="o" />
+                </LinearLayout>
+                <TextView android:id="@+id/distance_note" style="@style/Hint" android:visibility="gone" />
+
+                <!-- The user's own fields (CustomFields), then the button that adds one -->
+                <LinearLayout android:id="@+id/custom_fields" style="@style/Group" />
+                <Button android:id="@+id/custom_add" style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content" android:layout_height="48dp" android:textAllCaps="false"
+                    android:textColor="@color/heading" android:textSize="16sp" android:text="@string/custom_add_button" />
+            </LinearLayout>
+
+            <!-- Position: WGS 84, typed or from Get location. Under the line: the search, whose
+                 goal (FieldInfo.gpsGoalM) only says when Get location stops. -->
+            <LinearLayout style="@style/Card">
+                <TextView style="@style/CardTitle.Help" android:text="@string/position_label" />
+                <TextView style="@style/Hint.Help" android:text="@string/position_help" />
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/latitude" android:text="@string/field_latitude" />
+                    <EditText android:id="@+id/latitude" style="@style/Field.Row" android:hint="@string/field_latitude_hint"
+                        android:maxLength="13" android:importantForAutofill="no"
+                        android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/longitude" android:text="@string/field_longitude" />
+                    <EditText android:id="@+id/longitude" style="@style/Field.Row" android:hint="@string/field_longitude_hint"
+                        android:maxLength="13" android:importantForAutofill="no"
+                        android:inputType="numberSigned|numberDecimal" tools:targetApi="o" />
+                </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel.Help" android:labelFor="@id/accuracy" android:text="@string/field_uncertainty" />
+                    <EditText android:id="@+id/accuracy" style="@style/Field.Row" android:hint="@string/field_uncertainty_hint"
+                        android:maxLength="7" android:importantForAutofill="no"
+                        android:inputType="numberDecimal" tools:targetApi="o" />
+                </LinearLayout>
+                <TextView style="@style/Hint.Help" android:text="@string/field_uncertainty_help" />
+                <TextView style="@style/Hint" android:layout_marginTop="4dp" android:text="@string/position_datum" />
+                <TextView android:id="@+id/location_text" style="@style/Body" android:layout_marginTop="8dp"
+                    android:textSize="15sp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginTop="12dp" android:background="@color/card_edge" />
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel.Help" android:labelFor="@id/gps_goal" android:text="@string/gps_goal" />
+                    <EditText android:id="@+id/gps_goal" style="@style/Field.Row" android:hint="@string/gps_goal_hint"
+                        android:maxLength="4" android:importantForAutofill="no" android:inputType="number"
+                        tools:targetApi="o" />
+                </LinearLayout>
+                <TextView style="@style/Hint.Help" android:text="@string/gps_goal_help" />
+                <!-- A goal phones rarely reach, or one that is not usable -->
+                <TextView android:id="@+id/gps_goal_note" style="@style/Hint" android:layout_marginTop="4dp"
+                    android:textColor="@color/warning" android:visibility="gone" />
+                <Button android:id="@+id/get_location" style="@style/SecondaryButton" android:text="@string/location_get" />
+                <!-- The phone's Location switch: apps may only read it, so its settings page opens -->
+                <LinearLayout style="@style/FieldRow" android:layout_marginTop="8dp">
+                    <TextView android:id="@+id/location_switch" style="@style/Body" android:layout_width="0dp"
+                        android:layout_weight="1" android:layout_marginTop="0dp" android:textSize="15sp" />
+                    <Button android:id="@+id/location_settings" style="@style/SecondaryButton"
+                        android:layout_width="wrap_content" android:layout_height="48dp" android:layout_marginTop="0dp"
+                        android:layout_marginStart="12dp" android:textSize="15sp" android:text="@string/check_location_button" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Site photos (SitePhotos): taken with the phone's camera app, kept until Start -->
+            <LinearLayout style="@style/Card">
+                <TextView style="@style/CardTitle.Help" android:text="@string/site_photos_label" />
+                <TextView style="@style/Hint.Help" android:text="@string/site_photos_help" />
+                <HorizontalScrollView android:id="@+id/site_photos_scroll" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:visibility="gone">
+                    <LinearLayout android:id="@+id/site_photos" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:orientation="horizontal" />
+                </HorizontalScrollView>
+                <TextView android:id="@+id/site_photos_text" style="@style/Body" android:textSize="15sp" />
+                <Button android:id="@+id/site_photo_take" style="@style/SecondaryButton" android:text="@string/site_photo_take" />
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel" android:labelFor="@id/site_photos_about" android:text="@string/site_photos_about" />
+                    <EditText android:id="@+id/site_photos_about" style="@style/Field.Row" android:hint="@string/field_optional"
+                        android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Always visible -->
+    <Button android:id="@+id/done" style="@style/DoneButton" />
+</LinearLayout>
