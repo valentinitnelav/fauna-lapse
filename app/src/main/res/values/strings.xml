@@ -18,7 +18,7 @@
     <string name="last_session">Last session (%1$s): %2$s. Ended: %3$s.</string>
     <string name="last_session_warning">Last session: %1$s</string>
     <string name="last_session_early">it ended early (%1$s).</string>
-    <string name="no_session">No session yet. Aim the camera, check the schedule, then tap Start.</string>
+    <string name="no_session">No session yet. Aim and adjust the camera, add field metadata, check the schedule, then tap \'Start session\'.</string>
     <string name="battery_line">Battery %1$s, %2$s, %3$s °C.</string>
     <string name="charging">charging</string>
     <string name="not_charging">not charging</string>
@@ -82,18 +82,18 @@
     <string name="stop_yes">Stop</string>
     <string name="stop_no">Go on</string>
 
-    <!-- 1 Aim -->
+    <!-- 1 Aim card -->
     <string name="card_aim">1 · Aim</string>
     <string name="mode_photo">Photos</string>
     <string name="mode_video">Video</string>
     <string name="aim_button">Aim the camera</string>
-    <string name="aim_summary">Square: %1$d %% of the short side of the camera view, %2$s. Only the square is saved; focus and exposure follow it. %3$s</string>
+    <string name="aim_summary">Current setup - Square: %1$d %% of the short side of the camera view, %2$s. Only the square is saved. %3$s</string>
     <string name="aim_square_middle">in the middle</string>
     <string name="aim_square_placed">where you placed it</string>
 
     <!-- 2 Field metadata -->
     <string name="card_field">2 · Field metadata</string>
-    <string name="field_help">Saved in each session\'s record and kept for the next sessions until you change them.\n• Set up by, habitat, camera height and distance to target are named as in Camtrap DP (a data standard for camera traps), so the records can be shared in it.\n• Plant: or what else you observe. Sample ID: for other targets. Session ID: your own name for a recording plan, the same for all its sessions.\n• Distance to target: where the phone tells the lens distance, the fixed focus fills it in. Type a measured value to replace it; empty the field to get the focus distance back.\n• Add a field: your own fields, for example Observer or Weather. They stay until you remove them; the record lists them under \"custom\".</string>
+    <string name="field_help">Saved in each session\'s record and kept for the next sessions until you change them.\n• \'Set up by\', \'Habitat\', \'Camera height\' and \'Distance to target\' are named as in Camtrap DP (a data standard for camera traps), so the records can be shared in it.\n• \'Plant\': or what else you observe. \'Sample ID\': for other targets. \'Session ID\': your own name for a recording plan, the same for all its sessions.\n• \'Distance to target\': where the phone tells the lens distance, the fixed focus fills it in. Type a measured value to replace it; empty the field to get the focus distance back.\n• \'Add a field\': your own fields, for example Observer or Weather. They stay until you remove them; these are \"custom\" fields.</string>
     <string name="field_open">Change field metadata</string>
     <string name="field_setup_title">Site and setup</string>
     <string name="field_summary_empty">Nothing filled in yet.</string>
@@ -120,13 +120,13 @@
     <string name="field_sample">Sample ID</string>
     <string name="field_session">Session ID</string>
     <string name="field_height">Camera height (m)</string>
-    <string name="field_height_hint">above the ground</string>
+    <string name="field_height_hint">measure above the ground</string>
     <string name="field_distance">Distance to target (m)</string>
     <string name="field_distance_hint">camera to flower</string>
     <string name="distance_note">From the fixed focus (%1$s), which is not exact on every phone: check it with a ruler now and then.</string>
     <string name="field_phone_model">Phone model</string>
     <string name="field_phone_id">Phone ID</string>
-    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone (it cannot be changed). It starts each session folder name, so files from several phones never mix. A factory reset gives a new one; on Android 8 and newer, so does a FaunaLapse version signed by someone else (for example a test version). For a lasting name, write one on the phone and add it as your own field, for example Device ID.</string>
+    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone (it cannot be changed). It is used as a prefix in each session folder name, so files from several phones never mix. A factory reset (or sometimes reinstalling the app) gives a new one. You can also add your own specific field, for example \'Device ID\' by using the \'+ Add a field\' button below.</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="custom_add_button">+ Add a field</string>
@@ -176,7 +176,7 @@
     <string name="site_photo_close">Close</string>
     <string name="site_photo_unreadable">This photo cannot be shown.</string>
     <string name="position_label">Position</string>
-    <string name="position_help">Where the phone stands, saved in each session\'s record.\n• Get location: use it under open sky. Without network the first position can take a few minutes.\n• Or type the position from another GPS device. Empty latitude, longitude and uncertainty to remove it.</string>
+    <string name="position_help">Where the phone stands, saved in each session\'s record.\n• \'Get location\': use the phone under open sky. Without network the first position can take a few minutes.\n• Or type the position from another GPS device. Empty latitude, longitude and uncertainty to remove it.</string>
     <string name="position_datum">Coordinate system: WGS 84 (EPSG:4326), decimal degrees (as on GPS devices and web maps), also for typed values.</string>
     <string name="field_latitude">Latitude</string>
     <string name="field_latitude_hint">decimal degrees, -90 to 90</string>
@@ -184,10 +184,10 @@
     <string name="field_longitude_hint">decimal degrees, -180 to 180</string>
     <string name="field_uncertainty">Uncertainty (m)</string>
     <string name="field_uncertainty_hint">± m, optional</string>
-    <string name="field_uncertainty_help" formatted="false">Part of the position: how far the true position may be from these coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position (Camtrap DP: coordinateUncertainty). A typed value should come from the device that measured the position.</string>
+    <string name="field_uncertainty_help" formatted="false">Automatically estimated from the GPS signal. It tells how far the true position may be from the measured coordinates. Android\'s GPS gives a radius with a 68 % chance of holding the true position. If you edit this value, then it should come from the other device that measured the position. This field is the \'coordinateUncertainty\' in Camtrap DP metadata style.</string>
     <string name="gps_goal">Stop at (± m)</string>
     <string name="gps_goal_hint">0 to 1000</string>
-    <string name="gps_goal_help">Only for Get location: the search stops as soon as the uncertainty is this small or smaller, and the GPS goes off; otherwise it stops after 3 min with the best position. A smaller value can take longer; 0 m always takes the full 3 min. It is not the uncertainty of the position (the field above); the record keeps both.</string>
+    <string name="gps_goal_help">The GPS search stops as soon as the uncertainty is this small or smaller, and the GPS goes off; otherwise it stops after 3 min with the best position. It is not the final measured uncertainty of the position (the field above) but it attempts to set its limits.</string>
     <string name="gps_goal_low">Phones often cannot reach an uncertainty under %1$d m: the search may then run the full %2$d min.</string>
     <string name="gps_goal_zero">0 m: the search always runs the full %1$d min.</string>
     <string name="gps_goal_problem">Stop at: use a whole number from 0 to %1$d m.</string>
@@ -234,11 +234,11 @@
     <string name="summary_screen_off">Screen off by itself %1$d min after the last touch.</string>
     <string name="summary_screen_off_never">Screen off by itself: never.</string>
     <string name="step_label">Photo step (s)</string>
-    <string name="step_hint">Time between photos in a burst. Default 2 s: a 3 s step caught about 90 % of insect visits (Edwards et al. 2015).</string>
+    <string name="step_hint">Time between photos in a burst. Default 2 s.</string>
     <string name="burst_label">Burst length (s)</string>
-    <string name="burst_hint">Default 60 s: longer than a typical visit (about 11 s).</string>
+    <string name="burst_hint">Default 60 s.</string>
     <string name="saved_side_label">Saved square side (px)</string>
-    <string name="saved_side_hint">Photos and video: the square is shrunk to this size when saved. A multiple of 32 from 224 to 4096 (detectors and video encoders work in blocks of 16 or 32 pixels). Default 1280 px: the input size of many insect detectors. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both). Old phones may save video smaller if their hardware cannot take the size.</string>
+    <string name="saved_side_hint">Photos and video: the square is shrunk to this size when saved. A multiple of 32 from 224 to 4096 (detectors and video encoders work in blocks of 16 or 32 pixels). Default 1280 px. A square with fewer real pixels is never enlarged: it is saved at its own size, rounded down to a multiple of 32 (the aim screen shows both). Old phones may save video smaller if their hardware cannot take the size.</string>
     <string name="clip_label">Clip length (min)</string>
     <string name="clip_hint">One video file per clip. Default 5 min.</string>
     <string name="video_fps_label">Frames per s</string>
@@ -256,15 +256,15 @@
     <string name="run_minutes">Run length, minutes</string>
     <string name="unit_h">h</string>
     <string name="unit_min">min</string>
-    <string name="run_hint">Default 1 h, a usual observation period. At most 720 h (30 days), day and night.</string>
+    <string name="run_hint">Default 1 h. At most 720 h (30 days), day and night.</string>
     <string name="windows_label">Daily windows</string>
-    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. 22:00-04:00 crosses midnight; 00:00-24:00 records all day. Default 05:00-21:00: early morning and evening visits count (Toivonen and Humberg 2026).</string>
+    <string name="windows_hint" tools:ignore="TypographyDashes">Clock times, for example 06:00-08:00, 17:00-20:00. 22:00-04:00 crosses midnight; 00:00-24:00 records all day. Default 05:00-21:00.</string>
     <string name="days_label">Days</string>
     <string name="days_hint">Default 1. Counted from the first window not yet over: a phone started in the evening begins the next morning. For more days, use a power supply.</string>
     <string name="heat_label">Pause when the battery reaches (°C)</string>
     <string name="heat_hint">35 to 50 °C. Default 45 °C: phones still work, but most stop charging near 45 °C and the battery wears fast above it. The pause lasts until the battery is 3 °C cooler. The session also stops cleanly at 15 % without charging, or when the storage is nearly full.</string>
     <string name="screen_off_label">Screen off by itself after (min)</string>
-    <string name="screen_off_hint">During a session, if you forget Screen off: the screen goes off this many minutes after the last touch (a screen left on uses energy and warms the phone). 1 to 10 min, 0 = never. Default 3 min: time to see the first photos. Not while the session is paused by hand. Needs the Screen off right (the first tap on Screen off asks). The power button wakes the screen.</string>
+    <string name="screen_off_hint">During a session, if you forget Screen off: the screen goes off this many minutes after the last touch (a screen left on uses energy and warms the phone). 1 to 10 min, 0 = never. Default 3 min. Not considered while the session is paused by hand. Needs the \'Screen off\' right. The power button wakes the screen.</string>
     <string name="screen_off_note_right">Screen off is not allowed yet (the first tap on Screen off during a session asks): until then the phone\'s own screen timeout switches the screen off (now %1$s).</string>
     <string name="screen_off_note_never">Never: the screen goes off with Screen off, the power button or the phone\'s own screen timeout (now %1$s).</string>
     <string name="timeout_never">never</string>
@@ -280,7 +280,7 @@
     <string name="leave_anyway">Leave</string>
 
     <!-- 4 Phone for the field -->
-    <string name="card_phone">4 · Phone for the field</string>
+    <string name="card_phone">4 · Phone for the field (optimize battery usage)</string>
     <string name="check_clock">Phone date %1$s looks wrong. Set the date and time: file names and the session record use it.</string>
     <string name="check_clock_button">Open settings</string>
     <string name="check_radios">On: %1$s. For the field, turn on airplane mode (flight mode) and keep Wi-Fi and Bluetooth off: radios use energy.</string>
@@ -299,7 +299,7 @@
     <string name="check_background_button">Open settings</string>
     <string name="check_ok">Ready for the field: airplane mode on; Wi-Fi, Bluetooth, location and Stay awake off; no battery or background limits for FaunaLapse.</string>
     <string name="checklist_label">A phone used only as a camera</string>
-    <string name="checklist_text">Such a phone saves energy and is less likely to stop the app:\n• Reset it to factory settings; no Google account, no SIM card.\n• Turn off automatic app and system updates.\n• Uninstall or disable the apps you do not need (Settings, Apps).\n• Set the exact time, then turn on airplane mode (flight mode): without network the clock is not corrected, and file names and the session record use it.\n• Some phones stop apps with their own battery manager. Huawei: allow FaunaLapse by hand to start and run in the background (Battery, App launch). Xiaomi: set battery saver to No restrictions. Samsung: add FaunaLapse to Never sleeping apps.\n• Before the field day, test a session with the screen off.</string>
+    <string name="checklist_text">Such a phone setup saves energy and is less likely to stop the app:\n• Reset it to factory settings; a SIM card is not needed.\n• Turn off automatic app and system updates.\n• Uninstall or disable the apps you do not need (Settings, Apps).\n• Set the exact time, then turn on airplane mode (flight mode): without network the clock is not corrected, and file names and the session record use it.\n• Some phones stop apps with their own battery manager. Huawei: allow FaunaLapse by hand to start and run in the background (Battery, App launch). Xiaomi: set battery saver to No restrictions. Samsung: add FaunaLapse to Never sleeping apps.\n• Before the field day, test a session with the screen off.</string>
 
     <!-- Start -->
     <string name="start_session">Start session</string>
@@ -352,10 +352,10 @@
     <string name="focus_position_short">lens position %1$d of 100</string>
     <string name="focus_hint_auto">Auto: the camera focuses on the square once before each burst. In a dense flower patch it may focus on another flower; Fixed (if shown) avoids this.</string>
     <string name="focus_hint_auto_video">Auto: the camera focuses on the square once before each clip. In a dense flower patch it may focus on another flower; Fixed (if shown) avoids this.</string>
-    <string name="focus_hint_fixed">Fixed (default: about 20 cm, a usual phone-to-flower distance): the lens does not move during the session, so bursts and clips start faster, and wind, insects or other flowers cannot pull the focus away. Tap Focus again to focus once and fix it there; adjust with the slider while you watch the view. Then keep the phone still.</string>
+    <string name="focus_hint_fixed">Fixed (default: about 20 cm): the lens does not move during the session, so bursts and clips start faster, and wind, insects or other flowers cannot pull the focus away. Tap the \'Focus again\' button to focus once and fix it there or adjust with the focus slider while you watch the view.</string>
     <string name="focus_not_possible">This phone cannot fix the focus: it focuses on the square once before each burst or clip. In a dense flower patch, let the target flower fill most of the square.</string>
     <string name="summary_focus_auto">Focus: automatic before each burst or clip.</string>
-    <string name="summary_focus_fixed">Focus: fixed at %1$s; check it on the aim screen.</string>
+    <string name="summary_focus_fixed">Focus: fixed at %1$s.</string>
     <string name="summary_focus_fixed_position">Focus: fixed at one lens position, set on the aim screen.</string>
     <string name="summary_focus_unchecked">Focus: fixed at %1$s if this phone allows it; Aim the camera checks it.</string>
     <string name="summary_focus_cannot_fix">Focus: automatic before each burst or clip (this phone cannot fix it).</string>
@@ -365,7 +365,7 @@
     <string name="aim_more_below">More below</string>
     <string name="help_show">Show the explanation</string>
     <string name="help_hide">Hide the explanation</string>
-    <string name="aim_hint">Drag the square onto the flower (one finger inside it or on its edge). Pinch anywhere on the view, or use the slider, to change its size; Middle moves it back to the middle. The triangle marks the top of the saved photos and videos (it moves to a side when the phone is sideways). Fix the phone firmly in place: the session uses this square.</string>
+    <string name="aim_hint">Drag the square onto the region of interest (e.g. target flower). Tap, hold and move one finger inside the square or on its edge. Pinch anywhere on the view, or use the slider, to change its size. \'Middle\' button moves it back to the middle. The triangle/arrow marks the top of the saved photos and videos (it moves to a side when the phone is sideways).</string>
 
     <!-- Phone tests (phase 0, debug builds only) -->
     <string name="tests_show">Show the developer tests</string>
