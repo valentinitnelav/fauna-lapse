@@ -165,3 +165,21 @@ needed, (1) is the way.
 
 **Why parked:** rare (updates keep access; INSTALL.md warns against uninstalling) and nothing is
 lost: the file app and a computer still see the files (maintainer).
+
+## Problem reports without a GitHub account
+
+**Wish:** users without a GitHub account can report a problem from *Support FaunaLapse* (now only
+GitHub issues, which need a free account).
+
+**What was found:** a free web form opened in the browser needs no account from the sender and can
+be anonymous. Tally (free plan: unlimited forms and answers, fair use) takes hidden fields from the
+link (`?app_version=...&phone=...&android=...`); Google Forms fills fields from a "pre-filled link"
+(`entry.<number>=`). It needs internet on that phone at that moment (field phones often have none:
+show the short link for another device), the answers are stored by Tally or Google (the privacy
+policy must say so), and a reply needs an address from the sender. Framaforms' software is at its end
+of life; CryptPad forms accept guests, but its free limits are unclear. Email to a project address
+(`mailto:`) was the other option: free, works from any device, but the sender's address shows and
+the address gets spam. Built once and removed: a form button in `Support.report` next to GitHub,
+shown only when a form link is set.
+
+**Why parked:** not needed for the first release (maintainer).

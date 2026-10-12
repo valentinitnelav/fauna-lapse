@@ -316,10 +316,8 @@
     <string name="support_copy">Copy</string>
     <string name="support_copied">Citation copied.</string>
     <string name="support_report">Report a problem</string>
-    <string name="support_report_text">The report opens in your browser (it needs internet). This phone\'s details are filled in, and you see everything before you send it:\n%1$s\n\n• Web form: no account needed.\n• GitHub: needs a free GitHub account; reports there are public.\n\nWithout internet on this phone, use another device: %2$s</string>
-    <string name="support_report_text_github">The report opens on GitHub in your browser (it needs internet and a free GitHub account; reports there are public). This phone\'s details are filled in, and you see everything before you send it:\n%1$s\n\nWithout internet on this phone, use another device: %2$s</string>
-    <string name="support_report_form">Web form</string>
-    <string name="support_report_github">GitHub</string>
+    <string name="support_report_text">The report opens on GitHub in your browser (it needs internet and a free GitHub account; reports there are public). This phone\'s details are filled in, and you see everything before you send it:\n%1$s\n\nWithout internet on this phone, use another device: %2$s</string>
+    <string name="support_report_github">Open GitHub</string>
     <string name="support_details" translatable="false">FaunaLapse %1$s, %2$s %3$s, Android %4$s</string>
     <string name="support_issue_body" translatable="false">**What happened?**\n\n\n**What did you expect?**\n\n\n**How to make it happen again (if you know)**\n\n\n---\n%1$s</string>
     <string name="support_no_app">No app could open it. The address: %1$s</string>

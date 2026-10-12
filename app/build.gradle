@@ -22,7 +22,7 @@ android {
         minSdk = 24       // Android 7.0, the oldest phone we can test
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0-alpha.1"
+        versionName = "0.1.0-beta.1"
     }
 
     signingConfigs {

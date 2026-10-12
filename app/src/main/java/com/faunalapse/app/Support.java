@@ -21,9 +21,6 @@ import android.widget.Toast;
 final class Support {
 
     static final String REPO_URL = "https://github.com/valentinitnelav/fauna-lapse";
-    /** A web form for reports without a GitHub account (Tally or Google Forms, maintainer's choice,
-     *  2026-10-11); empty until it exists, and then its button stays hidden. */
-    static final String FORM_URL = "";
 
     private Support() {
     }
@@ -52,37 +49,25 @@ final class Support {
                 .show();
     }
 
-    /** Where a report goes (the web form, once there is one, and GitHub), with this phone's details
-     *  filled in; the browser opens it, and nothing is sent before the user sends it there. */
+    /** A new GitHub issue with this phone's details filled in; the browser opens it, and nothing
+     *  is sent before the user sends it there. Reports without a GitHub account: docs/PARKED.md. */
     static void report(final Activity a) {
         final String details = a.getString(R.string.support_details, version(a), Build.MANUFACTURER, Build.MODEL,
                 Build.VERSION.RELEASE);
         final String issues = REPO_URL + "/issues";
-        boolean form = !FORM_URL.isEmpty();
-        AlertDialog.Builder d = new AlertDialog.Builder(a)
+        new AlertDialog.Builder(a)
                 .setTitle(R.string.support_report)
-                .setMessage(form ? a.getString(R.string.support_report_text, details, FORM_URL)
-                        : a.getString(R.string.support_report_text_github, details, issues))
+                .setMessage(a.getString(R.string.support_report_text, details, issues))
                 .setNegativeButton(android.R.string.cancel, null)
-                .setNeutralButton(R.string.support_report_github, (dialog, which) -> {
+                .setPositiveButton(R.string.support_report_github, (dialog, which) -> {
                     Uri issue = Uri.parse(issues + "/new").buildUpon()
                             .appendQueryParameter("body", a.getString(R.string.support_issue_body, details)).build();
                     open(a, new Intent(Intent.ACTION_VIEW, issue), issues);
-                });
-        if (form) {
-            // Hidden fields of the form take these names from the link.
-            d.setPositiveButton(R.string.support_report_form, (dialog, which) -> {
-                Uri u = Uri.parse(FORM_URL).buildUpon()
-                        .appendQueryParameter("app_version", version(a))
-                        .appendQueryParameter("phone", Build.MANUFACTURER + " " + Build.MODEL)
-                        .appendQueryParameter("android", Build.VERSION.RELEASE).build();
-                open(a, new Intent(Intent.ACTION_VIEW, u), FORM_URL);
-            });
-        }
-        d.show();
+                })
+                .show();
     }
 
-    /** FaunaLapse's version name, for example 0.1.0-alpha.1. */
+    /** FaunaLapse's version name (versionName in app/build.gradle). */
     private static String version(Context c) {
         try {
             return c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName;

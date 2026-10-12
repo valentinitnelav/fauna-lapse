@@ -48,9 +48,9 @@ FaunaLapse never sends data to the developer or to anyone else. Files leave the 
 copy them (for example over USB) or share them with another app yourself.
 
 *Support FaunaLapse* on the main screen opens other apps: *Share* opens Android's share window with
-a link to FaunaLapse; *Report a problem* opens a GitHub page (or a web form) in your browser, with the
-FaunaLapse version, the phone model and the Android version filled in. You see all of it before you
-send it; what you send is then handled by GitHub (or the form service) under its own privacy policy.
+a link to FaunaLapse; *Report a problem* opens a GitHub page in your browser, with the FaunaLapse
+version, the phone model and the Android version filled in. You see all of it before you send it;
+what you send is then handled by GitHub under its own privacy policy.
 
 ## Children
 

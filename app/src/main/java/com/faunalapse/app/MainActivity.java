@@ -156,6 +156,7 @@ public final class MainActivity extends Activity {
     private RadioGroup mode;
     private TextView fieldSummary;
     private int requested;
+    private static boolean optionalAsked; // notifications or storage asked in this app run (missingPermissions)
     private boolean cameraDenied;
     private String problem; // why Start or Aim did not go on, shown above Start until the next tap
     private Class<? extends Activity> problemScreen; // the screen to correct that problem on
@@ -787,6 +788,7 @@ public final class MainActivity extends Activity {
         }
         List<String> missing = missingPermissions();
         if (!missing.isEmpty()) {
+            optionalAsked = true;
             requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
             return;
         }
@@ -818,20 +820,22 @@ public final class MainActivity extends Activity {
     }
 
     /** Permissions still to ask for: the camera; with it, on Android 13+ notifications and on
-     *  Android 10 and older the storage (for Documents/FaunaLapse). */
+     *  Android 10 and older the storage (for Documents/FaunaLapse). These two are optional, so
+     *  without the camera request they are asked only at the first Start of each app run (the
+     *  camera may have been allowed for a site photo); Android stops showing a twice refused one. */
     private List<String> missingPermissions() {
         List<String> missing = new ArrayList<>();
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             missing.add(Manifest.permission.CAMERA);
         }
-        if (Build.VERSION.SDK_INT <= 29 && !missing.isEmpty() && !Storage.canShare(this)) {
-            missing.add(Manifest.permission.WRITE_EXTERNAL_STORAGE); // optional, like notifications
+        boolean optional = !missing.isEmpty() || (requested == SESSION && !optionalAsked);
+        if (Build.VERSION.SDK_INT <= 29 && optional && !Storage.canShare(this)) {
+            missing.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             missing.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
-        if (Build.VERSION.SDK_INT >= 33 && !missing.isEmpty()
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED) {
-            missing.add(Manifest.permission.POST_NOTIFICATIONS); // asked together with the camera
+        if (Build.VERSION.SDK_INT >= 33 && optional
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            missing.add(Manifest.permission.POST_NOTIFICATIONS);
         }
         return missing;
     }

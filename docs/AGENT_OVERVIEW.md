@@ -69,7 +69,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
 
 | File | Job |
 |---|---|
-| `MainActivity.java`, `Support.java` | Main screen (status card with the last photo, Pause and Stop; the four cards; Start; Support: share, cite, report a problem on GitHub or a web form, `Support.FORM_URL`) and phase 0 test buttons; permissions; phone turn at Start and Continue; adb hooks in debug builds |
+| `MainActivity.java`, `Support.java` | Main screen (status card with the last photo, Pause and Stop; the four cards; Start; Support: share, cite, report a problem on GitHub) and phase 0 test buttons; permissions; phone turn at Start and Continue; adb hooks in debug builds |
 | `AimActivity.java`, `SquareView.java` | Aim screen: camera view (a visible preview for the session camera), the square (drag, pinch), focus auto or fixed |
 | `CaptureService.java`, `Storage.java` | Foreground service of type camera + partial wake lock; starts the session thread or a test; writes `phase0/log.jsonl`. The places for sessions (phone, memory cards), the chosen one, paths as file apps show them |
 | `ScheduleActivity.java`, `SessionSettings.java` | Schedule screen (card 3); camera and schedule values: defaults, saving, checks, `CapturePlan` and the record line |
@@ -96,5 +96,5 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
    the app (maintainer): the camera's own square sizes differ per phone (Samsung: 2992 and 1088 px only).
 4. Photo size: the largest square, not the most pixels (`RoiMath.largerSquare`); the sensor's real
    pixels stay unknown (Blackview A60 4:3 is still enlarged). HomTom HT50 untested. Lint kept: `allowBackup`, Gradle.
-5. First release `0.1.0-alpha.1`: the maintainer makes the signing key (`tools/create_release_key.sh`),
-   links Zenodo to GitHub, approves the push. Before it: a field day and an outdoor GPS test.
+5. First release (version only in `app/build.gradle` and `CITATION.cff`): the signing key exists; the
+   maintainer links Zenodo to GitHub and pushes. Before it: a field day and an outdoor GPS test.
