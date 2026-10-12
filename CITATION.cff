@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use FaunaLapse, please cite it with the metadata below. Source code, newest version, documentation and problem reports: https://github.com/valentinitnelav/fauna-lapse"
+message: "If you use FaunaLapse, please cite it with the metadata below. Source code and documentation at https://github.com/valentinitnelav/fauna-lapse"
 title: "FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals"
 abstract: >-
   FaunaLapse is an offline Android application that turns old or low-cost phones
@@ -7,13 +7,13 @@ abstract: >-
   flower. It records short photo bursts or video clips on a daily schedule with the
   screen off, keeps only a user-chosen square region of interest, and closes the
   camera between bursts to save energy and limit heat, so a phone can run for longer.
-  Every photo and video is logged together with field metadata. Source code,
-  newest version and documentation: https://github.com/valentinitnelav/fauna-lapse
+  Every photo and video is logged together with field metadata. Source code and
+  documentation at https://github.com/valentinitnelav/fauna-lapse
 type: software
 license: AGPL-3.0-only
 repository-code: "https://github.com/valentinitnelav/fauna-lapse"
 version: "0.1.0-beta.1"
-date-released: "2026-10-07"
+date-released: "2026-10-12"
 keywords:
   - pollinators
   - pollination ecology

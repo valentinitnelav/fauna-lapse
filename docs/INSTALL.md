@@ -1,16 +1,16 @@
 # Installing FaunaLapse
 
-FaunaLapse is not yet in the Google Play Store. You install it from an APK file (the install file of an
-Android app), which you download from the project's GitHub page. It needs Android 7.0 or newer. One
-APK works on every phone: the app has no code for a particular processor.
+FaunaLapse is not yet in the Google Play Store. For now, you can install it from an APK file (the install file of an
+Android app), via the Obtainium app or build it from source code yourself - see guided steps below.
+
+You need at least Android 7.0 on your smartphone.
 
 ## 1. Get the APK on the phone
 
 - On the phone, open the [list of releases](https://github.com/valentinitnelav/fauna-lapse/releases)
   and download `faunalapse-v<version>.apk` from the *Assets* of the newest release. Early versions
-  are marked *Pre-release*: take the newest one in the list all the same.
-- Or download it on a computer and copy it over USB (*File transfer*) into the phone's `Download`
-  folder.
+  are marked *Pre-release*.
+- Or download it on a computer and copy it over USB (*File transfer*) into the phone.
 
 ## 2. Install it
 
@@ -27,18 +27,21 @@ APK works on every phone: the app has no code for a particular processor.
 The same steps with pictures, on a Samsung phone, are in the install guide of the sister app
 FaunaPulse ([Track A, step A2](https://github.com/valentinitnelav/fauna-pulse/blob/main/docs/INSTALL.md#a2-install-it)).
 
-## 3. First start
+## 3. First start & app permissions
 
-1. Open FaunaLapse and allow the camera. On Android 13 or newer, Android asks at the same time
+1. Open FaunaLapse and **allow the camera**. On Android 13 or newer, Android asks at the same time
    whether FaunaLapse may show notifications: allow it, so the notification shows when a session
    runs.
-2. On Android 10 or older, also allow the storage (photos, media and files). Sessions then go to
-   `Documents/FaunaLapse`. Without it they stay in the app's own folder, which Android deletes
-   together with the app.
-3. The location is asked only when you first tap *Get location* (card *2 · Field metadata*). Choose
-   *Precise*: an approximate location can be wrong by more than a kilometre.
+2. On Android 10 or older, also **allow the storage** (photos, media and files). Sessions then go to
+   `Documents/FaunaLapse`. Without it they stay in the app's own folder
+   (e.g. `Android/data/com.faunalapse.app/`), which Android deletes together with the app when you uninstall it.
+3. The **location** is asked only when you first tap *Get location* (card *2 · Field metadata*).
+   Choose *Precise* if location precision is important for your experimental design.
+   With good GPS signal, precise location can be within a few meters. FaunaLapse will allow you
+   to set the level of acceptable GPS uncertainty as well.
 4. Then follow *Using it in the field* in the [README](../README.md#using-it-in-the-field). For a
-   phone used only as a camera, card *4 · Phone for the field* lists the phone settings to change.
+   phone optimized to be used only as a camera, card *4 · Phone for the field* lists
+   the phone settings to change in order to preserve battery.
 
 ## 4. Updates
 
@@ -53,12 +56,12 @@ FaunaPulse ([Track A, step A2](https://github.com/valentinitnelav/fauna-pulse/bl
   then install the other version. The phone ID changes too.
 - The installed version is shown in the phone's settings, under *Apps*, *FaunaLapse*.
 
-### Updates with Obtainium (optional)
+### Updates with Obtainium
 
 [Obtainium](https://github.com/ImranR98/Obtainium) is a free app that installs apps from their
 GitHub releases and tells you about new versions. In Obtainium, tap *Add*, paste
-`https://github.com/valentinitnelav/fauna-lapse`, and turn on *Include prereleases* before you add
-it: all FaunaLapse versions are pre-releases for now, and Obtainium skips those by default.
+`https://github.com/valentinitnelav/fauna-lapse`, and also turn on *Include prereleases* before you add
+it.
 
 ## 5. Uninstall
 
@@ -69,32 +72,96 @@ it: all FaunaLapse versions are pre-releases for now, and Obtainium skips those 
    folder (`Android/data/com.faunalapse.app/`: on a memory card with Android 7 to 10, or without the
    storage permission on Android 10 or older) are deleted with the app.
 2. If you allowed the *Screen off* button: in FaunaLapse, open *Last session, battery and clock* on
-   the status card and tap *Remove*. Android does not uninstall an app that is still a "device admin
-   app". (The same switch is in the phone's settings, under *Security*, *Device admin apps*; the
-   name differs between phones.)
+   the status card and tap *Remove*. This is because Android does not uninstall an app
+   that is still a "device admin app". The same switch is in the phone's settings,
+   under *Security*, *Device admin apps*. Note that these namings differ between phones.
 3. Uninstall FaunaLapse like any other app (touch and hold its icon, then *Uninstall*). Its saved
    settings go with it.
 
-## Building FaunaLapse yourself
+## Building FaunaLapse from source
 
-See *Build from source* in the [README](../README.md#build-from-source). Such a build is a test
-version: it has another key than the releases (see *Updates*).
+In case the version name and code must be updated, note that FaunaLapse follows *Semantic Versioning* (https://semver.org), the usual scheme for open-source
+software: `MAJOR.MINOR.PATCH-LABEL`.
+
+The app is built and tested using a free Linux OS. For commercial operating systems you can use almost any LLM to help you out.
+
+### Debug / test builds
+
+Note that such a build is a test / debug version and it has another key than the releases (see also *Updates*).
+
+You need JDK 17 or newer and the Android SDK.
+
+Write the SDK path into a file `local.properties` (`sdk.dir=/path/to/Android/Sdk`), then:
+
+```bash
+# Navigate to the path where this git repository is located on your computer, e.g:
+# cd ~/path/to/fauna-lapse
+./gradlew assembleDebug
+# If successful, expect a line like this:
+# "BUILD SUCCESSFUL in 14s"
+```
+
+The APK file `app-release.apk` appears at `.../fauna-lapse/app/build/outputs/apk/debug/`
+Note that it is always overwritten by the `./gradlew assembleDebug` command.
+
+APK debugging files require Developer Options to be enabled on Android devices.
+
+To deploy the APK file (the app in debug mode) on a specific smartphone:
+
+```bash
+# Navigate to the path where this git repository is located on your computer, e.g:
+# cd ~/path/to/fauna-lapse
+
+# List connected devices
+adb devices
+# List of devices attached
+# xyz123     device
+# zyx321     device
+
+adb -s xyz123 install -r app/build/outputs/apk/debug/app-debug.apk
+# Your phone might require you to click "Allow" (or something similar) to install the app,
+# so watch the phone's screen for any pop-up messages.
+
+# Expect on the terminal these 2 lines if the installation was successful:
+#   Performing Streamed Install
+#   Success
+```
+
+If you get this instead then you need to firs uninstall the app and install again.
+This can happen if you have previously installed a release APK file (release build).
+
+```
+Performing Streamed Install
+adb: failed to install app/build/outputs/apk/debug/app-debug.apk: Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.faunalapse.app signatures do not match newer version; ignoring!]
+```
+
+```bash
+adb -s xyz123 uninstall com.faunalapse.app
+# Success
+
+# Then re-run the installation command
+adb -s xyz123 install -r app/build/outputs/apk/debug/app-debug.apk
+```
 
 ### Release builds (maintainers only)
 
 Release APKs are signed with the project's release key. The key and its passwords stay outside the
-repository, in `~/faunalapse-signing/` (or in a properties file named by the `FAUNALAPSE_SIGNING`
-environment variable). Create the key once, in your own terminal:
+git repository (e.g. in `~/faunalapse-signing/`, or in a properties file named by the `FAUNALAPSE_SIGNING`
+environment variable). 
+
+Create the key once, in your own terminal (execute this only once):
 
 ```bash
+# Navigate to the path where this git repository is located on your computer, e.g:
+# cd ~/path/to/fauna-lapse
 bash tools/create_release_key.sh
 ```
 
-Back up the key file in two places and keep the password in a password manager. If the key or its
-password is lost, nobody can recover it, and every user must uninstall FaunaLapse (losing the
-settings) to get newer versions. Then:
+Then:
 
 ```bash
+# Navigate to the path where this git repository is located on your computer, e.g:
+# cd ~/path/to/fauna-lapse
 ./gradlew test lintDebug assembleRelease
 cp app/build/outputs/apk/release/app-release.apk faunalapse-v<version>.apk
 ~/Android/Sdk/build-tools/<version>/apksigner verify --print-certs faunalapse-v<version>.apk
@@ -102,3 +169,6 @@ cp app/build/outputs/apk/release/app-release.apk faunalapse-v<version>.apk
 
 Without the key, `assembleRelease` stops (`missing required property "storeFile"`); debug builds
 and tests need no key.
+
+If the key or its password is lost, nobody can recover it, and every user must uninstall FaunaLapse (losing the
+settings) to get newer versions.
