@@ -14,6 +14,29 @@ FaunaLapse has no artificial intelligence (AI). Check its sister app,
 [FaunaPulse](https://github.com/valentinitnelav/fauna-pulse),
 which can detect & track insects in real time with AI on newer phones.
 
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/29ec7cec-1d54-4f34-bf6c-e9fa6f7d7977"
+    alt="Bumblebee example"
+    height="250"
+    align="middle"
+  />
+  &nbsp;&nbsp;
+  <img
+    src="https://github.com/user-attachments/assets/5319a1c9-327d-467f-8cb3-0ff63674915c"
+    alt="Hymenoptera example"
+    height="250"
+    align="middle"
+  />
+  &nbsp;&nbsp;
+  <img
+    src="https://github.com/user-attachments/assets/ac699cd2-25e7-42ed-84b4-ff35cb465b26"
+    alt="Hoverfly example"
+    height="250"
+    align="middle"
+  />  
+</p>
+
 ## Status
 
 <details>
