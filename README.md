@@ -4,6 +4,12 @@
 
 <h1 align="center">FaunaLapse</h1>
 
+<p align="center">
+  <a href="https://doi.org/10.5281/zenodo.23318231"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.23318231.svg" alt="DOI"></a>
+  <a href="https://github.com/valentinitnelav/fauna-lapse/releases"><img src="https://img.shields.io/github/v/release/valentinitnelav/fauna-lapse?include_prereleases" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License: AGPL v3"></a>
+</p>
+
 ## Overview
 
 **FaunaLapse turns old or affordable Android phones into time-lapse cameras that watch one spot, for example insects visiting a flower.**
@@ -194,7 +200,7 @@ is archived on Zenodo with a DOI.
 
 Example:
 
-> Ștefan, V. & Knight, T. (2026). FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals. https://doi.org/...
+> Ștefan, V. & Knight, T. (2026). FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals [Software]. Zenodo. https://doi.org/10.5281/zenodo.23318231. Source code: https://github.com/valentinitnelav/fauna-lapse
 
 ## Licence
 

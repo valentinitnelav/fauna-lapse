@@ -36,11 +36,11 @@ authors:
     orcid: "https://orcid.org/0000-0003-0318-1567"    
 # Concept DOI: fixed for the lifetime of the project, always resolves to the newest
 # Zenodo version. The version DOI below changes with every release.
-# doi: 10.5281/zenodo.XXXXXXXX
-# identifiers:
-#   - type: doi
-#     value: "10.5281/zenodo.XXXXXXXX"
-#     description: "Concept DOI: all versions of FaunaLapse (resolves to the newest release)"
-#   - type: doi
-#     value: "10.5281/zenodo.YYYYYYYY"
-#     description: "Version DOI: FaunaLapse v0.1.0-beta.1"
+doi: 10.5281/zenodo.23318231
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23318231"
+    description: "Concept DOI: all versions of FaunaLapse (resolves to the newest release)"
+  - type: doi
+    value: "10.5281/zenodo.23318232"
+    description: "Version DOI: FaunaLapse v0.1.0-beta.1"
