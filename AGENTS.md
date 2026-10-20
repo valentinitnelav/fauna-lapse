@@ -52,7 +52,7 @@ plain language at first use, and write plain English with short sentences and no
 ## Repository layout
 
 - `app/`: the Android app (Gradle project, package `com.faunalapse.app`); unit tests in `app/src/test/`.
-- `tools/`: PC scripts in Python (`phase0_speed_report.py`); `docs/`: see "Where knowledge lives".
+- `tools/`: PC scripts in Python; `docs/`: see "Where knowledge lives"; `.github/`: GitHub checks.
 
 ## Build and test
 

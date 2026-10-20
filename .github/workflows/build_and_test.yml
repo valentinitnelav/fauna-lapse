@@ -1,0 +1,38 @@
+name: Build and test
+
+# Runs the PC tests, Android lint and a debug build on GitHub's computers.
+# Text-only changes (Markdown, docs/, CITATION.cff) start no run.
+on:
+  push:
+    branches: [develop, main]
+    paths-ignore: ["**.md", "docs/**", "CITATION.cff"]
+  pull_request:
+    paths-ignore: ["**.md", "docs/**", "CITATION.cff"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch stops the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # A safety stop for a stuck run, not a target: a normal run takes a few minutes.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      # JDK 17: the oldest Java that AGENTS.md promises to build with.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      # The Android SDK is already on GitHub's Linux computers (ANDROID_HOME).
+      - name: Unit tests, lint and debug build
+        run: ./gradlew test lintDebug assembleDebug
