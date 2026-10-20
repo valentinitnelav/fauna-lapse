@@ -312,7 +312,7 @@
     <string name="support_share_text">FaunaLapse: a free, open-source Android app that turns old phones into time-lapse cameras for insects and other animals. %1$s</string>
     <string name="support_cite">How to cite</string>
     <string name="support_citation" translatable="false">Ștefan, V. &amp; Knight, T. (2026). FaunaLapse: a smartphone application for scheduled time-lapse monitoring of insects and other animals (Version %1$s) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23318231. Source code: %2$s</string>
-    <string name="support_cite_note">The version is the one installed on this phone: cite the version you used. The DOI link opens all versions on Zenodo, where each version also has its own DOI.</string>
+    <string name="support_cite_note">The version is the one installed on this phone: cite the version you used. The DOI link opens the newest version on Zenodo; that page lists all versions, each with its own DOI.</string>
     <string name="support_copy">Copy</string>
     <string name="support_copied">Citation copied.</string>
     <string name="support_report">Report a problem</string>
