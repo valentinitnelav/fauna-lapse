@@ -43,14 +43,17 @@ the set distance; a sharpness value per photo in the record.
 ## A heat pause on the chip temperature
 
 **Found:** the records carry the hottest CPU and GPU sensor where the phone lets apps read them
-(Xiaomi phones yes, the Samsung M12 no). FaunaPulse saw the frame rate of a Xiaomi 11T Pro fall
+(Xiaomi phones yes, the Samsung M12 no), and Android's thermal status and headroom where the phone
+reports them (status: the Samsung and the Redmi; headroom: only the Samsung). FaunaPulse saw the frame rate of a Xiaomi 11T Pro fall
 while its battery read only 39 to 40 °C: the battery sensor warms slowly and misses the slow-down.
 
 **Why parked:** chips run at 50 to 80 °C under load and their safe limits differ per chip, so a
 limit needs readings from many phones (the old ones most). The heat pause stays on the battery.
 
-**To reopen:** collect `cpu_temp_c` from field sessions per phone model, with the frame rate or
-photo times next to it, and look for the temperature where the phone starts to slow down.
+**To reopen:** collect `cpu_temp_c`, `thermal_headroom` and the `thermal_status` records from
+field sessions per phone model, with the frame rate or photo times next to them, and look for where
+the phone starts to slow down. A pause on Android's own status ("severe") needs no limit per chip,
+but older phones and some makers do not report it.
 
 ## Copying settings between phones
 

@@ -9,7 +9,8 @@ indoor light) unless stated otherwise. Raw data stays outside git; after a speed
 
 Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two speed-test runs.
 Chip temperatures: the app may not read them (the thermal folder is closed), so `cpu_temp_c` and
-`gpu_temp_c` are null.
+`gpu_temp_c` are null. Android's thermal status and headroom: both reported (photo bursts, indoors:
+status none, headroom 0.49 to 0.54, where 1 = "severe" slow-down).
 
 ### Camera facts (back camera)
 
@@ -83,8 +84,8 @@ The number of real pixels inside the square depends on how much of the view the 
 
 A mid-range phone (Snapdragon 720G), tested like a new user would use it. Tested 2026-10-05, two
 speed-test runs and sessions, on the charger.
-Chip temperatures: readable (24 CPU and 3 GPU zones); video clips at 5 fps, indoors: CPU 33 °C,
-GPU 31 °C, battery 25 °C.
+Chip temperatures: readable (24 CPU and 3 GPU zones); video clips at 5 fps, indoors: CPU 31 °C,
+GPU 30 °C, battery 24 °C. Android's thermal status: reported (none); headroom: not reported (null).
 
 ### Camera facts (back camera)
 

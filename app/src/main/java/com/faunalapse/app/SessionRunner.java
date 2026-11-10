@@ -177,6 +177,7 @@ final class SessionRunner implements Runnable {
         List<String> sitePhotos = SitePhotos.moveInto(context, dir);
         SessionLog.put(field, "site_photos", new JSONArray(sitePhotos)); // in the folder site_photos
         writeStart();
+        Object thermalWatch = Thermal.watch(context, log); // a record when Android's thermal status changes
         Thread meterThread = new Thread(meter, "battery");
         meterThread.start();
         // Photos are cut and saved on a second thread; when two are waiting, the session thread
@@ -254,6 +255,7 @@ final class SessionRunner implements Runnable {
             reason = "error: " + e;
         } finally {
             closeCamera();
+            Thermal.stopWatching(context, thermalWatch);
             meterThread.interrupt();
             saver.shutdown();
             try {
@@ -410,7 +412,7 @@ final class SessionRunner implements Runnable {
         double resumeC = settings.heatLimitC - Guards.RESUME_GAP_C;
         JSONObject r = SessionLog.record("heat_pause");
         SessionLog.put(r, "battery_temp_c", CaptureService.batteryTempC(context));
-        ChipTemps.put(r);
+        Thermal.put(context, r);
         SessionLog.put(r, "resume_below_c", resumeC);
         log.write(r);
         heatPaused = true;
@@ -427,7 +429,7 @@ final class SessionRunner implements Runnable {
         heatPauseMs += end - start;
         JSONObject e = SessionLog.record("heat_pause_end");
         SessionLog.put(e, "battery_temp_c", CaptureService.batteryTempC(context));
-        ChipTemps.put(e);
+        Thermal.put(context, e);
         SessionLog.put(e, "paused_min", Math.round((end - start) / 6000.0) / 10.0);
         SessionLog.put(e, settings.video ? "clips_missed" : "bursts_missed", plan.burstsStartingIn(start, end));
         log.write(e);
@@ -542,7 +544,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(e, "skipped_photo_times", missed);
         SessionLog.put(e, "photo_times_missed_at_start", lateStart);
         if (taken > 0) SessionLog.put(e, "mean_photo_ms", captureMsSum / taken);
-        ChipTemps.put(e); // the chip warms within seconds: its heat after the photos
+        Thermal.put(context, e); // the chip warms within seconds: its heat after the photos
         if (hot) SessionLog.put(e, "stopped_for_heat", true);
         if (paused) SessionLog.put(e, "paused_by_user", true);
         log.write(e);
@@ -658,7 +660,7 @@ final class SessionRunner implements Runnable {
         SessionLog.put(r, "planned_end", SessionLog.isoTime(b.end));
         CaptureService.Battery battery = CaptureService.Battery.read(context);
         SessionLog.put(r, "battery_temp_c", battery.tempC);
-        ChipTemps.put(r);
+        Thermal.put(context, r);
         SessionLog.put(r, "battery_percent", battery.percent);
         SessionLog.put(r, "charging", battery.charging);
         SessionLog.put(r, "screen_on", CaptureService.isScreenOn(context));
