@@ -8,6 +8,8 @@ indoor light) unless stated otherwise. Raw data stays outside git; after a speed
 ## Samsung Galaxy M12 (SM-M127F), Android 13, 2021
 
 Reference phone for phase 0 (cheap, about 5 years old). Tested 2026-10-02, two speed-test runs.
+Chip temperatures: the app may not read them (the thermal folder is closed), so `cpu_temp_c` and
+`gpu_temp_c` are null.
 
 ### Camera facts (back camera)
 
@@ -81,6 +83,8 @@ The number of real pixels inside the square depends on how much of the view the 
 
 A mid-range phone (Snapdragon 720G), tested like a new user would use it. Tested 2026-10-05, two
 speed-test runs and sessions, on the charger.
+Chip temperatures: readable (24 CPU and 3 GPU zones); video clips at 5 fps, indoors: CPU 33 °C,
+GPU 31 °C, battery 25 °C.
 
 ### Camera facts (back camera)
 

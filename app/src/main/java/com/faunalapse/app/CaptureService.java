@@ -284,6 +284,7 @@ public final class CaptureService extends Service {
         put(record, "android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         Battery battery = Battery.read(this);
         put(record, "battery_temp_c", battery.tempC);
+        ChipTemps.put(record);
         put(record, "charging", battery.charging);
         Log.i(TAG, record.toString());
         try (Writer w = new OutputStreamWriter(
@@ -295,7 +296,8 @@ public final class CaptureService extends Service {
         }
     }
 
-    /** Battery temperature in °C (the only temperature an app can read), or null if unknown. */
+    /** Battery temperature in °C (the only one every phone lets apps read; see ChipTemps), or null
+     *  if unknown. */
     static Double batteryTempC(Context context) {
         return Battery.read(context).tempC;
     }

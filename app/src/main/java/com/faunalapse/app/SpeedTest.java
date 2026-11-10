@@ -488,6 +488,7 @@ final class SpeedTest implements Runnable {
         tests++;
         if (r.has("error")) failed++;
         put(r, "battery_temp_c", CaptureService.batteryTempC(context));
+        ChipTemps.put(r);
         Log.i(CaptureService.TAG, r.toString());
         try (Writer w = new OutputStreamWriter(
                 new FileOutputStream(new File(dir, "results.jsonl"), true), StandardCharsets.UTF_8)) {
