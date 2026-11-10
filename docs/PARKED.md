@@ -122,8 +122,9 @@ TDWG, https://camtrap-dp.tdwg.org/), to share and publish the data.
   `coordinateUncertainty` = `coordinate_uncertainty_m` rounded up (whole m, at least 1);
   `deploymentStart` and `deploymentEnd` = times of `session_start` and `session_end` (no ms);
   `locationName` = `site`; `setupBy`, `cameraHeight`, `detectionDistance` (camera to target),
-  `habitat`; `cameraID` = `phone_id`; `cameraModel` = maker-model; plant, transect, IDs and custom
-  fields as `deploymentTags` (key:value). Media: one row per photo or clip (`time`, `file`).
+  `habitat`; `cameraID` = `device_id`, else `phone_id`; `cameraModel` = maker-model; plant,
+  transect, IDs and custom fields as `deploymentTags` (key:value). Media: one row per photo or clip
+  (`time`, `file`).
 - Study facts (project, people, licence, `captureMethod` timeLapse, `filePublic`) and the
   observations (`unclassified` until someone looks) are made on the computer.
 
@@ -159,7 +160,7 @@ black screen kept on would take taps, but costs energy.
 
 **What was found:** since Android 10 only phone makers' apps may read lasting hardware IDs (IMEI,
 serial number); `ANDROID_ID` changes with a factory reset. A name written on the phone and typed as
-a custom field (for example Device ID) does the job.
+its Device ID (card 2) does the job.
 
 **Why parked:** not worth it (maintainer).
 

@@ -59,6 +59,7 @@ public final class FieldActivity extends Activity {
     private EditText transect;
     private EditText plant;
     private EditText habitat;
+    private EditText deviceId;
     private EditText sampleId;
     private EditText sessionId;
     private EditText cameraHeight;
@@ -95,6 +96,7 @@ public final class FieldActivity extends Activity {
         transect = findViewById(R.id.transect);
         plant = findViewById(R.id.plant);
         habitat = findViewById(R.id.habitat);
+        deviceId = findViewById(R.id.device_id);
         sampleId = findViewById(R.id.sample_id);
         sessionId = findViewById(R.id.session_id);
         cameraHeight = findViewById(R.id.camera_height);
@@ -240,6 +242,7 @@ public final class FieldActivity extends Activity {
         transect.setText(f.transect);
         plant.setText(f.plant);
         habitat.setText(f.habitat);
+        deviceId.setText(f.deviceId);
         sampleId.setText(f.sampleId);
         sessionId.setText(f.sessionId);
         cameraHeight.setText(f.cameraHeight);
@@ -434,6 +437,7 @@ public final class FieldActivity extends Activity {
         f.transect = MainActivity.text(transect);
         f.plant = MainActivity.text(plant);
         f.habitat = MainActivity.text(habitat);
+        f.deviceId = MainActivity.text(deviceId);
         f.sampleId = MainActivity.text(sampleId);
         f.sessionId = MainActivity.text(sessionId);
         f.cameraHeight = MainActivity.text(cameraHeight);

@@ -56,6 +56,10 @@ final class FieldInfo {
     String transect = "";
     String plant = "";
     String habitat = "";
+    /** A short name the user gives this phone (for example cam-03), as the Insect Detect camera
+     *  trap (Sittinger 2026) names itself by its hostname: insect-detect-post tells devices apart
+     *  only by device_id. Same field and record key as FaunaPulse; readers fall back to phone_id. */
+    String deviceId = "";
     String sampleId = "";
     String sessionId = "";
     /** In m as typed ("" = not given): text, so the field shows what was typed. */
@@ -149,6 +153,7 @@ final class FieldInfo {
         f.transect = p.getString("transect", "");
         f.plant = p.getString("plant", "");
         f.habitat = p.getString("habitat", "");
+        f.deviceId = p.getString("device_id", "");
         f.sampleId = p.getString("sample_id", "");
         f.sessionId = p.getString("session_id", "");
         f.cameraHeight = p.getString("camera_height_m", "");
@@ -199,6 +204,7 @@ final class FieldInfo {
                 .putString("transect", transect)
                 .putString("plant", plant)
                 .putString("habitat", habitat)
+                .putString("device_id", deviceId)
                 .putString("sample_id", sampleId)
                 .putString("session_id", sessionId)
                 .putString("camera_height_m", cameraHeight)
@@ -291,10 +297,15 @@ final class FieldInfo {
     }
 
     /** What is wrong with the name of a new custom field, or null. Names are unique (in any case):
-     *  they become keys in the record. */
+     *  they become keys in the record. No own "Device ID" (spaces, "_", "-" and case ignored, as
+     *  FaunaPulse does): the readers count such a field too, so two would leave unsure which one
+     *  names the phone. One saved by older versions stays. */
     static String nameProblem(String name, List<Custom> existing) {
         if (name.isEmpty()) return "Write a name for the field.";
         if (name.length() > MAX_NAME) return "Use at most " + MAX_NAME + " characters.";
+        if (name.replaceAll("[\\s\\u00a0\\ufeff_-]+", "").equalsIgnoreCase("deviceid")) {
+            return "\"Device ID\" is a field above; use that one.";
+        }
         for (Custom c : existing) {
             if (c.name.equalsIgnoreCase(name)) return "There is already a field with this name.";
         }
@@ -381,6 +392,7 @@ final class FieldInfo {
         SessionLog.put(j, "transect", transect);
         SessionLog.put(j, "plant", plant);
         SessionLog.put(j, "habitat", habitat);
+        SessionLog.put(j, "device_id", deviceId);
         SessionLog.put(j, "sample_id", sampleId);
         SessionLog.put(j, "session_id", sessionId);
         SessionLog.put(j, "camera_height_m", metres(cameraHeight));

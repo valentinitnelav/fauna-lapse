@@ -32,6 +32,12 @@ public class SessionSettingsTest {
         assertNotNull(FieldInfo.nameProblem("", fields));
         assertNotNull(FieldInfo.nameProblem("observer", fields)); // names are keys in the record
         assertNull(FieldInfo.nameProblem("Air temperature (°C)", fields));
+        // Device ID is a field of its own: no second one, however it is written
+        for (String n : new String[] {"Device ID", "device_id", "DEVICE-ID", "DeviceID", "device  id"}) {
+            assertNotNull(n, FieldInfo.nameProblem(n, fields));
+        }
+        assertNull(FieldInfo.nameProblem("Device IDs", fields));
+        assertNull(FieldInfo.nameProblem("Device", fields));
         FieldInfo.Custom t = new FieldInfo.Custom("T", FieldInfo.Custom.NUMBER, "21,5");
         assertNull(t.problem());
         assertEquals(21.5, (Double) t.jsonValue(), 0);

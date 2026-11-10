@@ -117,6 +117,9 @@
     <string name="field_plant_hint">common or Latin name</string>
     <string name="field_habitat">Habitat</string>
     <string name="field_habitat_hint">for example dry grassland</string>
+    <string name="field_device_id">Device ID</string>
+    <string name="field_device_id_hint">for example cam-03</string>
+    <string name="field_device_id_help">A short name you choose for this phone, best also written on it. When several phones record, it names each phone\'s results on the computer. Without it, they show the phone ID above, which changes after a factory reset.</string>
     <string name="field_sample">Sample ID</string>
     <string name="field_session">Session ID</string>
     <string name="field_height">Camera height (m)</string>
@@ -126,7 +129,7 @@
     <string name="distance_note">From the fixed focus (%1$s), which is not exact on every phone: check it with a ruler now and then.</string>
     <string name="field_phone_model">Phone model</string>
     <string name="field_phone_id">Phone ID</string>
-    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone (it cannot be changed). It is used as a prefix in each session folder name, so files from several phones never mix. A factory reset (or sometimes reinstalling the app) gives a new one. You can also add your own specific field, for example \'Device ID\' by using the \'+ Add a field\' button below.</string>
+    <string name="field_phone_id_help">Android\'s ID for FaunaLapse on this phone (it cannot be changed). It is used as a prefix in each session folder name, so files from several phones never mix. A factory reset (or sometimes reinstalling the app) gives a new one. For a name you choose, use Device ID below.</string>
     <string name="phone_model" translatable="false">%1$s %2$s</string>
     <string name="field_optional">optional</string>
     <string name="custom_add_button">+ Add a field</string>

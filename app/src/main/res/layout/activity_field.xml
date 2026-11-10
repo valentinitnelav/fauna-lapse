@@ -3,7 +3,8 @@
      (FieldInfo) in three cards: setup, position, site photos. Done stays at the bottom (Back does
      the same). Explanations open with the (i) of their label (HelpToggles). LabelFor: each field
      has its label, and the grey hint inside gives an example. importantForAutofill="no": field
-     notes, not the user's personal data (Android 8+). -->
+     notes, not the user's personal data (Android 8+). TooManyViews: lint's rough limit of 80; a
+     screen opened once per site, so the few ms of building it do not matter. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/field_root"
@@ -11,7 +12,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    tools:ignore="LabelFor">
+    tools:ignore="LabelFor,TooManyViews">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -62,6 +63,12 @@
                     <EditText android:id="@+id/habitat" style="@style/Field.Row" android:hint="@string/field_habitat_hint"
                         android:importantForAutofill="no" android:inputType="textCapSentences" tools:targetApi="o" />
                 </LinearLayout>
+                <LinearLayout style="@style/FieldRow">
+                    <TextView style="@style/FieldLabel.Help" android:labelFor="@id/device_id" android:text="@string/field_device_id" />
+                    <EditText android:id="@+id/device_id" style="@style/Field.Row" android:hint="@string/field_device_id_hint"
+                        android:importantForAutofill="no" android:inputType="text" tools:targetApi="o" />
+                </LinearLayout>
+                <TextView style="@style/Hint.Help" android:text="@string/field_device_id_help" />
                 <LinearLayout style="@style/FieldRow">
                     <TextView style="@style/FieldLabel" android:labelFor="@id/sample_id" android:text="@string/field_sample" />
                     <EditText android:id="@+id/sample_id" style="@style/Field.Row" android:hint="@string/field_optional"

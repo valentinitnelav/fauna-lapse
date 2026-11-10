@@ -371,6 +371,7 @@ public final class MainActivity extends Activity {
             line(lines, R.string.field_transect, f.transect);
             line(lines, R.string.field_plant, f.plant);
             line(lines, R.string.field_habitat, f.habitat);
+            line(lines, R.string.field_device_id, f.deviceId);
             line(lines, R.string.field_sample, f.sampleId);
             line(lines, R.string.field_session, f.sessionId);
             line(lines, R.string.field_height, f.cameraHeight);

@@ -46,7 +46,7 @@ true now and where it lives, no history (git). Rules and reasons: `AGENTS.md`. L
   the stored frame, within the SurfaceTexture transform (Camera2 adds the sensor turn, Camera1 not).
 - Records: `time` = phone clock with time zone; durations in ms; every setting and field key always
   present (null where it does not apply), so tables from many sessions get the same columns. Field
-  keys use Camtrap DP words where one fits (`setup_by`, `coordinate_uncertainty_m`, ...).
+  keys use Camtrap DP words where one fits (`setup_by`, ...); `device_id` as in FaunaPulse.
 - Pack (`SessionZip` in the foreground service `PackService`; Start waits): stored zips by the folder (4 GB
   at most, then `_part2`); files go once their zip is synced and read back; files a listing misses go by name.
 - `app/build.gradle` excludes the Kotlin library that the Android plugin adds (debug APK 220 to 300 KB).

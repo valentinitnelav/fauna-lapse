@@ -106,10 +106,11 @@ FaunaLapse is not yet in the Google Play Store: download the APK (the install fi
   is nearly full.
 - During a session: the last saved photo on the main screen, and a pause to adjust the phone (with
   the live camera view; nothing is recorded, and the session goes on by itself after 10 minutes).
-- Field metadata for each session: who set it up, site, transect, plant, habitat, sample and
-  session ID, camera height and distance to the target (named as in the *Camtrap DP* standard for
-  camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from your
-  own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
+- Field metadata for each session: who set it up, site, transect, plant, habitat, a device ID (a
+  name you give the phone, such as `cam-03`, so the results of several phones stay apart), sample
+  and session ID, camera height and distance to the target (named as in the *Camtrap DP* standard
+  for camera traps), your own fields (text, notes, number, date, time, yes or no, or a choice from
+  your own list), and the phone model and ID (filled in by the app); site photos of the surroundings,
   taken with the phone's camera app and kept apart in the session folder; one GPS position on a tap
   (WGS 84; the GPS switches off again when the position's uncertainty reaches your *Stop at* value,
   10 m unless you change it), or latitude, longitude and uncertainty typed from another GPS device.
